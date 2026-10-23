@@ -1,0 +1,122 @@
+apply plugin: 'com.android.application'
+
+// 从 package.json 读取版本号
+def packageJsonFile = file('../../package.json')
+def packageJsonText = packageJsonFile.text
+// 使用正则提取版本号
+def versionMatcher = packageJsonText =~ /"version"\s*:\s*"([^"]+)"/
+def appVersionName = versionMatcher ? versionMatcher[0][1] : "1.0.0"
+// 版本号转 versionCode:主*10000 + 次*100 + 补丁。
+// 项目约定版本号只有两段(如 "1.32"),缺失的段按 0 补,不能直接取下标 —— 否则越界。
+def versionParts = appVersionName.split('\\.')
+def versionPart = { int i -> i < versionParts.length ? versionParts[i].toInteger() : 0 }
+def appVersionCode = versionPart(0) * 10000 + versionPart(1) * 100 + versionPart(2)
+
+// 签名按仓库内的 key 文件走:keystore.properties(storeFile / keyAlias / 口令)+ release.keystore
+// 随仓库分发,clone 下来直接就能出可安装的签名包,CI 不需要任何 Secret。
+// 这是仓库所有者的既定选择(2026-09-02 起)。
+// 环境变量(KEYSTORE_STORE_PASSWORD / KEYSTORE_KEY_PASSWORD)与不入库的 keystore.local.properties
+// 仍可覆盖文件里的口令 —— 想换一把不进仓库的密钥时用得上,平时不需要。
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+def localPropsFile = rootProject.file('keystore.local.properties')
+def localProps = new Properties()
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+// 口令优先级:环境变量 > 本地覆盖文件 > 仓库内的 keystore.properties。
+// 空串按未设处理:CI 把没配的 Secret 注入成 "" 时,不能让它盖掉文件里的口令。
+def pick = { String key, String envName, props, local ->
+    def v = System.getenv(envName)
+    if (v != null && v.length() > 0) return v
+    if (local != null && local[key]) return local[key].toString()
+    if (props != null && props[key]) return props[key].toString()
+    return null
+}
+def signStorePassword = pick('storePassword', 'KEYSTORE_STORE_PASSWORD', keystoreProps, localProps)
+def signKeyPassword = pick('keyPassword', 'KEYSTORE_KEY_PASSWORD', keystoreProps, localProps)
+// 口令齐备才配签名。凑不齐就直接失败,而不是悄悄产出「未签名 APK」——
+// 那种包手机装不上,却能一路绿到发布页。key 文件就在仓库里,凑不齐只能是文件坏了。
+def signingAvailable = signStorePassword != null && signStorePassword.length() > 0 && signKeyPassword != null && signKeyPassword.length() > 0 && keystorePropsFile.exists()
+if (!signingAvailable) {
+    throw new GradleException("签名口令缺失:检查 android/keystore.properties 的 storePassword / keyPassword(或环境变量 KEYSTORE_STORE_PASSWORD / KEYSTORE_KEY_PASSWORD)")
+}
+
+android {
+    namespace = "com.games.wenzi.yunyin"
+    compileSdk = rootProject.ext.compileSdkVersion
+
+    signingConfigs {
+        release {
+            if (signingAvailable) {
+                keyAlias keystoreProps['keyAlias']
+                keyPassword signKeyPassword
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword signStorePassword
+                v1SigningEnabled true
+                v2SigningEnabled true
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.games.wenzi.yunyin"
+        minSdkVersion 26
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    buildTypes {
+        debug {
+            if (signingAvailable) signingConfig signingConfigs.release
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (signingAvailable) signingConfig signingConfigs.release
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "yunyin-${variant.versionName}.apk"
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

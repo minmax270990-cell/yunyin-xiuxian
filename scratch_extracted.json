@@ -1,0 +1,715 @@
+{
+  "pills": [
+    {
+      "id": "p_jvqisan",
+      "name": "聚气散",
+      "quality": "mortal",
+      "minRealm": 0,
+      "desc": "最粗浅的灵药,聊胜于无"
+    },
+    {
+      "id": "p_jvqidan",
+      "name": "聚气丹",
+      "quality": "fine",
+      "minRealm": 0,
+      "desc": "服之灵气涌动,修为小进"
+    },
+    {
+      "id": "p_huichun",
+      "name": "回灵丹",
+      "quality": "fine",
+      "minRealm": 0,
+      "desc": "回复五成灵气"
+    },
+    {
+      "id": "p_wudaocha",
+      "name": "悟道茶",
+      "quality": "fine",
+      "minRealm": 0,
+      "desc": "以灵茶入道,战斗中所悟更多"
+    },
+    {
+      "id": "p_ningshen",
+      "name": "凝神丹",
+      "quality": "fine",
+      "minRealm": 0,
+      "desc": "心神凝定,宜于小进阶之前;大关天劫,丹力不入"
+    },
+    {
+      "id": "p_juling",
+      "name": "聚灵丹",
+      "quality": "excellent",
+      "minRealm": 0,
+      "desc": "一炷香内修炼倍增(30 分钟)"
+    },
+    {
+      "id": "p_zhanling",
+      "name": "战灵丹",
+      "quality": "excellent",
+      "minRealm": 1,
+      "desc": "战意沸腾,攻防俱增"
+    },
+    {
+      "id": "p_huxin",
+      "name": "护心丹",
+      "quality": "excellent",
+      "minRealm": 1,
+      "desc": "护住心脉,减免伤害"
+    },
+    {
+      "id": "p_shenxing",
+      "name": "神行丹",
+      "quality": "excellent",
+      "minRealm": 1,
+      "desc": "脚下生风,同程妖踪更密,行程不减"
+    },
+    {
+      "id": "p_pojing",
+      "name": "破境丹",
+      "quality": "spirit",
+      "minRealm": 1,
+      "desc": "破境只开小进阶;大关天劫,此丹不与"
+    },
+    {
+      "id": "p_xuanyuan",
+      "name": "玄元丹",
+      "quality": "spirit",
+      "minRealm": 2,
+      "desc": "玄元之气化入丹中,服之如闭关一刻(15 分钟)"
+    },
+    {
+      "id": "p_jingang",
+      "name": "金刚液",
+      "quality": "spirit",
+      "minRealm": 2,
+      "desc": "服之肉身坚若金刚"
+    },
+    {
+      "id": "p_tianyun",
+      "name": "天运丹",
+      "quality": "spirit",
+      "minRealm": 3,
+      "desc": "窃一缕天运,福泽加身"
+    },
+    {
+      "id": "p_xuanming",
+      "name": "玄冥护体丹",
+      "quality": "spirit",
+      "minRealm": 3,
+      "desc": "渡劫前服用,可抵雷霆"
+    },
+    {
+      "id": "p_yanshou",
+      "name": "延寿丹",
+      "quality": "spirit",
+      "minRealm": 2,
+      "desc": "延寿三十载"
+    },
+    {
+      "id": "p_lingru",
+      "name": "灵乳",
+      "quality": "spirit",
+      "minRealm": 2,
+      "desc": "万年钟乳凝成的灵液,一口涤尽枯竭 —— 灵材难得,火候更难"
+    },
+    {
+      "id": "p_dahuan",
+      "name": "大还丹",
+      "quality": "profound",
+      "minRealm": 4,
+      "desc": "起死人肉白骨,服之如闭关一炷香(30 分钟)"
+    },
+    {
+      "id": "p_wudaodan",
+      "name": "悟道丹",
+      "quality": "profound",
+      "minRealm": 3,
+      "desc": "服之如聆道音,悟道点 +20"
+    },
+    {
+      "id": "p_qianshou",
+      "name": "千年延寿丹",
+      "quality": "profound",
+      "minRealm": 4,
+      "desc": "延寿两百载"
+    },
+    {
+      "id": "p_taixu",
+      "name": "太虚丹",
+      "quality": "earth",
+      "minRealm": 5,
+      "desc": "丹成有太虚幻境相随,服之如闭关半个时辰(1 小时)"
+    },
+    {
+      "id": "p_wanshou",
+      "name": "万寿金丹",
+      "quality": "earth",
+      "minRealm": 6,
+      "desc": "延寿千载,金丹光华内蕴"
+    },
+    {
+      "id": "p_jiuzhuan",
+      "name": "九转还魂丹",
+      "quality": "heaven",
+      "minRealm": 7,
+      "desc": "九转丹成,天地同贺,服之如闭关一个时辰(2 小时)"
+    },
+    {
+      "id": "p_gangqisan",
+      "name": "罡气散",
+      "quality": "excellent",
+      "minRealm": 1,
+      "desc": "服之罡气环身,盾出伤随"
+    },
+    {
+      "id": "p_pofudan",
+      "name": "破釜丹",
+      "quality": "spirit",
+      "minRealm": 2,
+      "desc": "断却生路,方见杀机"
+    },
+    {
+      "id": "p_yaoxue",
+      "name": "妖血丹",
+      "quality": "fine",
+      "minRealm": 0,
+      "desc": "以妖血炼成,药力狂暴,散修行走在外的常备之物"
+    },
+    {
+      "id": "p_leiling",
+      "name": "雷灵丹",
+      "quality": "spirit",
+      "minRealm": 3,
+      "desc": "雷灵之力灌顶淬体,痛楚过后如闭关将近一刻(9 分钟)"
+    },
+    {
+      "id": "p_fengsui",
+      "name": "凤髓膏",
+      "quality": "profound",
+      "minRealm": 4,
+      "desc": "凤髓所炼,延寿百载"
+    },
+    {
+      "id": "p_longqi",
+      "name": "龙气丹",
+      "quality": "profound",
+      "minRealm": 4,
+      "desc": "一缕真龙之气,服之如闭关一刻有余(18 分钟)"
+    },
+    {
+      "id": "p_xianchen",
+      "name": "仙尘散",
+      "quality": "earth",
+      "minRealm": 6,
+      "desc": "仙人遗蜕所化之尘,拈起一撮,悟道点 +18"
+    },
+    {
+      "id": "p_pantao",
+      "name": "蟠桃",
+      "quality": "earth",
+      "minRealm": 5,
+      "desc": "瑶池灵桃,延寿五百载"
+    },
+    {
+      "id": "p_zaohua",
+      "name": "造化丹",
+      "quality": "heaven",
+      "minRealm": 5,
+      "desc": "服之道韵加身"
+    },
+    {
+      "id": "p_hundun",
+      "name": "混沌丹",
+      "quality": "immortal",
+      "minRealm": 8,
+      "desc": "混沌初分时的一缕本源,服之如闭关六刻(90 分钟)"
+    },
+    {
+      "id": "p_taichu",
+      "name": "太初丹",
+      "quality": "immortal",
+      "minRealm": 10,
+      "desc": "太初之气凝丹,服之如闭关一个半时辰(3 小时)"
+    },
+    {
+      "id": "p_xiancheng",
+      "name": "仙成丹",
+      "quality": "divine",
+      "minRealm": 14,
+      "desc": "仙道既成,一枚抵两个时辰苦修(4 小时)"
+    },
+    {
+      "id": "p_daoyuan",
+      "name": "道源丹",
+      "quality": "divine",
+      "minRealm": 18,
+      "desc": "一炉道源,吞服者如闭关两个半时辰(5 小时)"
+    },
+    {
+      "id": "p_shenwu",
+      "name": "神悟丹",
+      "quality": "divine",
+      "minRealm": 16,
+      "desc": "一炉神悟,胜过百年面壁"
+    },
+    {
+      "id": "p_hunyuan",
+      "name": "混元丹",
+      "quality": "divine",
+      "minRealm": 19,
+      "desc": "混元一炉,吞之如再开一次天地,抵三个时辰闭关(6 小时)"
+    },
+    {
+      "id": "p_daozu",
+      "name": "道祖丹",
+      "quality": "divine",
+      "minRealm": 20,
+      "desc": "万道之祖留下的方子,一炉殊难成一枚,丹成则道贯古今"
+    },
+    {
+      "id": "p_yongchang",
+      "name": "永昌丹",
+      "quality": "immortal",
+      "minRealm": 13,
+      "desc": "服之添寿三千载,岁月于我何有"
+    },
+    {
+      "id": "p_wugou",
+      "name": "无垢金丹",
+      "quality": "divine",
+      "minRealm": 17,
+      "desc": "金丹无垢,寿与天齐,增寿万载"
+    },
+    {
+      "id": "p_daoyindan",
+      "name": "道音丹",
+      "quality": "immortal",
+      "minRealm": 12,
+      "desc": "耳畔道音不绝,悟道点 +60"
+    },
+    {
+      "id": "p_xiantianquan",
+      "name": "仙泉玉液",
+      "quality": "immortal",
+      "minRealm": 11,
+      "desc": "仙泉一盏,灵气涤尽复满 —— 泉眼难寻,火候更难"
+    },
+    {
+      "id": "p_xianlidan",
+      "name": "仙力丹",
+      "quality": "immortal",
+      "minRealm": 10,
+      "desc": "服之仙力贯体,出手重若崩山"
+    },
+    {
+      "id": "p_shenweidan",
+      "name": "神威丹",
+      "quality": "divine",
+      "minRealm": 15,
+      "desc": "神威临世,诸邪辟易"
+    },
+    {
+      "id": "p_benyuandan",
+      "name": "本源丹",
+      "quality": "divine",
+      "minRealm": 18,
+      "desc": "混沌本源入体,一日修行抵百日"
+    },
+    {
+      "id": "p_taiyi",
+      "name": "太乙丹",
+      "quality": "immortal",
+      "minRealm": 12,
+      "desc": "太乙近道,服之如闭关十三刻有余(200 分钟)"
+    },
+    {
+      "id": "p_xianyun",
+      "name": "仙韵丹",
+      "quality": "immortal",
+      "minRealm": 11,
+      "desc": "仙韵绕体,服之修炼加速三分之二(30 分钟)"
+    },
+    {
+      "id": "p_shenlian",
+      "name": "神炼金丹",
+      "quality": "divine",
+      "minRealm": 16,
+      "desc": "神火炼就的金丹,服之如闭关十八刻(270 分钟)"
+    },
+    {
+      "id": "p_yiyuan",
+      "name": "一元始丹",
+      "quality": "dao",
+      "minRealm": 20,
+      "desc": "一元复始,万象其中,服之如闭关三个半时辰(7 小时)"
+    },
+    {
+      "id": "p_shenshi",
+      "name": "神识丹",
+      "quality": "divine",
+      "minRealm": 14,
+      "desc": "神识洞明,悟道点 +85"
+    },
+    {
+      "id": "p_tiandao",
+      "name": "天道金丹",
+      "quality": "dao",
+      "minRealm": 20,
+      "desc": "万法归于一道,拈之如亲聆天道,悟道点 +200"
+    },
+    {
+      "id": "p_shoulu",
+      "name": "寿禄丹",
+      "quality": "immortal",
+      "minRealm": 10,
+      "desc": "福寿绵长,增寿一千五百载"
+    },
+    {
+      "id": "p_shenshou",
+      "name": "神寿金丹",
+      "quality": "divine",
+      "minRealm": 15,
+      "desc": "神寿不凋,增寿四千载"
+    },
+    {
+      "id": "p_wuliang",
+      "name": "无量寿丹",
+      "quality": "dao",
+      "minRealm": 19,
+      "desc": "寿与道同,增寿三万载"
+    },
+    {
+      "id": "p_daoye",
+      "name": "道液",
+      "quality": "dao",
+      "minRealm": 18,
+      "desc": "大道至简,一滴道液涤尽浩气 —— 混沌海深处方凝得成"
+    },
+    {
+      "id": "p_shenyuan",
+      "name": "神元丹",
+      "quality": "divine",
+      "minRealm": 16,
+      "desc": "神元入体,修炼如虎添翼"
+    },
+    {
+      "id": "p_huntian",
+      "name": "混天丹",
+      "quality": "dao",
+      "minRealm": 20,
+      "desc": "一气混元,吐纳之间日月无光"
+    },
+    {
+      "id": "p_daluo",
+      "name": "大罗金丹",
+      "quality": "immortal",
+      "minRealm": 13,
+      "desc": "大罗金身不坏,仙力贯体"
+    },
+    {
+      "id": "p_zhenshan",
+      "name": "镇神丹",
+      "quality": "divine",
+      "minRealm": 17,
+      "desc": "神威镇世,诸天辟易"
+    },
+    {
+      "id": "p_daotai",
+      "name": "道胎丹",
+      "quality": "dao",
+      "minRealm": 19,
+      "desc": "道胎不灭,万劫不改"
+    },
+    {
+      "id": "p_xianyao",
+      "name": "仙药丹",
+      "quality": "immortal",
+      "minRealm": 9,
+      "desc": "仙山深处的野药结丹,服之如闭关六刻(90 分钟)"
+    },
+    {
+      "id": "p_quanlu",
+      "name": "泉露",
+      "quality": "spirit",
+      "minRealm": 6,
+      "desc": "灵泉石壁凝出的露水,饮之灵气回涌"
+    },
+    {
+      "id": "p_xianquanlu",
+      "name": "仙泉露",
+      "quality": "immortal",
+      "minRealm": 10,
+      "desc": "仙泉一滴,涤尽枯竭"
+    },
+    {
+      "id": "p_yudao",
+      "name": "玉道丹",
+      "quality": "immortal",
+      "minRealm": 11,
+      "desc": "玉质道纹凝成的丹,拈之如聆道音"
+    },
+    {
+      "id": "p_xianshou",
+      "name": "仙寿丹",
+      "quality": "heaven",
+      "minRealm": 12,
+      "desc": "仙家野生的延寿灵果炼成,增寿八百载"
+    },
+    {
+      "id": "p_shenyin",
+      "name": "神引丹",
+      "quality": "divine",
+      "minRealm": 14,
+      "desc": "神域游离的仙气凝丹,服之如闭关九刻(135 分钟)"
+    },
+    {
+      "id": "p_hundunjing",
+      "name": "混沌精",
+      "quality": "dao",
+      "minRealm": 18,
+      "desc": "混沌初分时漏出的一缕精气,服之如闭关十三刻有余(200 分钟)"
+    },
+    {
+      "id": "p_shenfeng",
+      "name": "神风余韵",
+      "quality": "divine",
+      "minRealm": 15,
+      "desc": "神风过处道痕犹存,悟道点 +55"
+    },
+    {
+      "id": "p_hundunhuo",
+      "name": "混沌火种",
+      "quality": "dao",
+      "minRealm": 19,
+      "desc": "开天火种,一点道火不灭,悟道点 +85"
+    },
+    {
+      "id": "p_shenpan",
+      "name": "神蟠桃",
+      "quality": "divine",
+      "minRealm": 15,
+      "desc": "神界蟠桃,增寿两千五百载"
+    },
+    {
+      "id": "p_hundunshou",
+      "name": "混沌寿果",
+      "quality": "dao",
+      "minRealm": 19,
+      "desc": "混沌古果,增寿九千载"
+    },
+    {
+      "id": "p_shenlu",
+      "name": "神露",
+      "quality": "divine",
+      "minRealm": 15,
+      "desc": "神泉一滴,灵气回涌"
+    }
+  ],
+  "pets": [
+    "青羽灵狐",
+    "雪背小龟",
+    "赤火雀",
+    "月影狸",
+    "三足金蟾",
+    "摇光鹿",
+    "御雷猴",
+    "螭龙幼子",
+    "应龙",
+    "麒麟",
+    "鲲鹏",
+    "混沌饕餮",
+    "青鸾",
+    "白泽"
+  ],
+  "skills": [
+    {
+      "id": "discern",
+      "name": "识材",
+      "dao": "shicai",
+      "desc": "认出眼前是什么灵材",
+      "lackText": "采回来的东西堆在角落,你叫不出它的名字。"
+    },
+    {
+      "id": "herbLore",
+      "name": "辨药",
+      "dao": "liandan",
+      "desc": "通晓药性寒热与毒理",
+      "lackText": "寒热不分,烈药下炉便是一炉焦糊。"
+    },
+    {
+      "id": "pairing",
+      "name": "配伍",
+      "dao": "liandan",
+      "desc": "定君臣佐使,调和相冲药性",
+      "lackText": "药性在炉中互斗,成丹药力散乱。"
+    },
+    {
+      "id": "condense",
+      "name": "凝丹",
+      "dao": "liandan",
+      "desc": "聚散乱药力为丹形",
+      "lackText": "火候到了却聚不拢,药液在炉底摊成一片。"
+    },
+    {
+      "id": "temper",
+      "name": "淬药",
+      "dao": "liandan",
+      "desc": "逼出杂质,提纯药力",
+      "lackText": "丹是成了,药力却虚浮不实。"
+    },
+    {
+      "id": "nurture",
+      "name": "养丹",
+      "dao": "liandan",
+      "desc": "温养护持,压住残毒",
+      "lackText": "出炉即散气,毒性也压不住。"
+    },
+    {
+      "id": "flame",
+      "name": "控火",
+      "dao": "linghuo",
+      "desc": "引火、控温、护炉",
+      "lackText": "炉温忽高忽低,越好的方子越经不起你这么烧。"
+    },
+    {
+      "id": "smithing",
+      "name": "锻打",
+      "dao": "lianqi",
+      "desc": "千锤定形,逼出材质本性",
+      "lackText": "锤下去的是力气,不是形。"
+    },
+    {
+      "id": "inscribe",
+      "name": "铭纹",
+      "dao": "lianqi",
+      "desc": "刻纹引灵,使器通灵",
+      "lackText": "纹刻得工整,却是死纹,引不进一丝灵气。"
+    }
+  ],
+  "events": {
+    "titles": [],
+    "choices": []
+  },
+  "daolu": [
+    {
+      "id": "dl_qingli",
+      "name": "沈青璃",
+      "brief": "寡言的女修,袖口常沾着药渣",
+      "temper": "cautious",
+      "lean": "alchemy",
+      "pursuit": "寻找十年前失踪的师尊",
+      "taboo": "不喜杀伐,见人滥杀则远之"
+    },
+    {
+      "id": "dl_zhaoyan",
+      "name": "赵砚",
+      "brief": "背一柄未开锋的铁剑,说要等它自己认主",
+      "temper": "bold",
+      "lean": "sword",
+      "pursuit": "把那柄铁剑养到出鞘",
+      "taboo": "不肯用丹药抄近路"
+    },
+    {
+      "id": "dl_muyan",
+      "name": "慕烟",
+      "brief": "走到哪里都在记录草木,笔比剑用得勤",
+      "temper": "curious",
+      "lean": "truth",
+      "pursuit": "走遍此世每一处地界,把它记下来",
+      "taboo": "不愿为赶路而毁掉见到的东西"
+    },
+    {
+      "id": "dl_hanzheng",
+      "name": "韩峥",
+      "brief": "旧战场上活下来的人,袖中永远有三把匕首",
+      "temper": "bold",
+      "lean": "slaughter",
+      "pursuit": "找到当年灭他满门的那个人",
+      "taboo": "受人恩惠必偿,欠债则寝食难安"
+    },
+    {
+      "id": "dl_yunshu",
+      "name": "云舒",
+      "brief": "总在打盹的散修,醒着的时候话很准",
+      "temper": "frugal",
+      "lean": "longevity",
+      "pursuit": "活得够久,久到看见一件事的结局",
+      "taboo": "厌恶把命押在一次豪赌上"
+    },
+    {
+      "id": "dl_ligu",
+      "name": "厉孤",
+      "brief": "独来独往的炼器师,十指有旧烫痕",
+      "temper": "frugal",
+      "lean": "artifice",
+      "pursuit": "复原一件残缺的古器",
+      "taboo": "不许他人碰他未成的器胚"
+    },
+    {
+      "id": "dl_baiwei",
+      "name": "白薇",
+      "brief": "医修出身,救人时手很稳,收钱时也很稳",
+      "temper": "cautious",
+      "lean": "alchemy",
+      "pursuit": "把一门失传的疗伤方子补全",
+      "taboo": "见死不救是她的底线"
+    },
+    {
+      "id": "dl_zhongli",
+      "name": "钟离越",
+      "brief": "前宗门执法,如今只信自己那一套规矩",
+      "temper": "cautious",
+      "lean": "truth",
+      "pursuit": "查清当年宗门覆灭的真相",
+      "taboo": "不与背信者同行"
+    },
+    {
+      "id": "dl_xuewu",
+      "name": "雪无痕",
+      "brief": "雪岭里长大的剑修,话少,出手更少但更狠",
+      "temper": "bold",
+      "lean": "sword",
+      "pursuit": "在有生之年递出一剑无悔的剑",
+      "taboo": "不受嗟来之食"
+    },
+    {
+      "id": "dl_cangming",
+      "name": "苍冥",
+      "brief": "来历不明的修士,自称只是路过",
+      "temper": "curious",
+      "lean": "longevity",
+      "pursuit": "弄清自己为何会在这里醒来",
+      "taboo": "不谈来处,问急了便走"
+    }
+  ],
+  "bondEvents": {
+    "titles": [
+      "遗府",
+      "刀下",
+      "线索",
+      "代价",
+      "岔路",
+      "重伤",
+      "共劫"
+    ],
+    "wishes": [
+      "她想要那卷丹方——那是她找了很久的东西",
+      "她希望留他一条命",
+      "她想进去看看",
+      "她宁可自己扛着伤",
+      "她想去完成自己的事",
+      "她已经把丹药握在手里了",
+      "她说:「一起走吧。」语气很平,像在说一件已经想好的事。"
+    ],
+    "limits": [
+      "她不会为了法宝眼睁睁看你去死",
+      "她不看着人被杀",
+      "她不愿因自己的事把别人拖下水",
+      "她不肯让别人替她付代价",
+      "她不肯让人为她改道",
+      "她不喜欢欠人情,也不喜欢别人欠她",
+      "她不怕死,但她怕拖累别人;你若把她推开,她会记很久"
+    ],
+    "choices": []
+  }
+}
