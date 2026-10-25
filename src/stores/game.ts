@@ -3,8 +3,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { persistConfig, SAVE_VERSION } from '@/utils/storage'
 import { CREATE_REROLL_QUOTA } from '@/data/constants'
-import type { LinggenProfile } from '@/types'
-import { asFiniteNumber, asObjectOrNull } from '@/utils/saveShape'
+import type { CharacterGender, LinggenProfile } from '@/types'
+import { asFiniteNumber, asObjectOrNull, asStringArray } from '@/utils/saveShape'
 
 export const useGameStore = defineStore(
   'game',
@@ -25,6 +25,10 @@ export const useGameStore = defineStore(
     const createProfile = ref<LinggenProfile | null>(null)
     /** 建号草稿 · 道号:刷新页面不丢手打的字(与灵根草稿同一条「别丢我输入」的承诺) */
     const createName = ref('')
+    /** 建号草稿 · 性别 */
+    const createGender = ref<CharacterGender>('male')
+    /** 建号草稿 · 先天资质 */
+    const createAptitudes = ref<string[]>([])
 
     /** 存档修复:时间戳/时长被写坏会让离线结算与展示算出 NaN */
     function sanitize(): void {
@@ -40,12 +44,22 @@ export const useGameStore = defineStore(
               Math.max(0, Math.floor(asFiniteNumber(createRerolls.value, CREATE_REROLL_QUOTA, 0)))
             )
       createProfile.value = asObjectOrNull<LinggenProfile>(createProfile.value)
-      createName.value = typeof createName.value === 'string' ? createName.value.slice(0, 8) : ''
+      createName.value = typeof createName.value === 'string' ? createName.value.slice(0, 16) : ''
+      createGender.value = createGender.value === 'female' ? 'female' : 'male'
+      createAptitudes.value = asStringArray(createAptitudes.value)
     }
 
     /** 记下当前掷出的灵根(不扣次数,扣次数由 spendCreateReroll 负责) */
     function setCreateProfile(profile: LinggenProfile): void {
       createProfile.value = profile
+    }
+
+    function setCreateGender(gender: CharacterGender): void {
+      createGender.value = gender === 'female' ? 'female' : 'male'
+    }
+
+    function setCreateAptitudes(ids: string[]): void {
+      createAptitudes.value = ids
     }
 
     /** 花掉一次重掷额度;不限次(null)或还有余量时返回 true,额度耗尽返回 false */
@@ -61,6 +75,8 @@ export const useGameStore = defineStore(
       createRerolls.value = CREATE_REROLL_QUOTA
       createProfile.value = null
       createName.value = ''
+      createGender.value = 'male'
+      createAptitudes.value = []
     }
 
     /** 记下当前手打的道号(随草稿持久化,刷新不丢) */
@@ -91,8 +107,12 @@ export const useGameStore = defineStore(
       createRerolls,
       createProfile,
       createName,
+      createGender,
+      createAptitudes,
       setCreateProfile,
       setCreateName,
+      setCreateGender,
+      setCreateAptitudes,
       spendCreateReroll,
       resetCreateDraft,
       markStarted,

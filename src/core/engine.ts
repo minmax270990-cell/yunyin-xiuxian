@@ -12,6 +12,7 @@ import { useDongfuStore } from '@/stores/dongfu'
 import { useCultivationStore } from '@/stores/cultivation'
 import { useAdventureStore } from '@/stores/adventure'
 import { useUiStore } from '@/stores/ui'
+import { useNpcStore } from '@/stores/npc'
 import { tickExploration, stopExploration } from './exploration'
 import { settleOffline, sanitizeOfflineInputs } from './offline'
 import { checkStateAchievements, rolloverDailyIfNeeded } from './progress'
@@ -19,6 +20,7 @@ import { mayTriggerEnlightenment, mayTriggerCaveEvent } from './earlyGameService
 import { settleSuppressedRegions } from './suppress'
 import { studyTick, seedLoreIfNeeded } from './loreService'
 import { flushSaveWrites } from '@/utils/storage'
+import { tickDaoluCultivation } from './daoluCultivationService'
 
 const PERIODIC_CHECK_SEC = 30
 
@@ -159,7 +161,7 @@ class GameEngine {
       if (expiring.length > 0) {
         cultivation.pruneBuffs(now)
         const names = expiring.map(b => buffDef(b.defId)?.name).filter((n): n is string => n !== undefined)
-        if (names.length > 0) useUiStore().toast(`「${names.join('、')}」已到期`, 'info')
+        if (names.length > 0) useUiStore().toast(`「${names.join(', ')}」đã hết hạn`, 'info')
       } else {
         cultivation.pruneBuffs(now)
       }
@@ -173,6 +175,10 @@ class GameEngine {
       studyTick(dt)
       // 寿元流逝
       player.addAge((dt / 3600) * AGE_YEARS_PER_HOUR)
+      // Chu kỳ thế giới (30 phút thực = 1 tháng trong game)
+      useNpcStore().advanceMonthTime(dt)
+      // Tự tu luyện thời gian thực của Đạo Lữ đồng hành
+      tickDaoluCultivation(dt)
       this.checkDeath()
     }
 
@@ -198,7 +204,7 @@ class GameEngine {
     if (!this.deathAnnounced) {
       this.deathAnnounced = true
       ui.deathDialog = true
-      ui.toast('油尽灯枯,大限已至……', 'warn')
+      ui.toast('Dầu cạn đèn tắt, đại hạn đã tới……', 'warn')
     }
   }
 

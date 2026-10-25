@@ -179,7 +179,7 @@
               :class="n <= row.owned.level ? (row.owned.level >= ARTIFACT_MAX_LEVEL ? 'bg-gold-ink' : 'bg-cinnabar/80') : 'bg-ink/6 border border-ink/15'"
             />
           </div>
-          <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ row.def.desc }}</p>
+          <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ displayArtifactDesc(row.def.desc) }}</p>
           <p class="mt-1 flex items-baseline gap-1.5 text-[11px]">
             <span class="shrink-0 rounded bg-azure/10 px-1.5 py-0.5 text-[10px] leading-relaxed text-azure">Bị động</span>
             <span class="text-azure">{{ passiveLines(row.def.id, row.owned.level).map(displayArtifactPassive).join(' · ') }}</span>
@@ -285,11 +285,21 @@
           </div>
         </div>
         <p class="mt-3 text-[12px] leading-relaxed text-ink-soft">{{ currentMaterial.desc }}</p>
+        <button
+          v-if="currentMaterial.key === 'Linh Căn Quả'"
+          class="btn-seal w-full mt-3 !bg-jade"
+          @click="materialDetail = null; fruitModalOpen = true"
+        >
+          Bồi Dưỡng Linh Căn Ngay
+        </button>
       </template>
       <template #footer>
         <button class="btn-seal w-full" @click="materialDetail = null">Đóng</button>
       </template>
     </BaseModal>
+
+    <!-- Modal Bồi Dưỡng Linh Căn -->
+    <SpiritRootFruitModal :open="fruitModalOpen" @close="fruitModalOpen = false" />
 
     <!-- 开炉炼丹 -->
     <BaseModal :open="craftOpen" title="Khai Lò Luyện Đan" wide @close="craftOpen = false">
@@ -425,7 +435,7 @@
             :checked="settings.decomposeRanks.includes(row.rank)"
             @change="toggleRank(row.rank)"
           />
-          <span class="font-kai text-[13px]" :style="{ color: row.color }">{{ row.name }}</span>
+          <span class="font-kai text-[13px]" :style="{ color: row.color }">{{ displayQualityName(row.name) }}</span>
           <span class="ml-auto tabular text-[11px] text-ink-faint">
             Hiện có {{ row.count }} món
             <template v-if="row.count > 0">· {{ row.text }}</template>
@@ -572,6 +582,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue'
   import { useRoute } from 'vue-router'
+  import SpiritRootFruitModal from '@/components/character/SpiritRootFruitModal.vue'
   import { useInventoryStore } from '@/stores/inventory'
   import { useResourcesStore } from '@/stores/resources'
   import { usePlayerStore } from '@/stores/player'
@@ -645,6 +656,7 @@
     displayCraftWeakness,
     displayQualityName,
     displayArtifactName,
+    displayArtifactDesc,
     displayArtifactActiveName,
     displayArtifactActiveDesc,
     displayArtifactLevelLabel,
@@ -875,7 +887,14 @@
     { icon: 'mountain', name: 'Huyền Thiết', desc: 'Vật liệu kiến thiết và luyện khí', value: resources.ore, full: String(resources.ore) },
     { icon: 'scroll', name: 'Tàn Trang Công Pháp', desc: 'Gom góp tàn trang có thể tham ngộ công pháp', value: resources.page, full: String(resources.page) },
     { icon: 'sparkles', name: 'Khí Linh Trần', desc: 'Bụi linh tính dùng để cường hóa trang bị', value: resources.dust, full: String(resources.dust) },
-    { icon: 'book', name: 'Điểm Ngộ Đạo', desc: 'Cần thiết cho tiến tu công pháp và luyện hóa pháp bảo', value: resources.wudao, full: String(resources.wudao) }
+    { icon: 'book', name: 'Điểm Ngộ Đạo', desc: 'Cần thiết cho tiến tu công pháp và luyện hóa pháp bảo', value: resources.wudao, full: String(resources.wudao) },
+    {
+      icon: 'sparkles',
+      name: 'Linh Căn Quả',
+      desc: 'Thiên địa linh quả bồi dưỡng tư chất linh căn. Phàm phẩm +1, Trung phẩm +5, Thượng phẩm +10. Chỉ rơi ở bí cảnh với tỉ lệ thấp.',
+      value: resources.fruitCount('mortal') + resources.fruitCount('earth') + resources.fruitCount('heaven'),
+      full: `Phàm phẩm: ${formatNum(resources.fruitCount('mortal'))} · Trung phẩm: ${formatNum(resources.fruitCount('earth'))} · Thượng phẩm: ${formatNum(resources.fruitCount('heaven'))}`
+    }
   ])
 
   /** 材料格子:含灵石一并展示,数量走 formatNum 免得格子被长数字撑破 */
@@ -907,6 +926,7 @@
   const currentPill = computed(() => (pillDetail.value ? (pillRows.value.find(r => r.def?.id === pillDetail.value) ?? null) : null))
 
   const craftOpen = ref(false)
+  const fruitModalOpen = ref(false)
 
   /** 服用后若已吃完最后一枚,顺手关掉详情——否则弹窗会停在一个不存在的丹药上 */
   function onUsePill(): void {
@@ -1124,8 +1144,8 @@
     if (!gain) return ''
     const parts = gain.passive.map(p => {
       const caveat = statCaveat(p.key)
-      const span = `${STAT_NAMES[p.key] ?? p.key} ${formatPercent(p.from)} → ${formatPercent(p.to)}`
-      return caveat ? `${span}(${caveat})` : span
+      const rawSpan = `${STAT_NAMES[p.key] ?? p.key} ${formatPercent(p.from)} → ${formatPercent(p.to)}${caveat ? ` (${caveat})` : ''}`
+      return displayArtifactPassive(rawSpan)
     })
     if (gain.active) {
       const noun = ACTIVE_NOUNS[def!.active.effect.type] ?? 'hiệu quả'

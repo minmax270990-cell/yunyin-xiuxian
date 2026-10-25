@@ -72,6 +72,9 @@ export interface BreakthroughPrepOption {
 // ============ 五行灵根 ============
 export type ElementId = 'metal' | 'wood' | 'water' | 'fire' | 'earth' | 'wind' | 'thunder' | 'ice' | 'light' | 'dark' | 'chaos'
 
+// ============ 角色基础 ============
+export type CharacterGender = 'male' | 'female'
+
 export interface SpiritRoot {
   element: ElementId
   /** 资质 30~100 */
@@ -83,6 +86,22 @@ export interface LinggenProfile {
   gradeName: string
   /** 修炼速度总倍率 */
   growthMult: number
+}
+
+// ============ 先天资质 (Tư chất) ============
+export type AptitudeCategory = 'comprehension' | 'cultivation' | 'fortune' | 'charm' | 'physique' | 'craft'
+export type AptitudeGrade = 1 | 2 | 3 | 4 | 5 | 6
+
+export interface AptitudeDef {
+  id: string
+  name: string
+  category: AptitudeCategory
+  grade: AptitudeGrade
+  desc: string
+  mods: StatMods
+  weight: number
+  /** 魅力/相遇修正 (Mị lực tăng xác suất tao ngộ & hảo cảm đạo lữ) */
+  charmBonus?: number
 }
 
 // ============ 属性系统 ============
@@ -284,6 +303,8 @@ export interface EquipmentInstance {
   note?: string
   /** 被转入过词条的次数(词条转移,议题 #22)。只增不减;智能收纳据此当作有投入。老档/未转入件为 undefined */
   transferCount?: number
+  /** Nguồn gốc trang bị: tự tìm được, tự chế tạo, được tặng, được ban thưởng hoặc đổi từ kho tông môn */
+  origin?: 'found' | 'crafted' | 'gifted' | 'rewarded' | 'vault'
 }
 
 // ============ 法宝 ============
@@ -354,6 +375,7 @@ export interface ArtifactOwned {
 
 // ============ 功法 ============
 export type GongfaType = 'main' | 'sub' | 'secret'
+export type SecretCategory = 'attack' | 'defense' | 'speed' | 'support' | 'perception' | 'special'
 
 export interface GongfaDef {
   id: string
@@ -368,6 +390,10 @@ export interface GongfaDef {
   /** 主修功法附带战斗技能 */
   skill?: { name: string; mult: number; rate: number }
   minRealm: number
+  /** Bí thuật phân loại theo chức năng */
+  secretCategory?: SecretCategory
+  /** Ngộ tính tối thiểu để lĩnh ngộ */
+  minComprehension?: number
 }
 
 // ============ 丹药 / Buff ============
@@ -1107,4 +1133,10 @@ export interface AdventureSession {
   stoneGain: GNum
   expGain: GNum
   itemGain: number
+  /** Đạo lữ đồng hành cùng xuất hành lịch luyện */
+  accompanyPartnerId?: string
+  /** Khí huyết hiện tại của Đạo lữ đồng hành trong chuyến lịch luyện (0..1) */
+  partnerHpPct?: number
+  /** Khí huyết người chơi trong chuyến lịch luyện này (0..1) */
+  playerHpPct?: number
 }

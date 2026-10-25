@@ -17,10 +17,10 @@
             {{ row.worn ? 'Đeo' : row.owned ? 'Có' : 'Chưa' }}
           </span>
           <div class="min-w-0 grow">
-            <p class="font-kai text-[13px]" :class="row.owned ? 'text-ink' : 'text-ink-faint'">{{ row.def.name }}</p>
-            <p class="truncate text-[10px] text-ink-faint">{{ row.def.desc }}</p>
+            <p class="font-kai text-[13px]" :class="row.owned ? 'text-ink' : 'text-ink-faint'">{{ displayTitleName(row.def.name) }}</p>
+            <p class="truncate text-[10px] text-ink-faint">{{ displayTitleDesc(row.def.desc) }}</p>
             <p v-if="!row.owned && row.source" class="truncate text-[10px] text-ink-faint">Nguồn gốc: {{ translateDirection(row.source) }}</p>
-            <p v-if="row.owned && row.modText" class="truncate text-[10px] text-azure tabular" :title="row.modText">{{ row.modText }}</p>
+            <p v-if="row.owned && row.modText" class="truncate text-[10px] text-azure tabular" :title="displayModsText(row.modText)">{{ displayModsText(row.modText) }}</p>
           </div>
           <button v-if="row.owned" class="btn-ghost shrink-0 !px-2.5 !py-2 !text-[11px]" @click="toggleTitle(row.def.id)">
             {{ row.worn ? 'Tháo' : 'Đeo' }}
@@ -50,7 +50,7 @@
               <span v-if="row.active" class="shrink-0 rounded bg-jade/15 px-1.5 py-0.5 text-[10px] text-jade">Đồng hành</span>
             </p>
             <p class="truncate text-[10px] text-ink-faint">{{ row.def.desc }}</p>
-            <p v-if="row.modText" class="text-[10px] text-azure tabular">{{ row.modText }}</p>
+            <p v-if="row.modText" class="text-[10px] text-azure tabular">{{ displayModsText(row.modText) }}</p>
             <!-- 性格是灵兽的"人味":它在历练里怎么表现,得让玩家看得见,而不是只看数值 -->
             <p class="text-[10px] text-violet-ink">
               {{ row.personalityName }} · <span class="text-ink-faint">{{ row.personalityDesc }}</span>
@@ -90,6 +90,7 @@
   import { petTraitText } from '@/ui/itemText'
   import { qualityDef } from '@/data/qualities'
   import { modsText } from '@/ui/statNames'
+  import { displayTitleName, displayTitleDesc, displayModsText } from '@/ui/displayZhVi'
   import type { PetDef, QualityId } from '@/types'
   import SectionTitle from '@/components/common/SectionTitle.vue'
   import InkTabs from '@/components/common/InkTabs.vue'
@@ -193,7 +194,7 @@
     const wearing = player.titleId === id
     player.setTitle(wearing ? null : id)
     // 佩戴/卸下都得有回响:顶栏只换了个名,名号还得当场说一句(与唤来灵兽对称)
-    if (def) ui.toast(wearing ? `Tháo xuống「${def.name}」—— Danh hiệu giấu mũi nhọn` : `Đeo lên「${def.name}」`, 'info')
+    if (def) ui.toast(wearing ? `Tháo xuống「${displayTitleName(def.name)}」—— Danh hiệu giấu mũi nhọn` : `Đeo lên「${displayTitleName(def.name)}」`, 'info')
   }
 
   // ---- 灵兽 ----

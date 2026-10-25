@@ -24,6 +24,65 @@ export const LIFESPAN_WARN_RATIO = 0.15
 /** 寿元低于该比例记为「寿元低位」(成就口径,较告警更危急) */
 export const LIFESPAN_CRITICAL_RATIO = 0.1
 
+// ============ Thời gian & Chu kỳ Thế Giới ============
+/** Mỗi tháng trong game tương đương 30 phút thời gian thực (1800 giây) */
+export const GAME_MONTH_REAL_SECONDS = 1800
+
+/**
+ * Giới hạn số lần tương tác định kỳ trong 1 tháng.
+ * Phân định rõ ràng theo vai trò NPC (NPC thường, Đạo lữ, v.v.).
+ */
+export const NPC_MONTHLY_LIMITS = {
+  regular: {
+    greet: 1,      // Chào hỏi: 1 lần/tháng
+    chat: 1,       // Đàm đạo: 1 lần/tháng
+    discuss: 1,    // Luận đạo: 1 lần/tháng
+    spar: 1,       // Tỉ thí / Luận kiếm: 1 lần/tháng
+    dual: 0,       // Song tu: NPC thường không thể song tu
+    gift: 1,       // Tặng quà cho NPC: 1 lần/tháng
+    npcGift: 1     // NPC chủ động tặng quà / đề xuất: 1 lần/tháng
+  },
+  daolu: {
+    greet: 1,      // Chào hỏi: 1 lần/tháng
+    chat: 3,       // Đàm đạo: 3 lần/tháng
+    discuss: 1,    // Luận đạo: 1 lần/tháng
+    spar: 1,       // Tỉ thí / Luận kiếm: 1 lần/tháng
+    dual: 1,       // Song tu: 1 lần/tháng
+    gift: 3,       // Tặng quà: 3 lần/tháng
+    npcGift: 1     // Đề xuất: 1 lần/tháng
+  },
+  mentor: {
+    greet: 1,      // Thỉnh an sư phụ: 1 lần/tháng
+    chat: 2,       // Đàm đạo: 2 lần/tháng
+    discuss: 2,    // Luận đạo / thỉnh giáo: 2 lần/tháng
+    spar: 1,       // Tỉ thí thỉnh giáo: 1 lần/tháng
+    dual: 0,       // Song tu: không
+    gift: 2,       // Dâng lễ vật: 2 lần/tháng
+    npcGift: 1     // Sư phụ ban thưởng: 1 lần/tháng
+  },
+  apprentice: {
+    greet: 1,      // Chào hỏi đồ đệ: 1 lần/tháng
+    chat: 2,       // Đàm đạo dạy dỗ: 2 lần/tháng
+    discuss: 2,    // Chỉ điểm công pháp: 2 lần/tháng
+    spar: 1,       // Khảo hạch võ công: 1 lần/tháng
+    dual: 0,       // Song tu: không
+    gift: 2,       // Ban thưởng đồ đệ: 2 lần/tháng
+    npcGift: 1     // Đồ đệ hiếu kính: 1 lần/tháng
+  },
+  sibling: {
+    greet: 1,      // Chào hỏi huynh đệ: 1 lần/tháng
+    chat: 2,       // Đàm đạo uống rượu: 2 lần/tháng
+    discuss: 2,    // Cùng nhau luận đạo: 2 lần/tháng
+    spar: 2,       // Tỉ thí luận kiếm: 2 lần/tháng
+    dual: 0,       // Song tu: không
+    gift: 2,       // Tặng quà huynh đệ: 2 lần/tháng
+    npcGift: 1     // Huynh đệ chia sẻ cơ duyên: 1 lần/tháng
+  }
+} as const
+
+export type NpcRoleType = keyof typeof NPC_MONTHLY_LIMITS
+export type NpcMonthlyInteractionType = keyof typeof NPC_MONTHLY_LIMITS.regular
+
 // ============ 修炼曲线 ============
 /** 炼气一层突破需求 */
 export const EXP_BASE = 40

@@ -90,7 +90,7 @@ export const useDongfuStore = defineStore(
       if (id === 'mansion' || !def) return def?.maxLevel ?? 0
       return Math.min(def.maxLevel, buildingLevelCap.value)
     }
-    const subGongfaSlots = computed(() => 1 + Math.floor(levels.value.library / 3))
+    const subGongfaSlots = computed(() => Math.min(8, 1 + Math.floor(levels.value.library / 3)))
     const alchemyLevel = computed(() => levels.value.alchemy)
     // 炼器台每 FORGE_LEVEL_PER_CAP 级提高强化上限 1(此前把 2 写死在业务代码里)
     const forgeCapBonus = computed(() => Math.floor(levels.value.forge / FORGE_LEVEL_PER_CAP))

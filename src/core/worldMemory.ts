@@ -181,11 +181,11 @@ export function shouldTriggerAftermath(memories: Record<string, EventMemory>, ev
 export function aftermathText(eventTitle: string, kind: 'good' | 'echo' | 'silence'): string {
   switch (kind) {
     case 'good':
-      return `${eventTitle}的痕迹依旧温存,你感到一丝久违的暖意。`
+      return `${eventTitle}余温尚存,心头微生暖意。`
     case 'echo':
-      return `${eventTitle}的余韵未散,往事如画卷般在眼前展开。`
+      return `${eventTitle}余韵未消,往事历历在目。`
     case 'silence':
-      return `${eventTitle}已然远去,只余一片寂静。`
+      return `${eventTitle}渐行渐远,归于寂静。`
   }
 }
 
@@ -231,5 +231,5 @@ export function ghostTitle(n: NemesisRecord): string {
 
 /** 残魂引导语 (战报第一行前) */
 export function ghostLeadIn(n: NemesisRecord): string {
-  return `你曾${n.lossCount}败于此,又将此敌斩于剑下。如今一道残魂再度拦路——它似乎仍记得你。`
+  return `曾${n.lossCount}败于此,终斩此獠于剑下。如今残魂再现拦路 —— 他似乎还认得你。`
 }

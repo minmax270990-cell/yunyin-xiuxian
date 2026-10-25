@@ -57,17 +57,17 @@ export function signLifeTrial(id: string): boolean {
   const def = lifeTrialDef(id)
   if (!def) return false
   if (player.reincarnation.trial) {
-    ui.toast('此生已有契在身', 'warn')
+    ui.toast('Kiếp này đã có khế ước tại thân', 'warn')
     return false
   }
   // 规则不合法则拒签:契约只许加难,这是硬约束
   if (!isPurelyAdverse(def.rules)) return false
   if (!player.spendDaoFruit(def.cost)) {
-    ui.toast('道果不足', 'warn')
+    ui.toast('Đạo quả không đủ', 'warn')
     return false
   }
   player.setLifeTrial({ trialId: def.id, at: Date.now(), paid: def.cost })
-  ui.toast(`「${def.name}」既立,此生再无回头路`, 'rare')
+  ui.toast(`「${def.name}」đã lập, kiếp này không còn đường quay đầu`, 'rare')
   return true
 }
 

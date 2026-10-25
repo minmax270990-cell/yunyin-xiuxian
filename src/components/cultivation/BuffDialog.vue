@@ -1,17 +1,17 @@
 <template>
-  <BaseModal :open="def !== undefined" :title="def?.name ?? ''" @close="close">
+  <BaseModal :open="def !== undefined" :title="def ? displayBuffName(def.name) : ''" @close="close">
     <template v-if="def">
       <p class="flex items-center gap-2">
         <span class="grid h-9 w-9 shrink-0 place-items-center rounded-md" :class="isInjury ? 'bg-cinnabar/10 text-cinnabar' : 'bg-jade/10 text-jade'">
           <GameIcon :name="def.icon" :size="17" />
         </span>
         <span>
-          <span class="block font-kai text-[14px] tracking-widest text-ink">{{ def.name }}</span>
+          <span class="block font-kai text-[14px] tracking-widest text-ink">{{ displayBuffName(def.name) }}</span>
           <span class="block text-[11px]" :class="isInjury ? 'text-cinnabar' : 'text-jade'">{{ kindText }}</span>
         </span>
       </p>
 
-      <p class="mt-2.5 text-[12px] leading-relaxed text-ink-faint">{{ def.desc }}</p>
+      <p class="mt-2.5 text-[12px] leading-relaxed text-ink-faint">{{ displayBuffDesc(def.desc) }}</p>
 
       <div class="ink-divider my-3" />
 
@@ -51,6 +51,7 @@
   import { useNow } from '@/composables/useNow'
   import { buffDef } from '@/data/buffs'
   import { STAT_NAMES, statValueText } from '@/ui/statNames'
+  import { displayBuffName, displayBuffDesc, displayArtifactPassive } from '@/ui/displayZhVi'
   import { formatCountdown, formatDuration } from '@/utils/format'
   import type { AnyStatKey } from '@/types'
   import BaseModal from '@/components/common/BaseModal.vue'
@@ -110,7 +111,13 @@
   const modRows = computed(() =>
     Object.entries(def.value?.mods ?? {}).map(([key, value]) => {
       const v = value as number
-      return { key, label: STAT_NAMES[key as AnyStatKey] ?? key, text: statValueText(key, v), good: v > 0 }
+      const rawLabel = STAT_NAMES[key as AnyStatKey] ?? key
+      return {
+        key,
+        label: displayArtifactPassive(rawLabel),
+        text: displayArtifactPassive(statValueText(key, v)),
+        good: v > 0
+      }
     })
   )
 

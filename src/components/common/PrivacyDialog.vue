@@ -3,7 +3,7 @@
     <div class="space-y-3 text-[12px] leading-relaxed">
       <section>
         <h4 class="mb-0.5 font-kai text-[13px] text-ink">I. Giới Thiệu</h4>
-        <p class="text-ink-faint">《Vân Ẩn Tu Tiên Lục》 là một trò chơi web thuần ngoại tuyến (offline). Chúng tôi tôn trọng và bảo vệ quyền riêng tư của bạn. Chính sách này giải thích cách trò chơi xử lý dữ liệu của bạn.</p>
+        <p class="text-ink-faint">《Thiên Đạo》 là một trò chơi web thuần ngoại tuyến (offline). Chúng tôi tôn trọng và bảo vệ quyền riêng tư của bạn. Chính sách này giải thích cách trò chơi xử lý dữ liệu của bạn.</p>
       </section>
       <section>
         <h4 class="mb-0.5 font-kai text-[13px] text-ink">II. Thu Thập Dữ Liệu</h4>

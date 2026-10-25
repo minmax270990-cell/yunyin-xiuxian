@@ -1,34 +1,35 @@
 /**
- * 轮回继承审计
+ * Kiểm tra việc kế thừa qua luân hồi
  *
- * 起因是玩家反馈「轮回次数太多没有意义」。诊断指向一件事:
- * 轮回若不制造代价,就退化成「存档继承后重新跑一遍」的 New Game+。
+ * Xuất phát từ phản hồi của người chơi: "Số lần luân hồi quá nhiều nhưng không có ý nghĩa". Chẩn đoán chỉ ra một điều:
+ * Nếu luân hồi không tạo ra cái giá phải trả, nó sẽ thoái hóa thành New Game+ theo kiểu "kế thừa bản lưu rồi chạy lại từ đầu".
  *
- * 本模块只做度量,不改任何数值——先把「玩家轮回一次后到底还需要重新经历多少」
- * 量化出来,再谈砍什么。
+ * Mô-đun này chỉ thực hiện đo lường, không thay đổi bất kỳ chỉ số nào —— trước hết lượng hóa
+ * "sau khi người chơi luân hồi một đời thì rốt cuộc còn cần phải trải nghiệm lại bao nhiêu",
+ * sau đó mới bàn đến việc cắt giảm những gì.
  *
- * 核心原则(拿来当判据用):**保留「我是谁」,重置「我现在拥有多少」。**
- *   遗产(应继承)= 记忆 / 精神 / 灵魂:认知与丹方、履历与成就、道果与天赋与宿慧、
- *     称号(荣誉)、师承(道统)、道源与道痕、世界记忆(镇压资格/宿敌/机缘选择)
- *   状态(应重建)= 皮囊 / 外物:境界与修为、灵石与灵材、装备与法宝、丹药、
- *     灵兽、洞府建筑、灵脉投资、区域进度、本世之界、进行中的秘境/事件、连胜
+ * Nguyên tắc cốt lõi (dùng làm tiêu chí phán đoán): **Giữ lại "ta là ai", đặt lại "ta hiện có bao nhiêu".**
+ *   Di sản được kế thừa (nên kế thừa) = Ký ức / Tinh thần / Linh hồn: Nhận thức và đan phương, lý lịch và thành tựu, Đạo quả và thiên phú cùng túc tuệ,
+ *     Danh hiệu (vinh dự), Sư thừa (đạo thống), Đạo nguyên và đạo ngân, Ký ức thế giới (tư cách trấn áp / kẻ thù truyền kiếp / lựa chọn cơ duyên)
+ *   Trạng thái (nên xây dựng lại) = Thể xác / Ngoại vật: Cảnh giới và tu vi, linh thạch và linh tài, trang bị và pháp bảo, đan dược,
+ *     linh thú, công trình động phủ, đầu tư linh mạch, tiến độ khu vực, giới vực kiếp này, bí cảnh/sự kiện đang diễn ra, chuỗi thắng
  *
- * 本清单要求**最小完备**:凡有跨世去留的功能都必须在此登记一行(见 samsaraAudit.spec
- * 的「覆盖度」一条),既不留半截状态,也不漏掉一个子系统。
+ * Danh sách này yêu cầu **tối thiểu đầy đủ**: Bất kỳ tính năng nào có quyết định giữ lại hay đặt lại qua các đời đều phải đăng ký một dòng tại đây (xem samsaraAudit.spec
+ * mục "độ bao phủ"), không để lại trạng thái dở dang, cũng không bỏ sót bất kỳ hệ thống con nào.
  *
- * 关键读数不是「出生战力继承了多少」——境界从真仙掉回炼气,出生战力必然极低。
- * 真正决定轮回有无意义的是 **追平时间**:第 N 世重修回上一世终点要花多久。
- * 若第 10 世只需第 1 世的零头,那这一世就没有「重新经历」可言。
+ * Chỉ số đo lường then chốt không phải là "chiến lực lúc sinh ra kế thừa được bao nhiêu" —— cảnh giới từ Chân Tiên rơi về Luyện Khí, chiến lực xuất sinh tất nhiên cực thấp.
+ * Điều thực sự quyết định luân hồi có ý nghĩa hay không là **Thời gian đuổi kịp**: Đời thứ N cần bao lâu để tu luyện lại đến điểm kết thúc của đời trước.
+ * Nếu đời thứ 10 chỉ tốn một phần nhỏ của đời thứ 1, thì đời đó coi như không còn gì gọi là "trải nghiệm lại".
  *
- * ⚠ 口径警告(saveCalibration 用真实存档验出):
- * 本模块的 hoursToPeakAt 建立在 progressionSim 之上,而后者**高估约 100~400 倍**——
- * 它算的是「纯修为累积需要多少秒」,真实玩家的修为绝大部分来自战斗、事件、
- * 丹药与离线收益。且它假设「每世都修满真仙」,而实测玩家在元婴到合体之间就转世。
+ * ⚠ Cảnh báo quy chuẩn (saveCalibration đã kiểm chứng bằng bản lưu thực tế):
+ * hoursToPeakAt của mô-đun này được xây dựng trên progressionSim, mà progressionSim lại **được ước tính cao hơn khoảng 100~400 lần** ——
+ * nó tính toán "cần bao nhiêu giây để thuần túy tích lũy tu vi", trong khi tu vi thực tế của người chơi phần lớn đến từ chiến đấu, sự kiện,
+ * đan dược và lợi ích ngoại tuyến. Đồng thời nó giả định "mỗi đời đều tu đầy Chân Tiên", trong khi người chơi thực tế chuyển thế trong khoảng Nguyên Anh đến Hợp Thể.
  *
- * 因此:**比值可用,绝对值不可用**。
- *   可信:第 N 世 ÷ 第 1 世、兑现度、边际收益——偏差是同一系数,做除法时约掉
- *   作废:任何「第 N 世需要 X 小时」的读数
- * 引用本模块出绝对时长的结论前,先看 saveCalibration.spec.ts
+ * Do đó: **Tỷ lệ có thể dùng, giá trị tuyệt đối không thể dùng.**
+ *   Đáng tin cậy: Đời thứ N ÷ Đời thứ 1, mức độ hiện thực hóa, lợi ích biên —— sai số cùng một hệ số, khi chia sẽ bị triệt tiêu
+ *   Không dùng: Bất kỳ kết quả nào ghi "Đời thứ N cần X giờ"
+ * Trước khi trích dẫn kết luận về thời lượng tuyệt đối từ mô-đun này, hãy xem saveCalibration.spec.ts trước.
  */
 import { DAO_FRUIT_COMBAT_BONUS, TALENT_DRAW_DIV } from '@/data/constants'
 import { TALENTS } from '@/data/talents'
@@ -38,49 +39,49 @@ import { daoFruitGain } from './formulas'
 import { effectiveDaoFruit } from './statsCalc'
 import { hoursToReach, type SimAssumptions } from './progressionSim'
 
-/** 继承方式 */
+/** Phương thức kế thừa */
 export type HeritageMode = 'full' | 'partial' | 'reset'
 
 export interface HeritageRow {
   id: string
   name: string
   mode: HeritageMode
-  /** 代码中的实际处理(核实过,非设计文档口径) */
+  /** Xử lý thực tế trong mã nguồn (đã kiểm chứng, không theo tài liệu thiết kế) */
   detail: string
-  /** 属于「遗产」(我是谁)还是「状态」(我拥有多少) */
+  /** Thuộc về "Di sản" (ta là ai) hay "Trạng thái" (ta sở hữu bao nhiêu) */
   kind: 'legacy' | 'state'
-  /** 对战力的直接贡献:none / low / mid / high */
+  /** Đóng góp trực tiếp vào chiến lực: none / low / mid / high */
   power: 'none' | 'low' | 'mid' | 'high'
-  /** 是否压缩下一世的成长空间——这一列才是要盯的 */
+  /** Có thu hẹp không gian tăng trưởng của đời kế tiếp hay không —— cột này mới là trọng tâm cần theo dõi */
   compressesGrowth: boolean
 }
 
 /**
- * 当前实际的继承清单。
- * 逐条对照 confirmReincarnation 核实,不采信设计文档或记忆
+ * Danh sách kế thừa thực tế hiện tại.
+ * Đối chiếu xác thực từng mục với confirmReincarnation, không dựa vào tài liệu thiết kế hay ký ức.
  */
 export const HERITAGE: HeritageRow[] = [
   {
     id: 'realm',
-    name: '境界与修为',
+    name: 'Cảnh giới và tu vi',
     mode: 'reset',
-    detail: 'rebirth() 将 major/sub/exp 归零,年龄回到 START_AGE',
+    detail: 'rebirth() đưa major/sub/exp về 0, tuổi trở lại START_AGE',
     kind: 'state',
     power: 'high',
     compressesGrowth: false
   },
   {
     id: 'equipment',
-    name: '装备',
+    name: 'Trang bị',
     mode: 'reset',
-    detail: 'items = [] 且 equipped = {},佩戴与行囊一并清空',
+    detail: 'items = [] và equipped = {}, trang bị trên thân và hành trang cùng xóa sạch',
     kind: 'state',
     power: 'high',
     compressesGrowth: false
   },
   {
     id: 'pills',
-    name: '丹药',
+    name: 'Đan dược',
     mode: 'reset',
     detail: 'pills = {}',
     kind: 'state',
@@ -89,342 +90,342 @@ export const HERITAGE: HeritageRow[] = [
   },
   {
     id: 'artifacts',
-    name: '法宝',
+    name: 'Pháp bảo',
     mode: 'reset',
-    detail: 'artifacts = [] 且 equippedArtifacts = []',
+    detail: 'artifacts = [] và equippedArtifacts = []',
     kind: 'state',
     power: 'high',
     compressesGrowth: false
   },
   {
     id: 'materials',
-    name: '材料与灵石',
+    name: 'Nguyên liệu và linh thạch',
     mode: 'reset',
-    detail: 'spiritStone/qi/wudao/herb/ore/page/dust 全部归零',
+    detail: 'spiritStone/qi/wudao/herb/ore/page/dust toàn bộ đặt về không',
     kind: 'state',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'regions',
-    name: '区域进度',
+    name: 'Tiến độ khu vực',
     mode: 'reset',
-    detail: 'unlocked 退回 qingyun,cleared 清空',
+    detail: 'unlocked lùi về qingyun, cleared xóa sạch',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'buildings',
-    name: '洞府建筑',
+    name: 'Công trình động phủ',
     mode: 'reset',
-    detail: 'dongfu.resetForRebirth() 将每座建筑等级归零 —— 屋舍是外物,随皮囊散去',
+    detail: 'dongfu.resetForRebirth() đưa cấp mỗi công trình về 0 —— nhà cửa là ngoại vật, tan biến cùng thể xác',
     kind: 'state',
     power: 'mid',
     compressesGrowth: false
   },
   {
     id: 'gongfa',
-    name: '功法',
+    name: 'Công pháp',
     mode: 'partial',
-    detail: '记得哪些功法(门类)是记忆,留下;练到几层是修为进度,归零回一层;顶阶宿慧可留一门满层',
+    detail: 'Nhớ những công pháp (môn loại) nào là ký ức, giữ lại; luyện tới tầng mấy là tiến độ tu vi, đặt về không trở lại tầng 1; túc tuệ đỉnh giai có thể giữ lại một môn mãn tầng',
     kind: 'state',
     power: 'high',
     compressesGrowth: true
   },
   {
     id: 'daoFruit',
-    name: '道果',
+    name: 'Đạo quả',
     mode: 'full',
-    detail: `每世凝 ${daoFruitGain(REBIRTH_REFERENCE_MAJOR, 9)} 枚(修满人间界并飞升真仙口径),永不清零`,
+    detail: `Mỗi đời ngưng tụ ${daoFruitGain(REBIRTH_REFERENCE_MAJOR, 9)} quả (tu đầy nhân gian giới và phi thăng Chân Tiên), vĩnh viễn không đặt về không`,
     kind: 'legacy',
     power: 'high',
     compressesGrowth: true
   },
   {
     id: 'talents',
-    name: '先天之姿',
+    name: 'Tư chất tiên thiên',
     mode: 'full',
-    detail: `每世得 1 + major/${TALENT_DRAW_DIV} 项,共 ${TALENTS.length} 项可集齐`,
+    detail: `Mỗi đời nhận 1 + major/${TALENT_DRAW_DIV} mục, tổng cộng ${TALENTS.length} mục có thể thu thập đủ`,
     kind: 'legacy',
     power: 'high',
     compressesGrowth: true
   },
   {
     id: 'heritage',
-    name: '宿命传承',
+    name: 'Túc mệnh truyền thừa',
     mode: 'full',
-    detail: 'reincarnation.heritage 随神魂不灭,跨世不清零;每世至多锻造最深一道未入门槛(见 core/heritageForge),重复锻造被忽略',
+    detail: 'reincarnation.heritage cùng thần hồn bất diệt, qua các đời không đặt về không; mỗi đời tối đa trui rèn một ngưỡng sâu nhất chưa nhập môn (xem core/heritageForge), trui rèn trùng lặp bị bỏ qua',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'insight',
-    name: '宿慧',
+    name: 'Túc tuệ',
     mode: 'full',
-    detail: '决定阶位,影响功法保留档与认知补齐量;不直接给战力',
+    detail: 'Quyết định giai vị, ảnh hưởng mức giữ lại công pháp và lượng bù đắp nhận thức; không trực tiếp tăng chiến lực',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: true
   },
   {
     id: 'title',
-    name: '称号',
+    name: 'Danh hiệu',
     mode: 'full',
-    detail: 'rebirth() 未重置 titleId,称号 mods 直接带入下一世',
+    detail: 'rebirth() không đặt lại titleId, mods danh hiệu trực tiếp mang vào đời sau',
     kind: 'state',
     power: 'mid',
     compressesGrowth: true
   },
   {
     id: 'pet',
-    name: '灵兽',
+    name: 'Linh thú',
     mode: 'reset',
-    detail: 'rebirth() 调 setPet(null) —— 灵兽是相伴的外物,下一世要与新的灵兽相识',
+    detail: 'rebirth() gọi setPet(null) —— linh thú là ngoại vật đồng hành, đời sau sẽ làm quen với linh thú mới',
     kind: 'state',
     power: 'mid',
     compressesGrowth: false
   },
   {
     id: 'mentor',
-    name: '师承',
+    name: 'Sư thừa',
     mode: 'full',
-    detail: 'rebirth() 未重置 mentor,师承 mods 直接带入下一世',
+    detail: 'rebirth() không đặt lại mentor, mods sư thừa trực tiếp mang vào đời sau',
     kind: 'state',
     power: 'mid',
     compressesGrowth: true
   },
   {
     id: 'veins',
-    name: '灵脉投资',
+    name: 'Đầu tư linh mạch',
     mode: 'reset',
-    detail: 'dongfu.resetForRebirth() 清空 veinPoints/veinMain —— 灵脉投资是外物,每世从零重投(旧稿曾满投封顶后跨世保留)',
+    detail: 'dongfu.resetForRebirth() xóa sạch veinPoints/veinMain —— đầu tư linh mạch là ngoại vật, mỗi đời đầu tư lại từ đầu (bản thảo cũ từng cho phép giữ lại qua các đời sau khi đầu tư đầy)',
     kind: 'state',
     power: 'mid',
     compressesGrowth: false
   },
   {
     id: 'lore',
-    name: '认知(丹方/药性/器纹/敌手)',
+    name: 'Nhận thức (Đan phương/Dược tính/Khí văn/Địch thủ)',
     mode: 'full',
-    detail: 'lore store 整体不清,另按宿慧阶位 carryLore 补齐',
+    detail: 'lore store toàn bộ không xóa, ngoài ra căn cứ theo giai vị túc tuệ carryLore bù đắp',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'quests',
-    name: '成就与图鉴',
+    name: 'Thành tựu và đồ giám',
     mode: 'full',
-    detail: 'quests store 不参与轮回重置',
+    detail: 'quests store không tham gia đặt lại luân hồi',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'endgame',
-    name: '道源与道痕',
+    name: 'Đạo nguyên và đạo ngân',
     mode: 'partial',
-    detail: 'onRebirth 只归还道途,道源/道痕/纪录随神魂不灭',
+    detail: 'onRebirth chỉ hoàn trả đạo đồ, đạo nguyên/đạo ngân/kỷ lục cùng thần hồn bất diệt',
     kind: 'legacy',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'suppress',
-    name: '区域镇压与宿敌',
+    name: 'Trấn áp khu vực và kẻ thù truyền kiếp',
     mode: 'partial',
     detail:
-      '镇压收益与资格是「我拥有多少」:旧世压下的远境若跨世,新世炼气仍按旧阶位派发高阶装备/灵石,数值当场爆炸(玩家实报)。故 rebirth() 清空 suppressedRegions/suppressedSince/suppressQualified —— 妖气复聚、回到历练地;sanitize 还兜「修复前已转世的老档」同款(清掉 minRealm>当前境界的残留)。regionStats 战绩与 nemeses 宿敌仍随神魂不灭(「世界记得你」的叙事与石碑不丢)',
+      'Lợi ích trấn áp và tư cách là "ta sở hữu bao nhiêu": Vùng xa kiếp trước trấn áp nếu qua đời, kiếp mới Luyện Khí vẫn nhận trang bị/linh thạch bậc cao, chỉ số nổ tung ngay tại chỗ (người chơi phản ánh thực tế). Do đó rebirth() xóa sạch suppressedRegions/suppressedSince/suppressQualified —— yêu khí tụ lại, trở về nơi lịch luyện; sanitize cũng đỡ cho các save cũ đã chuyển thế trước khi sửa (xóa sạch tàn dư có minRealm > cảnh giới hiện tại). Chiến tích regionStats và kẻ thù truyền kiếp nemeses vẫn cùng thần hồn bất diệt (lời tự sự "thế giới ghi nhớ bạn" và bia đá không mất)',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
-  // ---- 补全:此前未被清单收录、却同样有跨世去留的功能 ----
+  // ---- Bổ sung: Các tính năng trước đây chưa được đưa vào danh sách nhưng cũng có quyết định giữ/bỏ qua các đời ----
   {
     id: 'secretRealm',
-    name: '短期秘境',
+    name: 'Bí cảnh ngắn hạn',
     mode: 'reset',
-    detail: 'player.rebirth() 置 secretRealm=null —— 进行中的一次性内容随本世结束',
+    detail: 'player.rebirth() đặt secretRealm=null —— nội dung dùng một lần đang diễn ra kết thúc cùng kiếp này',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'regionEvent',
-    name: '区域动态事件',
+    name: 'Sự kiện động khu vực',
     mode: 'reset',
-    detail: 'player.rebirth() 置 regionEvent=null(临时异象不该跨世)',
+    detail: 'player.rebirth() đặt regionEvent=null (dị tượng tạm thời không nên truyền qua đời sau)',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'mortalWorld',
-    name: '本世之界',
+    name: 'Giới vực kiếp này',
     mode: 'reset',
-    detail: 'rerollMortalWorld() 每世换一方天地(与上一世去重)',
+    detail: 'rerollMortalWorld() mỗi đời đổi một phương thiên địa (không trùng với kiếp trước)',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'fortuneMemory',
-    name: '机缘与际遇记忆',
+    name: 'Ký ức cơ duyên và tao ngộ',
     mode: 'full',
-    detail: 'fortuneChoices / eventChains / eventMemories 不清 —— 「世界记得你的选择」',
+    detail: 'fortuneChoices / eventChains / eventMemories không xóa —— "Thế giới ghi nhớ lựa chọn của bạn"',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'bonds',
-    name: '道友',
+    name: 'Đạo hữu',
     mode: 'partial',
-    detail: '关系归档入履历(archiveBond),人不留下;留的是曾同行这件事',
+    detail: 'Quan hệ lưu vào lý lịch (archiveBond), người không giữ lại; giữ lại là việc đã từng đồng hành',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'trial',
-    name: '逆旅契',
+    name: 'Nghịch Lữ Khế',
     mode: 'reset',
-    detail: '契随皮囊散去,下一世要签得重新花道果(setLifeTrial(null))',
+    detail: 'Khế ước tiêu tán cùng thể xác, kiếp sau muốn ký phải tiêu hao lại Đạo quả (setLifeTrial(null))',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'streak',
-    name: '连胜与当日巡游',
+    name: 'Chuỗi thắng và tuần du trong ngày',
     mode: 'reset',
-    detail: 'winStreak / lastCaveEventDay 归零 —— 属「这一世」的当下进度',
+    detail: 'winStreak / lastCaveEventDay đặt về không —— thuộc tiến độ hiện tại của "kiếp này"',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'linggen',
-    name: '灵根',
+    name: 'Linh căn',
     mode: 'reset',
-    detail: 'rebirth() 重掷灵根;资质地板随宿慧上浮(aptitudeFloorNow)',
+    detail: 'rebirth() gieo lại linh căn; sàn tư chất tăng dần theo túc tuệ (aptitudeFloorNow)',
     kind: 'state',
     power: 'high',
     compressesGrowth: false
   },
-  // ---- 补全(Phase 34.8):本轮新加的三处状态与一处身份,此前清单里没有 ----
+  // ---- Bổ sung: Các trạng thái và thân phận được thêm vào sau ----
   {
     id: 'divination',
-    name: '问卦所得之卦',
+    name: 'Quẻ bói khi vấn quẻ',
     mode: 'reset',
-    detail: 'rebirth() 置 divination=null —— 卦是「此一时的时机」,不是「我是谁」',
+    detail: 'rebirth() đặt divination=null —— quẻ là "thời cơ tại thời điểm này", không phải "ta là ai"',
     kind: 'state',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'breakthroughPrep',
-    name: '突破准备(静坐/聚气丹)',
+    name: 'Chuẩn bị phá cảnh (Tọa thiền/Tụ Khí Đan)',
     mode: 'reset',
-    detail: 'rebirth() 置 breakthroughPrep=null —— 下一世要重新备;未用完的一次性加成也不跨世',
+    detail: 'rebirth() đặt breakthroughPrep=null —— kiếp sau phải chuẩn bị lại; gia thành một lần chưa dùng hết cũng không qua đời',
     kind: 'state',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'wudaoExchange',
-    name: '悟道兑换(灵石→悟道点的当日限次出口)',
+    name: 'Đổi ngộ đạo (Linh thạch → điểm ngộ đạo hạn mức trong ngày)',
     mode: 'full',
-    detail: '日账不入世:gameDay 相合才计入当日,次日自动重置;转世不清 — 否则同游戏日转世会重开每日兑换配额',
+    detail: 'Sổ sách ngày không tính theo kiếp: đúng gameDay mới tính vào ngày hôm đó, ngày hôm sau tự động đặt lại; chuyển thế không xóa — nếu không trong cùng một ngày chuyển thế sẽ làm mới hạn ngạch đổi',
     kind: 'state',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'mansionRedirect',
-    name: '星象值日定向(今日所利界域的战术覆盖)',
+    name: 'Định hướng tinh tượng trực nhật (Bảo bọc chiến thuật cho giới vực có lợi hôm nay)',
     mode: 'full',
-    detail: '日账不入世:gameDay 相合才生效,次日自动回落到天数派生;转世不清 — 否则同游戏日转世会重开当日改向配额',
+    detail: 'Sổ sách ngày không tính theo kiếp: đúng gameDay mới có hiệu lực, ngày hôm sau tự động trở về suy diễn số ngày; chuyển thế không xóa — nếu không trong cùng một ngày chuyển thế sẽ làm mới hạn ngạch đổi hướng',
     kind: 'state',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'fateFocus',
-    name: '命格点化主星(择一主星显化)',
+    name: 'Điểm hóa chủ tinh mệnh cách (Chọn một chủ tinh hiển hóa)',
     mode: 'reset',
-    detail: 'rebirth() 置 fateFocus=null —— 点化是「这一世侧重哪一路」的选择,位随盘转:转世命盘重排,点化随之散去',
+    detail: 'rebirth() đặt fateFocus=null —— điểm hóa là lựa chọn "kiếp này nghiêng về hướng nào", vị trí chuyển theo bàn: chuyển thế sắp xếp lại mệnh bàn, điểm hóa theo đó tiêu tán',
     kind: 'state',
     power: 'low',
     compressesGrowth: false
   },
   {
     id: 'enlightenmentAt',
-    name: '悟道频次(顿悟冷却)',
+    name: 'Tần suất ngộ đạo (Hồi chiêu đốn ngộ)',
     mode: 'full',
-    detail: 'enlightenmentAt 不随转世清零 —— 它是频次闸不是本世进度;清了就能靠转世刷顿悟',
+    detail: 'enlightenmentAt không đặt về không khi chuyển thế —— nó là van tần suất chứ không phải tiến độ kiếp này; nếu xóa thì có thể lợi dụng chuyển thế để cày đốn ngộ',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'name',
-    name: '道号',
+    name: 'Đạo hiệu',
     mode: 'reset',
-    detail: 'rebirth() 每世重掷新道号 —— 神魂不灭带走的是所知所历,不是名号;新的皮囊换新的名(见 stores/player.rebirth)',
+    detail: 'rebirth() mỗi đời gieo đạo hiệu mới —— thần hồn bất diệt mang theo sở tri sở lịch, không phải danh hiệu; thể xác mới đổi tên mới (xem stores/player.rebirth)',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'reincarnationCount',
-    name: '转世次数',
+    name: 'Số lần luân hồi',
     mode: 'full',
-    detail: 'reincarnation.count 只增不减 —— 每世道果与天赋的发放都按它计',
+    detail: 'reincarnation.count chỉ tăng không giảm —— phát Đạo quả và thiên phú mỗi đời đều tính theo nó',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: true
   },
   {
     id: 'lives',
-    name: '历世履历',
+    name: 'Lý lịch các đời',
     mode: 'full',
-    detail: 'confirmReincarnation 里 recordLife 逐世归档,只增不改(修仙录据此成书)',
+    detail: 'recordLife trong confirmReincarnation lưu trữ từng đời, chỉ tăng không sửa (Tu Tiên Lục căn cứ vào đó viết thành sách)',
     kind: 'legacy',
     power: 'none',
     compressesGrowth: false
   },
   {
     id: 'vow',
-    name: '本世命题',
+    name: 'Đề tài kiếp này',
     mode: 'reset',
-    detail: 'beginLife() 每世重立;上一世的题只入履历与宿慧,不再参与本世结算',
+    detail: 'beginLife() mỗi đời lập lại; đề tài kiếp trước chỉ lưu vào lý lịch và túc tuệ, không tham gia kết toán kiếp này nữa',
     kind: 'state',
     power: 'none',
     compressesGrowth: false
   }
 ]
 
-// ---------------- 跨世永久量的累积 ----------------
+// ---------------- Sự tích lũy các đại lượng vĩnh viễn qua các đời ----------------
 
 export interface HeritageGroup {
   mode: HeritageMode
-  /** 界面用语:这一组是「带走」还是「放下」 */
+  /** Ngôn ngữ giao diện: Nhóm này là "mang đi" hay "buông xuống" */
   title: string
   rows: HeritageRow[]
 }
 
 /**
- * 按去留分组的继承清单 —— 界面(轮回结算)与审计共用同一份,
- * 保证玩家看到的「带走/放下」与代码实际交割不会分叉。
+ * Danh sách kế thừa được phân nhóm theo giữ/bỏ —— giao diện (kết toán luân hồi) và kiểm toán cùng dùng một bản,
+ * đảm bảo thông tin "mang đi / buông xuống" người chơi nhìn thấy không bị phân nhánh so với thực tế bàn giao trong mã nguồn.
  */
 export function heritageGroups(): HeritageGroup[] {
   const titles: Record<HeritageMode, string> = {
-    full: '随神魂带走',
-    partial: '折损带走',
-    reset: '随皮囊放下'
+    full: 'Theo thần hồn mang đi',
+    partial: 'Chiết tổn mang đi',
+    reset: 'Theo thể xác buông xuống'
   }
   return (['full', 'partial', 'reset'] as const).map(mode => ({
     mode,
@@ -433,28 +434,28 @@ export function heritageGroups(): HeritageGroup[] {
   }))
 }
 
-/** 修满人间界并飞升真仙再转世时,每世凝得的道果 */
+/** Số Đạo quả ngưng tụ được mỗi đời khi tu đầy nhân gian giới, phi thăng Chân Tiên rồi mới chuyển thế */
 export const FRUIT_PER_LIFE = daoFruitGain(REBIRTH_REFERENCE_MAJOR, 9)
 
-/** 走完 n 世后累积的道果总数 */
+/** Tổng số Đạo quả tích lũy sau khi đi qua n đời */
 export function daoFruitAfterLives(lives: number): number {
   return Math.max(0, lives) * FRUIT_PER_LIFE
 }
 
-/** 走完 n 世后持有的天赋数(每世 1 + major/DIV,封顶于天赋总数) */
+/** Số lượng thiên phú nắm giữ sau khi đi qua n đời (mỗi đời 1 + major/DIV, chặn trần ở tổng số thiên phú) */
 export function talentsAfterLives(lives: number): number {
   const perLife = 1 + Math.floor(REBIRTH_REFERENCE_MAJOR / TALENT_DRAW_DIV)
   return Math.min(TALENTS.length, Math.max(0, lives) * perLife)
 }
 
-/** 天赋按数量估算的修速加成(取全集平均值线性外推) */
+/** Gia thành tốc độ tu luyện ước tính theo số lượng thiên phú (lấy trung bình toàn tập ngoại suy tuyến tính) */
 export function talentCultBonusAt(lives: number): number {
   const total = TALENTS.reduce((sum, t) => sum + (t.mods.cultivationSpeed ?? 0), 0)
   const avg = TALENTS.length > 0 ? total / TALENTS.length : 0
   return avg * talentsAfterLives(lives)
 }
 
-/** 天赋按数量估算的战力加成(攻击向,同上口径) */
+/** Gia thành chiến lực ước tính theo số lượng thiên phú (hướng tấn công, cùng quy chuẩn trên) */
 export function talentPowerBonusAt(lives: number): number {
   const total = TALENTS.reduce((sum, t) => sum + modSum(t.mods), 0)
   const avg = TALENTS.length > 0 ? total / TALENTS.length : 0
@@ -470,38 +471,38 @@ function modSum(mods: StatMods): number {
   return sum
 }
 
-/** 第 n 世出生时携带的永久战力乘数(道果 + 天赋) */
+/** Hệ số nhân chiến lực vĩnh viễn mang theo khi sinh ra ở đời thứ n (Đạo quả + Thiên phú) */
 export function permanentPowerMultAt(lives: number): number {
   const fruit = effectiveDaoFruit(daoFruitAfterLives(lives)) * DAO_FRUIT_COMBAT_BONUS
   return 1 + fruit + talentPowerBonusAt(lives)
 }
 
-// ---------------- 追平时间:轮回是否还有「重新经历」 ----------------
+// ---------------- Thời gian đuổi kịp: Luân hồi còn lại bao nhiêu "trải nghiệm lại" ----------------
 
 export interface PaceRow {
-  /** 第几世(1 = 第一世) */
+  /** Đời thứ mấy (1 = Đời đầu tiên) */
   life: number
   daoFruit: number
   talents: number
-  /** 该世从零修到真仙所需小时 */
+  /** Số giờ cần để đời này tu từ số không lên Chân Tiên */
   hoursToPeak: number
-  /** 相对第一世的耗时比例 */
+  /** Tỷ lệ thời gian so với đời đầu tiên */
   vsFirstLife: number
-  /** 该世出生时携带的永久战力乘数 */
+  /** Hệ số nhân chiến lực vĩnh viễn mang theo khi sinh ra ở đời này */
   permanentMult: number
 }
 
 /**
- * 第 n 世的修行假设:灵根取典型值,天赋按已积累量折算。
- * 灵脉不再计入 —— 地脉是外物,每世从零重投(见 HERITAGE 的 veins 一行)。
+ * Giả định tu hành ở đời thứ n: Linh căn lấy giá trị điển hình, thiên phú quy đổi theo lượng đã tích lũy.
+ * Linh mạch không còn được tính vào —— địa mạch là ngoại vật, mỗi đời đầu tư lại từ đầu (xem dòng veins trong HERITAGE).
  */
 function assumptionsAt(lives: number): SimAssumptions {
   return { linggenMult: 1.6, talentCultBonus: talentCultBonusAt(lives - 1) }
 }
 
 /**
- * 第 n 世从炼气修到真仙所需小时。
- * 道果与天赋都按「上一世结束时」的存量计——这一世出生就带着它们
+ * Số giờ cần để đời thứ n tu từ Luyện Khí lên Chân Tiên.
+ * Đạo quả và thiên phú đều tính theo tồn lượng "ở thời điểm kết thúc đời trước" —— đời này sinh ra đã mang theo chúng.
  */
 export function hoursToPeakAt(lives: number): number {
   return hoursToReach(REBIRTH_REFERENCE_MAJOR, daoFruitAfterLives(lives - 1), assumptionsAt(lives))
@@ -522,16 +523,16 @@ export function pacePerLife(lifeList: number[]): PaceRow[] {
   })
 }
 
-// ---------------- 汇总判据 ----------------
+// ---------------- Tổng hợp tiêu chuẩn đánh giá ----------------
 
 export interface HeritageSummary {
-  /** 完整继承的条目数 */
+  /** Số lượng mục kế thừa đầy đủ */
   fullCount: number
   partialCount: number
   resetCount: number
-  /** 压缩下一世成长空间的条目 */
+  /** Các mục làm thu hẹp không gian tăng trưởng của đời kế tiếp */
   compressing: HeritageRow[]
-  /** 属于「状态」却被完整继承的——违反「重置我拥有多少」原则 */
+  /** Các mục thuộc nhóm "Trạng thái" nhưng lại được kế thừa đầy đủ —— vi phạm nguyên tắc "đặt lại những gì ta hiện có" */
   stateButFull: HeritageRow[]
 }
 

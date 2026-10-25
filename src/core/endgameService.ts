@@ -57,11 +57,11 @@ export function chooseDaoPath(id: DaoPathId): boolean {
   const def = daoPathDef(id)
   if (!def) return false
   if (!endgame.chooseDao(id)) {
-    ui.toast('此生道途已定,来世方可另择', 'warn')
+    ui.toast('Kiếp này Đạo đồ đã định, kiếp sau mới có thể chọn lại', 'warn')
     return false
   }
   recordMilestone('first_dao')
-  ui.toast(`你于天穹之下立誓——此生行${def.name}`, 'rare')
+  ui.toast(`Ngươi dưới vòm trời lập lời thề —— Kiếp này tu hành ${def.name}`, 'rare')
   return true
 }
 
@@ -77,14 +77,14 @@ export function furnaceConvert(rate: FurnaceRate): number {
   const have = rate.resource === 'herb' ? resources.herbMeltable : resources[rate.resource]
   const daoSource = Math.floor(have / rate.per)
   if (daoSource <= 0) {
-    ui.toast(`${rate.name}不足 ${rate.per},不够熔铸一缕道源`, 'warn')
+    ui.toast(`${rate.name} không đủ ${rate.per}, chưa đủ để luyện đúc một sợi Đạo nguyên`, 'warn')
     return 0
   }
   const spent = daoSource * rate.per
   const ok = rate.resource === 'herb' ? resources.spendHerbMeltable(spent) : resources.spendSmall(rate.resource, spent)
   if (!ok) return 0
   endgame.addDaoSource(daoSource)
-  ui.toast(`${rate.name}×${spent} 熔作道源 +${daoSource}`, 'success')
+  ui.toast(`${rate.name} × ${spent} luyện thành Đạo nguyên +${daoSource}`, 'success')
   return daoSource
 }
 
@@ -108,11 +108,11 @@ export function furnaceConvertStone(): boolean {
   const ui = useUiStore()
   const cost = furnaceStoneCost()
   if (!resources.spendStone(cost)) {
-    ui.toast('灵石不足', 'warn')
+    ui.toast('Linh thạch không đủ', 'warn')
     return false
   }
   endgame.addDaoSource(FURNACE_STONE_DAO_SOURCE)
-  ui.toast(`灵石 ${formatGN(cost)} 熔作道源 +${FURNACE_STONE_DAO_SOURCE}`, 'success')
+  ui.toast(`Linh thạch ${formatGN(cost)} luyện thành Đạo nguyên +${FURNACE_STONE_DAO_SOURCE}`, 'success')
   return true
 }
 
@@ -122,7 +122,7 @@ export function condenseDaoFruit(): boolean {
   const player = usePlayerStore()
   const ui = useUiStore()
   if (!endgame.spendDaoSource(DAO_SOURCE_PER_FRUIT)) {
-    ui.toast(`道源不足 ${DAO_SOURCE_PER_FRUIT}`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${DAO_SOURCE_PER_FRUIT}`, 'warn')
     return false
   }
   player.addDaoFruit(1)
@@ -131,8 +131,8 @@ export function condenseDaoFruit(): boolean {
   // S5 首次道果教学:即时因果解释,建立"现在拿道果 = 以后更强"
   ui.toast(
     first
-      ? `${DAO_SOURCE_PER_FRUIT} 缕道源凝作一枚道果——此物不随此身而灭,转世仍归你所有,来世修行更快。`
-      : `${DAO_SOURCE_PER_FRUIT} 缕道源凝作一枚道果`,
+      ? `${DAO_SOURCE_PER_FRUIT} sợi Đạo nguyên ngưng tụ thành một viên Đạo quả —— Vật này không theo thân xác mà tiêu biến, chuyển thế vẫn thuộc về ngươi, kiếp sau tu hành càng thêm thần tốc.`
+      : `${DAO_SOURCE_PER_FRUIT} sợi Đạo nguyên ngưng tụ thành một viên Đạo quả`,
     'rare'
   )
   return true
@@ -250,12 +250,12 @@ function markTarget(mark: DaoMark): { world?: ReturnType<typeof celestialWorldDe
 export function replayMark(mark: DaoMark): ExpeditionResult | null {
   const ui = useUiStore()
   if (!mark.replay) {
-    ui.toast('此痕年代久远,战况已不可考', 'warn')
+    ui.toast('Dấu vết này niên đại xa xưa, chiến huống không thể tra cứu', 'warn')
     return null
   }
   const { world, trial } = markTarget(mark)
   if (!world && !trial) {
-    ui.toast('此界早已散于天道,无从重临', 'warn')
+    ui.toast('Giới này đã tan vào thiên đạo, không thể giáng lâm lại', 'warn')
     return null
   }
   const r = mark.replay
@@ -277,7 +277,7 @@ export function replayMark(mark: DaoMark): ExpeditionResult | null {
   const rules = markRules(mark, world, trial)
   const report = runGauntlet(snap, foes, rules, 'healBetweenPct' in target ? target.healBetweenPct : 0.5, rng)
   const era = isStaleRuleset(mark.ruleset) ? `(此战录于规则纪元 ${mark.ruleset},今为 ${RULESET_VERSION},天道已变)` : ''
-  ui.toast(report.cleared ? '忆战功成——当年的你,如今依旧能赢' : '忆战未竟,当年之勇亦有时运', 'info')
+  ui.toast(report.cleared ? 'Hồi ức chiến thành công —— Ngươi của năm xưa, nay vẫn chiến thắng' : 'Hồi ức chiến chưa thành, dũng khí năm xưa cũng có lúc không may', 'info')
   return {
     title: `忆战 · ${mark.targetName}`,
     report,
@@ -298,11 +298,11 @@ export function rewriteMark(mark: DaoMark): ExpeditionResult | null {
   if (!mark.cleared || !mark.replay) return null
   const { world, trial } = markTarget(mark)
   if (!world && !trial) {
-    ui.toast('此界早已散于天道,无从重写', 'warn')
+    ui.toast('Giới này đã tan vào thiên đạo, không thể viết lại', 'warn')
     return null
   }
   if (!endgame.spendDaoSource(REWRITE_ENTRY_COST)) {
-    ui.toast(`道源不足 ${REWRITE_ENTRY_COST}`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${REWRITE_ENTRY_COST}`, 'warn')
     return null
   }
   const player = usePlayerStore()
@@ -330,11 +330,11 @@ export function rewriteMark(mark: DaoMark): ExpeditionResult | null {
   if (beaten) {
     recordMilestone('first_rewrite')
     trackClearRecords(mark.targetName, report.totalRounds, mark.replay.pactId, 0)
-    ui.toast(`【胜于旧我】${mark.targetName}:${mark.rounds} 回合 → ${report.totalRounds} 回合`, 'rare')
+    ui.toast(`【Thắng Vượt Bản Thân】${mark.targetName}: ${mark.rounds} hiệp → ${report.totalRounds} hiệp`, 'rare')
   } else if (report.cleared) {
-    ui.toast(`重写功成,但未快过当年(${report.totalRounds} vs ${mark.rounds} 回合)`, 'info')
+    ui.toast(`Viết lại thành công, nhưng không nhanh hơn năm xưa (${report.totalRounds} vs ${mark.rounds} hiệp)`, 'info')
   } else {
-    ui.toast('重写未竟——当年之你,并不好胜过', 'warn')
+    ui.toast('Viết lại chưa thành —— Ngươi của năm xưa, quả nhiên không dễ vượt qua', 'warn')
   }
   recordMark(mark.targetId, `重写·${mark.targetName}`, report.cleared, report.totalRounds, mark.replay.pactId, mark.context)
   return {
@@ -357,11 +357,11 @@ export function challengeTrial(trialId: string): ExpeditionResult | null {
   const trial = trialDef(trialId)
   if (!trial || !endgameUnlocked()) return null
   if (!endgame.daoPath) {
-    ui.toast('先择道途,方可赴试炼', 'warn')
+    ui.toast('Trước tiên hãy chọn Đạo Đồ, mới có thể tiến vào thí luyện', 'warn')
     return null
   }
   if (!endgame.spendDaoSource(trial.entryCost)) {
-    ui.toast(`道源不足 ${trial.entryCost}`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${trial.entryCost}`, 'warn')
     return null
   }
   const stats = player.celestialStats
@@ -386,19 +386,19 @@ export function challengeTrial(trialId: string): ExpeditionResult | null {
     endgame.recordTrial(trial.id, report.totalRounds)
     ui.toast(
       prevBest !== undefined && report.totalRounds < prevBest
-        ? `${trial.name}新纪录!${report.totalRounds} 回合(原 ${prevBest})`
-        : `${trial.name}功成,道源 +${reward}`,
+        ? `Kỷ lục mới tại ${trial.name}! ${report.totalRounds} hiệp (kỷ lục cũ ${prevBest})`
+        : `Vượt qua ${trial.name}, Đạo nguyên +${reward}`,
       'rare'
     )
   } else {
-    ui.toast(`${trial.name}未竟(第 ${report.fightsWon + 1} 战失利)`, 'warn')
+    ui.toast(`${trial.name} chưa thành (thất bại ở trận thứ ${report.fightsWon + 1})`, 'warn')
   }
   recordMark(trial.id, trial.name, report.cleared, report.totalRounds)
   return {
     title: trial.name,
     report,
     rewardDaoSource: reward,
-    markText: report.cleared ? `${trial.fights} 战全捷,共 ${report.totalRounds} 回合` : `止步第 ${report.fightsWon + 1} 战`
+    markText: report.cleared ? `${trial.fights} trận toàn thắng, tổng cộng ${report.totalRounds} hiệp` : `Dừng bước ở trận thứ ${report.fightsWon + 1}`
   }
 }
 

@@ -3,18 +3,18 @@
     <!-- 一 转出:源件的词条。选中后收成一行,点「更换」重选 -->
     <section ref="outRef" class="scroll-mt-6">
       <p class="flex min-h-[28px] items-center justify-between">
-        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ TRANSFER_LABELS.out }}</span>
+        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.out) }}</span>
         <button
           v-if="flow.affixId"
           type="button"
           class="-my-1 min-h-[28px] px-1.5 text-[11px] text-azure active:opacity-60"
           @click="flow.pickAffix(null)"
         >
-          {{ TRANSFER_LABELS.change }}
+          {{ displayTransferLabel(TRANSFER_LABELS.change) }}
         </button>
       </p>
-      <p v-if="flow.sourceLines.length === 0" class="py-3 text-center text-[11px] text-ink-faint">{{ TRANSFER_LABELS.noAffix }}</p>
-      <div v-else role="group" :aria-label="TRANSFER_LABELS.out" class="mt-1 space-y-1.5">
+      <p v-if="flow.sourceLines.length === 0" class="py-3 text-center text-[11px] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.noAffix) }}</p>
+      <div v-else role="group" :aria-label="displayTransferLabel(TRANSFER_LABELS.out)" class="mt-1 space-y-1.5">
         <button
           v-for="line in shownSourceLines"
           :key="line.id"
@@ -25,9 +25,9 @@
           @click="flow.pickAffix(line.id)"
         >
           <span class="flex items-center gap-1.5">
-            <span class="whitespace-nowrap font-kai text-[12px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">「{{ line.name }}」</span>
-            <span class="text-[9px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">{{ AFFIX_RARITY_META[line.rarity].name }}</span>
-            <span v-if="flow.sourceSealed.has(line.id)" class="text-jade" role="img" :aria-label="TRANSFER_LABELS.sealed"><GameIcon name="lock" :size="11" /></span>
+            <span class="whitespace-nowrap font-kai text-[12px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">「{{ displayAffixName(line.name) }}」</span>
+            <span class="text-[9px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">{{ displayAffixRarity(AFFIX_RARITY_META[line.rarity].name) }}</span>
+            <span v-if="flow.sourceSealed.has(line.id)" class="text-jade" role="img" :aria-label="displayTransferLabel(TRANSFER_LABELS.sealed)"><GameIcon name="lock" :size="11" /></span>
           </span>
           <span class="mt-0.5 block text-[11px] leading-snug text-ink-soft">
             {{ line.before }}<span class="tabular font-medium text-ink">{{ line.value }}</span>{{ line.after }}
@@ -39,18 +39,18 @@
     <!-- 二 转入:接得了这一条的件。部位、品质不合的不列;已有这条且不更低的置灰 -->
     <section v-if="flow.affixId" ref="intoRef" class="scroll-mt-6">
       <p class="flex min-h-[28px] items-center justify-between">
-        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ TRANSFER_LABELS.into }}</span>
+        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.into) }}</span>
         <span v-if="flow.targetUid" class="flex gap-1">
           <button type="button" class="-my-1 min-h-[28px] px-1.5 text-[11px] text-azure active:opacity-60" @click="emit('view', flow.targetUid)">
-            {{ TRANSFER_LABELS.view }}
+            {{ displayTransferLabel(TRANSFER_LABELS.view) }}
           </button>
           <button type="button" class="-my-1 min-h-[28px] px-1.5 text-[11px] text-azure active:opacity-60" @click="flow.pickTarget(null)">
-            {{ TRANSFER_LABELS.change }}
+            {{ displayTransferLabel(TRANSFER_LABELS.change) }}
           </button>
         </span>
       </p>
-      <p v-if="flow.candidates.length === 0" class="py-3 text-center text-[11px] text-ink-faint">{{ TRANSFER_LABELS.noTarget }}</p>
-      <div v-else role="group" :aria-label="TRANSFER_LABELS.into" class="mt-1 space-y-1.5">
+      <p v-if="flow.candidates.length === 0" class="py-3 text-center text-[11px] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.noTarget) }}</p>
+      <div v-else role="group" :aria-label="displayTransferLabel(TRANSFER_LABELS.into)" class="mt-1 space-y-1.5">
         <button
           v-for="c in shownCandidates"
           :key="c.item.uid"
@@ -68,8 +68,8 @@
           <span class="mt-0.5 block text-[10px] text-ink-faint">
             {{ slotName(c.item.templateId) }} · {{ qualityDef(c.item.quality).name }} · <span class="whitespace-nowrap">Bậc {{ c.item.tier }}</span> ·
             <span class="whitespace-nowrap">Từ điều {{ c.item.affixes.length }}/{{ qualityDef(c.item.quality).affixes[1] }}</span>
-            <span v-if="c.worn" class="ml-1 text-jade">{{ TRANSFER_LABELS.equipped }}</span>
-            <span v-if="c.block !== null" class="ml-1 text-cinnabar">{{ transferBlockText(c.block, flow.affixId) }}</span>
+            <span v-if="c.worn" class="ml-1 text-jade">{{ displayTransferLabel(TRANSFER_LABELS.equipped) }}</span>
+            <span v-if="c.block !== null" class="ml-1 text-cinnabar">{{ displayTransferBlock(transferBlockText(c.block, flow.affixId)) }}</span>
           </span>
         </button>
       </div>
@@ -86,9 +86,9 @@
     <!-- 三 位置:新增,或顶替一条。每一项单独标价;被挡的写原因 -->
     <section v-if="flow.affixId && flow.target" ref="slotRef" class="scroll-mt-6">
       <p class="flex min-h-[28px] items-center">
-        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ TRANSFER_LABELS.slot }}</span>
+        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.slot) }}</span>
       </p>
-      <div role="group" :aria-label="TRANSFER_LABELS.slot" class="mt-1 space-y-1.5">
+      <div role="group" :aria-label="displayTransferLabel(TRANSFER_LABELS.slot)" class="mt-1 space-y-1.5">
         <button
           v-for="l in flow.landings"
           :key="l.replaceId ?? '_append'"
@@ -100,11 +100,11 @@
           @click="flow.pickSlot(l.replaceId)"
         >
           <span class="flex items-center gap-1.5 text-[12px]">
-            <span v-if="l.replaceId === null" class="font-kai text-ink">{{ TRANSFER_LABELS.append }}</span>
+            <span v-if="l.replaceId === null" class="font-kai text-ink">{{ displayTransferLabel(TRANSFER_LABELS.append) }}</span>
             <template v-else>
-              <span class="text-ink-faint">{{ TRANSFER_LABELS.replace }}</span>
-              <span class="whitespace-nowrap font-kai" :style="{ color: rarityColor(l.replaceId) }">「{{ targetLine(l.replaceId)?.name }}」</span>
-              <span v-if="flow.targetSealed.has(l.replaceId)" class="text-jade" role="img" :aria-label="TRANSFER_LABELS.sealed"><GameIcon name="lock" :size="11" /></span>
+              <span class="text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.replace) }}</span>
+              <span class="whitespace-nowrap font-kai" :style="{ color: rarityColor(l.replaceId) }">「{{ displayAffixName(targetLine(l.replaceId)?.name ?? '') }}」</span>
+              <span v-if="flow.targetSealed.has(l.replaceId)" class="text-jade" role="img" :aria-label="displayTransferLabel(TRANSFER_LABELS.sealed)"><GameIcon name="lock" :size="11" /></span>
             </template>
           </span>
           <span v-if="l.replaceId !== null && targetLine(l.replaceId)" class="mt-0.5 block text-[11px] leading-snug text-ink-soft">
@@ -114,7 +114,7 @@
             <span class="whitespace-nowrap">{{ transferStoneText(l.check.plan.cost.stone) }}</span> ·
             <span class="whitespace-nowrap">Trần × {{ l.check.plan.cost.dust }}</span>
           </span>
-          <span v-else class="mt-0.5 block text-[10px] text-cinnabar">{{ transferBlockText(l.check.block, flow.affixId) }}</span>
+          <span v-else class="mt-0.5 block text-[10px] text-cinnabar">{{ displayTransferBlock(transferBlockText(l.check.block, flow.affixId)) }}</span>
         </button>
       </div>
     </section>
@@ -122,7 +122,7 @@
     <!-- 四 结果:落地后的词条表、封存、目标件的属性变化、源件失去什么 -->
     <section v-if="flow.plan && flow.target" ref="resultRef" class="scroll-mt-6">
       <p class="flex min-h-[28px] items-center justify-between">
-        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ TRANSFER_LABELS.result }}</span>
+        <span class="font-kai text-[12px] tracking-[0.3em] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.result) }}</span>
         <span class="text-[10px] tabular text-ink-faint">
           {{ transferCountText(flow.target.affixes.length, flow.plan.target.affixes.length, flow.targetCap) }}
         </span>
@@ -136,28 +136,28 @@
           :style="{ borderLeft: `2px solid ${AFFIX_RARITY_META[line.rarity].color}` }"
         >
           <span class="flex items-center gap-1.5">
-            <span class="whitespace-nowrap font-kai text-[12px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">「{{ line.name }}」</span>
+            <span class="whitespace-nowrap font-kai text-[12px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">「{{ displayAffixName(line.name) }}」</span>
             <span v-if="line.id === flow.plan.moved.id" class="rounded bg-cinnabar/15 px-1 text-[9px] leading-relaxed text-cinnabar">
-              {{ TRANSFER_LABELS.newTag }}
+              {{ displayTransferLabel(TRANSFER_LABELS.newTag) }}
             </span>
-            <span v-if="flow.resultSealed.has(line.id)" class="text-jade" role="img" :aria-label="TRANSFER_LABELS.sealed"><GameIcon name="lock" :size="11" /></span>
+            <span v-if="flow.resultSealed.has(line.id)" class="text-jade" role="img" :aria-label="displayTransferLabel(TRANSFER_LABELS.sealed)"><GameIcon name="lock" :size="11" /></span>
           </span>
           <span class="mt-0.5 block text-[11px] leading-snug text-ink-soft">
             {{ line.before }}<span class="tabular font-medium text-ink">{{ line.value }}</span>{{ line.after }}
           </span>
         </li>
       </ul>
-      <p v-if="flow.plan.sealMode === 'inherit'" class="mt-1 flex min-h-[28px] items-center text-[11px] text-jade">{{ TRANSFER_LABELS.sealKeep }}</p>
+      <p v-if="flow.plan.sealMode === 'inherit'" class="mt-1 flex min-h-[28px] items-center text-[11px] text-jade">{{ displayTransferLabel(TRANSFER_LABELS.sealKeep) }}</p>
       <label v-else-if="flow.sealFee" class="mt-1 flex min-h-[28px] items-center justify-between gap-2 text-[11px]">
         <span class="text-ink-soft">
-          {{ TRANSFER_LABELS.seal }} <span class="whitespace-nowrap tabular text-ink-faint">{{ transferStoneText(flow.sealFee) }}</span>
+          {{ displayTransferLabel(TRANSFER_LABELS.seal) }} <span class="whitespace-nowrap tabular text-ink-faint">{{ transferStoneText(flow.sealFee) }}</span>
         </span>
         <input type="checkbox" class="h-4 w-4 shrink-0 accent-cinnabar" :checked="flow.sealWanted" @change="flow.toggleSeal()" />
       </label>
-      <p v-else class="mt-1 flex min-h-[28px] items-center text-[11px] text-ink-faint">{{ TRANSFER_LABELS.sealFull }}</p>
-      <p v-if="flow.deltaText" class="text-[11px] leading-relaxed text-azure tabular">{{ TRANSFER_LABELS.delta }} {{ flow.deltaText }}</p>
+      <p v-else class="mt-1 flex min-h-[28px] items-center text-[11px] text-ink-faint">{{ displayTransferLabel(TRANSFER_LABELS.sealFull) }}</p>
+      <p v-if="flow.deltaText" class="text-[11px] leading-relaxed text-azure tabular">{{ displayTransferLabel(TRANSFER_LABELS.delta) }} {{ flow.deltaText }}</p>
       <p class="mt-0.5 text-[11px] leading-relaxed text-cinnabar">
-        {{ TRANSFER_LABELS.sourceLose }}「{{ movedName }}」<template v-if="flow.sourceWorn"> · {{ TRANSFER_LABELS.equipped }}</template>
+        {{ displayTransferLabel(TRANSFER_LABELS.sourceLose) }}「{{ displayAffixName(movedName) }}」<template v-if="flow.sourceWorn"> · {{ displayTransferLabel(TRANSFER_LABELS.equipped) }}</template>
       </p>
     </section>
   </div>
@@ -187,7 +187,14 @@
     props.flow.affixId ? props.flow.sourceLines.filter(l => l.id === props.flow.affixId) : props.flow.sourceLines
   )
   /** 选中目标后只留那一件 */
-  import { displayEquipName, displayEquipSlot } from '@/ui/displayZhVi'
+  import {
+    displayEquipName,
+    displayEquipSlot,
+    displayTransferLabel,
+    displayTransferBlock,
+    displayAffixName,
+    displayAffixRarity
+  } from '@/ui/displayZhVi'
 
   const shownCandidates = computed(() =>
     props.flow.targetUid ? props.flow.candidates.filter(c => c.item.uid === props.flow.targetUid) : props.flow.shownCandidates

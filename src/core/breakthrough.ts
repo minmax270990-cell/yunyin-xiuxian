@@ -28,6 +28,7 @@ import { todayWeather } from './weather'
 import { tribulationDef, TRIBULATIONS, type TribulationKind } from '@/data/tribulations'
 import { NO_RELIEF, type TribulationRelief } from '@/data/linggenAffinity'
 import { reliefFelt } from './linggenAffinity'
+import { displayRealmName, displayTribulationName } from '@/ui/displayZhVi'
 import { track, trackRealm, checkStateAchievements } from './progress'
 import { recordMilestone } from './identity'
 import { usePlayerStore } from '@/stores/player'
@@ -178,8 +179,10 @@ function runTribulation(targetMajor: number): { survived: boolean; log: string[]
   const stat = currentStatGuard()
   const regen = sustainScore(mods, tDef, relief)
   let hpLeft = 1 + guardScore(mods, tDef, relief) + stat.guard
-  const log: string[] = [`乌云压顶,${realmDef(targetMajor).name}劫将至——${tDef.name}之劫,共 ${waves} 道!`]
-  if (reliefFelt(relief)) log.push('你体内灵根与此劫气机隐隐相应,自有一线生路。')
+  const rName = displayRealmName(realmDef(targetMajor).name)
+  const tName = displayTribulationName(tDef.name)
+  const log: string[] = [`Mây đen ngút trời, ${rName} kiếp sắp tới —— ${tName} chi kiếp, tổng cộng ${waves} đạo!`]
+  if (reliefFelt(relief)) log.push('Linh căn trong cơ thể ngươi cùng khí cơ thiên kiếp này mơ hồ tương ứng, tự có một tia sinh cơ.')
   const prep = breakthroughPrepState()
   if (prep.ready) {
     log.push('Ngươi đã sớm tĩnh tọa điều tức/dùng đan dược, chân khí tích tụ hóa thành hộ thể linh quang, vững vàng tiếp nhận thiên kiếp.')
@@ -191,13 +194,13 @@ function runTribulation(targetMajor: number): { survived: boolean; log: string[]
     hpLeft =
       hpLeft - waveDamage(tDef, mods, targetMajor, w, hpLeft, relief, weatherMult, stat) * rng.float(0.85, 1.15) + regen
     if (hpLeft <= 0) {
-      log.push(`第 ${w} 道天雷轰然落下,你护体灵光崩碎,重伤坠地……`)
+      log.push(`Đạo thiên lôi thứ ${w} ầm ầm giáng xuống, linh quang hộ thể của ngươi vỡ vụn, trọng thương rơi xuống đất (重伤坠地)……`)
       return { survived: false, log }
     }
     const pct = Math.max(1, Math.round(hpLeft * 100))
-    log.push(`第 ${w} 道天雷落下,你咬牙硬撼,气血余 ${Math.min(999, pct)}%。`)
+    log.push(`Đạo thiên lôi thứ ${w} giáng xuống, ngươi cắn răng chống đỡ, khí huyết còn ${Math.min(999, pct)}%.`)
   }
-  log.push('雷云散尽,天光重开。你于劫灰中缓缓立起——渡劫,成了!')
+  log.push('Lôi vân tan biến, ánh trời lại mở. Ngươi từ trong tro tàn kiếp nạn từ từ đứng dậy —— Độ kiếp (渡劫), đã thành!')
   return { survived: true, log }
 }
 

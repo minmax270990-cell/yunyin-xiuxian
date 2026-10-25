@@ -16,7 +16,7 @@
           <span>{{ displayRealmName(player.realmName) }}</span>
           <!-- 年龄:寿元将尽时转朱砂,顶栏常驻便于随时察觉 -->
           <span class="tabular" :class="player.lifespanRatio < LIFESPAN_WARN_RATIO ? 'text-cinnabar' : ''">
-            {{ Math.floor(player.age) }}/{{ displayYears(formatYears(player.lifespanMax)) }}
+            {{ Math.floor(player.age) }}/{{ displayGNVi(displayYears(formatYears(player.lifespanMax))) }}
           </span>
           <!--
             轮回次数:从主页人物卡移来,置于全局顶栏常驻。
@@ -31,7 +31,7 @@
     <div class="flex shrink-0 items-center gap-3 text-[11px] text-ink-soft tabular short:gap-2">
       <span class="flex items-center gap-1 whitespace-nowrap" title="Linh Thạch · Thu được từ lịch luyện và phường thị">
         <GameIcon name="gem" :size="13" class="text-gold-ink" />
-        {{ formatGN(resources.spiritStone) }}
+        {{ displayGNVi(formatGN(resources.spiritStone)) }}
       </span>
       <!-- 只有图标的入口必须自带名字:否则读屏只会念「链接」,自动化也点不着它 -->
       <RouterLink
@@ -55,7 +55,7 @@
   import { usePlayerStore } from '@/stores/player'
   import { useResourcesStore } from '@/stores/resources'
   import { formatGN, formatYears } from '@/utils/format'
-  import { displayRealmName, displayYears } from '@/ui/displayZhVi'
+  import { displayRealmName, displayYears, displayGNVi } from '@/ui/displayZhVi'
   import { LIFESPAN_WARN_RATIO } from '@/data/constants'
   import { Capacitor } from '@capacitor/core'
   import { useNativeInsets } from '@/composables/useNativeInsets'

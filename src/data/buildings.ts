@@ -84,7 +84,7 @@ export const BUILDINGS: BuildingDef[] = [
     name: 'Tàng Kinh Các',
     desc: 'Chứa hết đạo tàng trong thiên hạ, tham ngộ chân ý bên trong',
     icon: 'book',
-    maxLevel: 12,
+    maxLevel: 21,
     unlockRealm: 1,
     costBase: 120,
     costOre: 12,

@@ -100,6 +100,8 @@ export interface DaoluDef {
   taboo: string
   /** 相遇偏好的地貌轴;空表示随处可遇 */
   terrains: readonly string[]
+  /** 性别 (Giới tính: male | female) */
+  gender: 'male' | 'female'
 }
 
 function d(
@@ -112,9 +114,10 @@ function d(
   startMajor: number,
   pursuit: string,
   taboo: string,
-  terrains: readonly string[] = []
+  terrains: readonly string[] = [],
+  gender: 'male' | 'female' = 'female'
 ): DaoluDef {
-  return { id, name, brief, temper, lean, element, startMajor, pursuit, taboo, terrains }
+  return { id, name, brief, temper, lean, element, startMajor, pursuit, taboo, terrains, gender }
 }
 
 /**
@@ -134,7 +137,8 @@ export const DAOLU: DaoluDef[] = [
     1,
     '寻找十年前失踪的师尊',
     '不喜杀伐,见人滥杀则远之',
-    ['林泽', '山岳']
+    ['林泽', '山岳'],
+    'female'
   ),
   d(
     'dl_zhaoyan',
@@ -146,7 +150,8 @@ export const DAOLU: DaoluDef[] = [
     2,
     '把那柄铁剑养到出鞘',
     '不肯用丹药抄近路',
-    ['废墟', '山岳']
+    ['废墟', '山岳'],
+    'male'
   ),
   d(
     'dl_muyan',
@@ -158,7 +163,8 @@ export const DAOLU: DaoluDef[] = [
     1,
     '走遍此世每一处地界,把它记下来',
     '不愿为赶路而毁掉见到的东西',
-    []
+    [],
+    'female'
   ),
   d(
     'dl_hanzheng',
@@ -170,7 +176,8 @@ export const DAOLU: DaoluDef[] = [
     3,
     '找到当年灭他满门的那个人',
     '受人恩惠必偿,欠债则寝食难安',
-    ['废墟', '幽冥']
+    ['废墟', '幽冥'],
+    'male'
   ),
   d(
     'dl_yunshu',
@@ -182,7 +189,8 @@ export const DAOLU: DaoluDef[] = [
     2,
     '活得够久,久到看见一件事的结局',
     '厌恶把命押在一次豪赌上',
-    ['林泽', '天象']
+    ['林泽', '天象'],
+    'female'
   ),
   d(
     'dl_ligu',
@@ -194,7 +202,8 @@ export const DAOLU: DaoluDef[] = [
     2,
     '复原一件残缺的古器',
     '不许他人碰他未成的器胚',
-    ['火域', '废墟']
+    ['火域', '废墟'],
+    'male'
   ),
   d(
     'dl_baiwei',
@@ -206,7 +215,8 @@ export const DAOLU: DaoluDef[] = [
     1,
     '把一门失传的疗伤方子补全',
     '见死不救是她的底线',
-    ['林泽', '山岳']
+    ['林泽', '山岳'],
+    'female'
   ),
   d(
     'dl_zhongli',
@@ -218,7 +228,8 @@ export const DAOLU: DaoluDef[] = [
     3,
     '查清当年宗门覆灭的真相',
     '不与背信者同行',
-    ['废墟', '山岳']
+    ['废墟', '山岳'],
+    'male'
   ),
   d(
     'dl_xuewu',
@@ -230,7 +241,8 @@ export const DAOLU: DaoluDef[] = [
     3,
     '在有生之年递出一剑无悔的剑',
     '不受嗟来之食',
-    ['山岳', '天象']
+    ['山岳', '天象'],
+    'male'
   ),
   d(
     'dl_cangming',
@@ -242,12 +254,21 @@ export const DAOLU: DaoluDef[] = [
     4,
     '弄清自己为何会在这里醒来',
     '不谈来处,问急了便走',
-    ['幽冥', '天象']
+    ['幽冥', '天象'],
+    'male'
   )
 ]
 
+let customDaoluLookup: ((id: string) => DaoluDef | undefined) | null = null
+
+export function registerDaoluLookup(fn: (id: string) => DaoluDef | undefined): void {
+  customDaoluLookup = fn
+}
+
 export function daoluDef(id: string): DaoluDef | undefined {
-  return DAOLU.find(x => x.id === id)
+  const d = DAOLU.find(x => x.id === id)
+  if (d) return d
+  return customDaoluLookup?.(id)
 }
 
 // ============ 关系阶段 ============

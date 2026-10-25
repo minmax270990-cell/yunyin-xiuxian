@@ -40,7 +40,7 @@
         </div>
         <p v-if="buildSourceNames.length" class="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-ink-faint">
           <span>Thành đường từ:</span>
-          <span v-for="name in buildSourceNames" :key="name" class="text-azure">{{ name }}</span>
+          <span v-for="name in buildSourceNames" :key="name" class="text-azure">{{ displayBuildSourceName(name) }}</span>
         </p>
         <!-- Đánh giá các chiều (Phase 30.2) -->
         <div class="mt-2.5 rounded-md bg-paper-deep/60 px-3 py-2">
@@ -80,16 +80,16 @@
         <div v-if="comboInfo" class="mt-2.5 rounded-md px-3 py-2" :class="comboInfo.active ? 'bg-violet-ink/8' : 'bg-ink/4'">
           <p class="flex items-center gap-2">
             <span class="font-kai text-[13px]" :class="comboInfo.active ? 'text-violet-ink' : 'text-ink-faint'">
-              Tổ hợp kỹ「{{ comboInfo.art.name }}」
+              Tổ hợp kỹ「{{ displayComboArtName(comboInfo.art.name) }}」
             </span>
             <span class="text-[10px]" :class="comboInfo.active ? 'text-jade' : 'text-ink-faint'">
               {{ comboInfo.active ? 'Đã thành' : `Hệ thống phụ đạt ${Math.round(COMBO_SECONDARY_MIN * 100)}% khế hợp có thể thành` }}
             </span>
           </p>
           <p class="mt-0.5 text-[11px] leading-relaxed" :class="comboInfo.active ? 'text-ink-soft' : 'text-ink-faint'">
-            {{ comboInfo.art.desc }}
+            {{ displayComboArtDesc(comboInfo.art.desc) }}
           </p>
-          <p class="mt-0.5 text-[10px] text-cinnabar">Giá phải trả: {{ comboInfo.art.costText }}</p>
+          <p class="mt-0.5 text-[10px] text-cinnabar">Giá phải trả: {{ displayComboArtCost(comboInfo.art.costText) }}</p>
         </div>
         <!-- Độ bền cấu trúc -->
         <div v-if="resilience" class="mt-2.5 rounded-md bg-ink/4 px-3 py-2">
@@ -242,7 +242,13 @@
   import { applyLoadout, captureLoadout, deleteLoadout, renameLoadout } from '@/core/loadoutService'
   import { useLoadoutsStore, MAX_LOADOUTS, type Loadout } from '@/stores/loadouts'
   import { cnNumber } from '@/utils/format'
-  import { displayCnNum } from '@/ui/displayZhVi'
+  import {
+  displayCnNum,
+  displayComboArtName,
+  displayComboArtDesc,
+  displayComboArtCost,
+  displayBuildSourceName
+} from '@/ui/displayZhVi'
   import { STAT_NAMES, signedPercent, statCaveat } from '@/ui/statNames'
   import { isSoftCapped } from '@/core/statsCalc'
   import SectionTitle from '@/components/common/SectionTitle.vue'

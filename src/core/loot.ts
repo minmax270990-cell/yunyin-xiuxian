@@ -151,7 +151,7 @@ function acquireInto(inst: EquipmentInstance, opts: { quiet?: boolean; forceKeep
     return { ...res, line: `${label}(行囊已满,${res.line})` }
   }
   if (!quiet && isRareQuality(q)) {
-    ui.toast(`灵光乍现,拾得「${label}」`, 'rare')
+    ui.toast(`Linh quang chợt hiện, nhặt được「${label}」`, 'rare')
   }
   return { line: label, bagged: true, evicted: false, dust: 0, stone: gnZero() }
 }
@@ -177,7 +177,7 @@ export function acquireArtifact(defId: string, quiet = false): string {
     resources.addSmall('wudao', 10)
     return `法宝「${def.name}」(已拥有,化作悟道点×10)`
   }
-  if (!quiet) ui.toast(`天降机缘!获得法宝「${def.name}」`, 'rare')
+  if (!quiet) ui.toast(`Trời ban cơ duyên! Nhận được pháp bảo「${def.name}」`, 'rare')
   return `法宝「${def.name}」`
 }
 

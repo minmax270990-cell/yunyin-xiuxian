@@ -70,3 +70,29 @@ function gradeName(count: number, hasSpecial: boolean, avgAptitude: number): str
 function round2(v: number): number {
   return Math.round(v * 100) / 100
 }
+
+/**
+ * Tính toán lại cấp vị linh căn và hệ số tu luyện khi tư chất thay đổi
+ */
+export function recomputeLinggen(roots: SpiritRoot[]): LinggenProfile {
+  if (roots.length === 0) {
+    return { roots: [], gradeName: 'Phàm Căn', growthMult: 1 }
+  }
+  const count = roots.length
+  const avgAptitude = roots.reduce((s, r) => s + r.aptitude, 0) / count
+  if (count === 1 && roots[0]?.element === 'chaos') {
+    return {
+      roots,
+      gradeName: 'Hỗn Độn Linh Căn',
+      growthMult: round2(1.6 * (avgAptitude / 60) * 1.5)
+    }
+  }
+  const hasSpecial = roots.some(r => ELEMENTS[r.element]?.special)
+  const growthMult = round2((avgAptitude / 60) * (COUNT_FACTOR[count] ?? 1) * (hasSpecial ? 1.2 : 1))
+  return {
+    roots,
+    gradeName: gradeName(count, hasSpecial, avgAptitude),
+    growthMult
+  }
+}
+

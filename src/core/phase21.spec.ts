@@ -254,7 +254,7 @@ describe('剑意层数与门槛 · 一处出', () => {
 
   it('天界页的「/N 层」读 SWORD_PURITY_MAX_LAYERS,不许再写 /4', () => {
     const src = strip(readFileSync(resolve(__dirname, '../views/CelestialView.vue'), 'utf8'))
-    expect(src).toContain('/{{ SWORD_PURITY_MAX_LAYERS }} 层')
+    expect(src).toMatch(/\/\{\{\s*SWORD_PURITY_MAX_LAYERS\s*\}\}\s*(?:层|tầng)/)
     expect(src).not.toContain('剑意 {{ swordInfo.layers }}/4 层')
   })
 })

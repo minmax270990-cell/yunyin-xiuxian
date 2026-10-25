@@ -350,7 +350,7 @@
           @click="ui.buffDetailId = b.def!.id"
         >
           <GameIcon :name="b.def!.icon" :size="11" />
-          {{ b.def!.name }}
+          {{ displayBuffName(b.def!.name) }}
           <span class="countdown-slot">{{ formatCountdown(b.remain) }}</span>
         </button>
       </div>
@@ -416,6 +416,76 @@
           </span>
           <GameIcon name="flame" :size="15" class="text-cinnabar" />
         </button>
+
+        <!-- 8 Ô Phụ Tu & Bí Thuật -->
+        <div class="card-ink p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="grid h-5 w-5 place-items-center rounded bg-jade/15 font-kai text-[11px] text-jade">Phụ</span>
+              <span class="font-kai text-[13px] text-ink">Ô Phụ Tu & Bí Thuật</span>
+              <span class="rounded bg-jade/10 px-1.5 py-0.5 text-[10px] tabular text-jade">
+                {{ activeSubGongfaCount }} / {{ dongfu.subGongfaSlots }} Ô
+              </span>
+            </div>
+            <span class="text-[10px] text-ink-faint">Tối đa 8 ô</span>
+          </div>
+
+          <!-- Grid 8 ô phụ tu -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <div
+              v-for="(slot, sIdx) in subSlotsList"
+              :key="sIdx"
+              class="rounded border p-2 text-left transition-all relative overflow-hidden"
+              :class="slot.equipped ? 'border-ink/20 bg-paper-deep/60 cursor-pointer active:scale-98' : slot.unlocked ? 'border-dashed border-ink/20 bg-paper-deep/30 cursor-pointer hover:border-jade/40' : 'border-ink/10 bg-paper-deep/10 opacity-60 cursor-not-allowed'"
+              @click="onSubSlotClick(slot)"
+            >
+              <!-- Khi ô đã trang bị -->
+              <template v-if="slot.equipped && slot.def">
+                <div class="flex items-center justify-between gap-1">
+                  <span
+                    class="grid h-4 w-4 shrink-0 place-items-center rounded font-kai text-[9px]"
+                    :class="slot.def.type === 'secret' ? 'bg-violet-ink/15 text-violet-ink' : 'bg-jade/15 text-jade'"
+                  >{{ slot.def.type === 'secret' ? 'Bí' : 'Phụ' }}</span>
+                  <span class="text-[9px] tabular text-ink-faint">T.{{ slot.level }}</span>
+                </div>
+                <div class="mt-1 truncate font-kai text-[12px] font-medium" :style="{ color: slot.color }">
+                  {{ slot.name }}
+                </div>
+                <div v-if="slot.branch" class="mt-0.5 truncate text-[9px] text-gold-ink">
+                  {{ slot.branch }}
+                </div>
+              </template>
+
+              <!-- Khi ô mở khóa nhưng còn trống -->
+              <template v-else-if="slot.unlocked">
+                <div class="text-[10px] text-ink-faint flex items-center gap-1">
+                  <span class="font-kai text-[11px] text-jade">+</span>
+                  <span>Ô {{ sIdx + 1 }}</span>
+                </div>
+                <div class="mt-0.5 text-[10px] text-ink-soft">
+                  Trống
+                </div>
+                <div class="text-[9px] text-ink-faint">
+                  Chạm để gắn
+                </div>
+              </template>
+
+              <!-- Khi ô chưa mở khóa -->
+              <template v-else>
+                <div class="text-[10px] text-ink-faint flex items-center gap-1">
+                  <GameIcon name="lock" :size="10" />
+                  <span>Ô {{ sIdx + 1 }}</span>
+                </div>
+                <div class="mt-0.5 text-[9px] text-ink-faint">
+                  Khóa
+                </div>
+                <div class="text-[9px] text-ink-faint">
+                  Cấp {{ slot.reqLevel }}
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
 
         <!--
           门类分段切换:主修/辅修/秘术 三选一,只渲染选中门类 ——
@@ -486,15 +556,21 @@
           参悟池还剩几部也报出来:藏经阁是「花残页赌一部没见过的」,
           玩家看不到池子还有多大,就无从判断这一注值不值。
         -->
-        <button class="btn-ghost w-full" @click="comprehendGongfa()">
-          Tham ngộ công pháp tại Tàng Kinh Các (Tàn trang ×{{ COMPREHEND_PAGE_COST }})
-          <span v-if="comprehendLeft > 0" class="ml-1 text-[10px] text-ink-faint">· Trong hồ còn {{ comprehendLeft }} bộ chưa tham</span>
-          <span v-else class="ml-1 text-[10px] text-ink-faint">· {{ gongfaAllLearnedToast() }}</span>
-        </button>
+        <div class="flex gap-2">
+          <button class="btn-ghost flex-1" :disabled="comprehendLeft === 0" @click="comprehendGongfa()">
+            Tham ngộ tại Tàng Kinh Các (Tàn trang ×{{ COMPREHEND_PAGE_COST }})
+            <span v-if="comprehendLeft > 0" class="ml-1 text-[10px] text-ink-faint">· Hợp duyên còn {{ comprehendLeft }} bộ</span>
+            <span v-else class="ml-1 text-[10px] text-ink-faint">· {{ gongfaAllLearnedToast() }}</span>
+          </button>
+          <button class="btn-seal px-3 text-[12px]" title="Mở danh lục toàn thư Tàng Kinh Các" @click="showScriptureModal = true">
+            Tàng Kinh Các
+          </button>
+        </div>
       </div>
     </section>
 
     <GongfaDialog />
+    <ScripturePavilionModal :open="showScriptureModal" @close="showScriptureModal = false" />
     <BuffDialog />
   </div>
 </template>
@@ -505,6 +581,8 @@
   import { useResourcesStore } from '@/stores/resources'
   import { useDongfuStore } from '@/stores/dongfu'
   import CultivationOrb from '@/components/common/CultivationOrb.vue'
+  import ScripturePavilionModal from '@/components/cultivation/ScripturePavilionModal.vue'
+  import { checkGongfaEligibility, getPlayerSnapshot } from '@/core/gongfaEligibility'
   import { useCultivationStore } from '@/stores/cultivation'
   import { useInventoryStore } from '@/stores/inventory'
   import { useUiStore } from '@/stores/ui'
@@ -570,7 +648,8 @@
     displayGongfaName,
     displayGongfaBranchName,
     displayQualityName,
-    displayRetreatGainText
+    displayRetreatGainText,
+    displayBuffName
   } from '@/ui/displayZhVi'
   import GameIcon from '@/components/common/GameIcon.vue'
   import GongfaDialog from '@/components/cultivation/GongfaDialog.vue'
@@ -826,12 +905,15 @@
     ;(e.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>('[role="tab"]')[idx]?.focus()
   }
 
+  const showScriptureModal = ref(false)
+
   const mainDef = computed(() => (cultivation.mainGongfa ? gongfaDef(cultivation.mainGongfa) : undefined))
 
-  /** 参悟池里还剩几部 —— 与 comprehendGongfa 的池条件同源(minRealm ≤ 当前 + 1 且未习得) */
-  const comprehendLeft = computed(
-    () => GONGFA.filter(g => g.minRealm <= player.major + 1 && !cultivation.learned[g.id]).length
-  )
+  /** 参悟池里还剩几部 —— 与 comprehendGongfa 的池条件同源(hợp duyên linh căn, cảnh giới & ngộ tính) */
+  const comprehendLeft = computed(() => {
+    const snap = getPlayerSnapshot()
+    return GONGFA.filter(g => !cultivation.learned[g.id] && checkGongfaEligibility(g, snap, 0).canLearn).length
+  })
 
   /** 修行相关丹药快捷栏:按品质降序,越珍稀的越靠前(原为插入序,先拿到什么显什么) */
   const quickPills = computed(() =>
@@ -867,5 +949,80 @@
   function branchName(id: string): string | undefined {
     const branchId = cultivation.gongfaBranch[id]
     return branchId ? gongfaBranchDef(branchId)?.name : undefined
+  }
+
+  interface SubSlotItem {
+    idx: number
+    equipped: boolean
+    unlocked: boolean
+    def?: GongfaDef
+    name: string
+    level: number
+    color: string
+    branch?: string
+    reqLevel: number
+  }
+
+  const subSlotsList = computed<SubSlotItem[]>(() => {
+    const cap = dongfu.subGongfaSlots
+    const equippedIds = cultivation.subGongfa.slice(0, cap)
+    const list: SubSlotItem[] = []
+    for (let i = 0; i < 8; i++) {
+      const id = equippedIds[i]
+      if (id) {
+        const def = gongfaDef(id)
+        const bName = branchName(id)
+        list.push({
+          idx: i,
+          equipped: true,
+          unlocked: true,
+          def,
+          name: def ? displayGongfaName(def.name) : '',
+          level: cultivation.learned[id] ?? 1,
+          color: def ? qualityDef(def.quality).color : '',
+          branch: bName ? displayGongfaBranchName(bName) : undefined,
+          reqLevel: i * 3
+        })
+      } else if (i < cap) {
+        list.push({
+          idx: i,
+          equipped: false,
+          unlocked: true,
+          name: '',
+          level: 0,
+          color: '',
+          reqLevel: i * 3
+        })
+      } else {
+        list.push({
+          idx: i,
+          equipped: false,
+          unlocked: false,
+          name: '',
+          level: 0,
+          color: '',
+          reqLevel: i * 3
+        })
+      }
+    }
+    return list
+  })
+
+  const activeSubGongfaCount = computed(() => {
+    const cap = dongfu.subGongfaSlots
+    return cultivation.subGongfa.slice(0, cap).length
+  })
+
+  function onSubSlotClick(slot: SubSlotItem): void {
+    if (slot.equipped && slot.def) {
+      ui.gongfaDetailId = slot.def.id
+    } else if (slot.unlocked) {
+      if (gongfaCat.value === 'main') {
+        gongfaCat.value = 'sub'
+      }
+      ui.toast(`Ô phụ tu ${slot.idx + 1} đang trống. Chọn một công pháp bên dưới rồi chọn「Cài Đặt」để trang bị.`, 'info')
+    } else {
+      ui.toast(`Cần nâng cấp Tàng Kinh Các lên cấp ${slot.reqLevel} trong Động Phủ để mở ô phụ tu này.`, 'warn')
+    }
   }
 </script>

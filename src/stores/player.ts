@@ -1,9 +1,11 @@
 /** 玩家状态 —— 境界 / 修为 / 寿元 / 灵根 / 最终属性汇总 */
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { FinalStats, GNum, LinggenProfile, StatMods, WorldId } from '@/types'
+import type { CharacterGender, ElementId, FinalStats, GNum, LinggenProfile, StatMods, WorldId } from '@/types'
 import { gn, gnZero, add, gte, mulN, progress, subClamp } from '@/utils/gnum'
 import { persistConfig } from '@/utils/storage'
+import { recomputeLinggen } from '@/core/linggenGen'
+import { SPIRIT_ROOT_FRUITS, type SpiritRootFruitTier } from '@/data/spiritRootFruit'
 import { realmDef, realmLabel, worldOf, WORLDS, SUB_NAMES, MAX_MAJOR } from '@/data/realms'
 import { SUB_LEVELS, START_AGE } from '@/data/constants'
 import { QI_BANK_MULT, QI_RICH_RATIO } from '@/data/constants'
@@ -17,6 +19,7 @@ import { petDef } from '@/data/pets'
 import type { PetDef } from '@/types'
 import { mentorDef } from '@/data/mentors'
 import { talentDef } from '@/data/talents'
+import { aptitudeDef } from '@/data/aptitudes'
 import { heritageDef } from '@/data/heritage'
 import { CHAINS } from '@/data/chains'
 import { birthMajorFloor } from '@/core/heritageEffects'
@@ -28,7 +31,7 @@ import { todayWeather } from '@/core/weather'
 import { readingFromState, readingMods } from '@/core/divination'
 import { asCarriedHpPct, asFiniteNumber, asStringArray } from '@/utils/saveShape'
 import { SECRET_LAYERS, SECRET_MAX_LOSSES, SECRET_REALMS, SECRET_RULES } from '@/data/secretRealms'
-import { DAOLU, STAGE_ORDER } from '@/data/daolu'
+import { DAOLU, STAGE_ORDER, daoluDef } from '@/data/daolu'
 import { regionDef } from '@/data/regions'
 import { lifeTrialDef, type LifeTrialState } from '@/data/lifeTrials'
 import { STARS } from '@/data/ziwei'
@@ -42,6 +45,7 @@ import { useApprenticeStore } from './apprentice'
 import { useResourcesStore } from './resources'
 import { useEndgameStore } from './endgame'
 import { useGameStore } from './game'
+import { useNpcStore } from './npc'
 
 /** 修行速率的下限乘数:修为/灵气增速从不归零(防负增益把成长钉死在地板上) */
 const MIN_SPEED_MULT = 0.05
@@ -56,6 +60,8 @@ export const usePlayerStore = defineStore(
     const resources = useResourcesStore()
 
     const name = ref('无名散修')
+    const gender = ref<CharacterGender | null>(null)
+    const aptitudes = ref<string[]>([])
     const linggen = ref<LinggenProfile | null>(null)
     const major = ref(0)
     const sub = ref(0)
@@ -244,6 +250,12 @@ export const usePlayerStore = defineStore(
      */
     const wudaoExchange = ref<{ gameDay: number; count: number }>({ gameDay: 0, count: 0 })
 
+    const aptitudeMods = computed<StatMods[]>(() =>
+      aptitudes.value
+        .map(id => aptitudeDef(id)?.mods ?? {})
+        .filter(m => Object.keys(m).length > 0)
+    )
+
     /**
      * Mod sources except the pet itself. beastPct/qiCapPct must not read
      * finalStats (qiRich → qiCap → finalStats would cycle; pet scaling
@@ -260,6 +272,7 @@ export const usePlayerStore = defineStore(
       weatherMods.value,
       divinationMods.value,
       fateModsValue.value,
+      ...aptitudeMods.value,
       ...talentMods.value
     ])
 
@@ -306,6 +319,7 @@ export const usePlayerStore = defineStore(
           weatherMods.value,
           divinationMods.value,
           fateModsValue.value,
+          ...aptitudeMods.value,
           ...talentMods.value
         ],
         // 名字与上面一一对应 —— 面板的「来源明细」直接读它们,不再另起一套说法。
@@ -324,6 +338,7 @@ export const usePlayerStore = defineStore(
           `天时·${todayWeather().name}`,
           '在身之卦',
           '命格',
+          ...aptitudes.value.map(id => `Tư chất·${aptitudeDef(id)?.name ?? id}`),
           ...reincarnation.value.talents.map(id => `天赋·${talentDef(id)?.name ?? id}`)
         ],
         /** 凡界的平铺三维:**装备给的攻防血就是从这里进来的**(见 core/statsCalc) */
@@ -372,6 +387,7 @@ export const usePlayerStore = defineStore(
           weatherMods.value,
           divinationMods.value,
           fateModsValue.value,
+          ...aptitudeMods.value,
           ...talentMods.value
         ],
         sourceNames: [
@@ -387,6 +403,7 @@ export const usePlayerStore = defineStore(
           '天时',
           '在身之卦',
           '命格',
+          ...aptitudes.value.map(id => `Tư chất·${aptitudeDef(id)?.name ?? id}`),
           ...reincarnation.value.talents.map(id => `天赋·${talentDef(id)?.name ?? id}`)
         ],
         /** 平铺三维也照常作数:它就是「基础属性」本身 */
@@ -410,9 +427,16 @@ export const usePlayerStore = defineStore(
     const lifespanRatio = computed(() => Math.max(0, 1 - age.value / Math.max(1, lifespanMax.value)))
 
     // ---------- 动作 ----------
-    function initCharacter(newName: string, profile: LinggenProfile): void {
+    function initCharacter(
+      newName: string,
+      profile: LinggenProfile,
+      characterGender: CharacterGender = 'male',
+      initialAptitudes: string[] = []
+    ): void {
       name.value = newName
       linggen.value = profile
+      gender.value = characterGender === 'female' ? 'female' : 'male'
+      aptitudes.value = initialAptitudes
       major.value = 0
       sub.value = 0
       exp.value = gnZero()
@@ -601,6 +625,79 @@ export const usePlayerStore = defineStore(
       dead.value = true
     }
 
+    /**
+     * Phục dụng Linh Căn Quả để tăng tư chất linh căn.
+     * Có thể tăng toàn bộ linh căn sở hữu hoặc nhắm vào 1 nguyên tố cụ thể.
+     */
+    function consumeSpiritRootFruit(
+      tier: SpiritRootFruitTier,
+      count = 1,
+      targetElement?: ElementId
+    ): { ok: boolean; message: string; gained: number } {
+      if (!linggen.value || linggen.value.roots.length === 0) {
+        return { ok: false, message: 'Chưa thức tỉnh linh căn, không thể phục dụng linh quả.', gained: 0 }
+      }
+      const fruit = SPIRIT_ROOT_FRUITS[tier]
+      if (!fruit) {
+        return { ok: false, message: 'Linh quả không hợp lệ.', gained: 0 }
+      }
+
+      const resources = useResourcesStore()
+      const available = resources.fruitCount(tier)
+      if (available < count || count <= 0) {
+        return { ok: false, message: `Không đủ ${fruit.name} (hiện có: ${available}).`, gained: 0 }
+      }
+
+      const bonus = fruit.bonus * count
+      let totalGain = 0
+
+      const newRoots = linggen.value.roots.map(r => {
+        if (targetElement && r.element !== targetElement) {
+          return { ...r }
+        }
+        const before = r.aptitude
+        const after = Math.min(100, before + bonus)
+        totalGain += after - before
+        return { ...r, aptitude: after }
+      })
+
+      if (totalGain <= 0) {
+        return {
+          ok: false,
+          message: targetElement
+            ? `Linh căn ${targetElement} đã đạt cực hạn 100 điểm, không thể tăng thêm!`
+            : 'Tất cả linh căn đều đã đạt cực hạn viên mãn (100 điểm)!',
+          gained: 0
+        }
+      }
+
+      if (!resources.spendFruit(tier, count)) {
+        return { ok: false, message: 'Khấu trừ linh quả thất bại.', gained: 0 }
+      }
+
+      linggen.value = recomputeLinggen(newRoots)
+      return {
+        ok: true,
+        message: `Đã phục dụng ${count} quả ${fruit.name}! Tư chất linh căn tăng +${totalGain} điểm, tốc độ tu luyện đạt ×${linggen.value.growthMult.toFixed(2)}.`,
+        gained: totalGain
+      }
+    }
+
+    /**
+     * Nâng toàn bộ linh căn lên mức 100 điểm cực hạn viên mãn (dành cho Admin / Test)
+     */
+    function maxAllSpiritRoots(): { ok: boolean; message: string } {
+      if (!linggen.value || linggen.value.roots.length === 0) {
+        return { ok: false, message: 'Chưa thức tỉnh linh căn!' }
+      }
+      const newRoots = linggen.value.roots.map(r => ({ ...r, aptitude: 100 }))
+      linggen.value = recomputeLinggen(newRoots)
+      return {
+        ok: true,
+        message: `Toàn bộ linh căn đã đạt cực hạn viên mãn 100 điểm! Hệ số tu luyện: ×${linggen.value.growthMult.toFixed(2)}.`
+      }
+    }
+
     /** 转世重置(保留天赋/道果/转世次数/宿命传承) */
     function rebirth(newLinggen: LinggenProfile): void {
       reincarnation.value = {
@@ -650,6 +747,8 @@ export const usePlayerStore = defineStore(
       dongfu.resetForRebirth()
       // 道童同为今生观中家业,随皮囊散去 —— 与洞府同处归零,新世 sync() 会补送一名入门道童
       apprentices.resetForRebirth()
+      // Quần thể tu sĩ: Hảo cảm và đề nghị kiếp trước tan biến theo thể xác, thế giới tu sĩ và ký ức kỳ ngộ giữ nguyên
+      useNpcStore().resetForRebirth()
       // 新的皮囊,新的道号:神魂不灭带走的是所知所历(宿慧/道果/天赋/称号),不是这个名号。
       // 每一世重掷一个道号(避免与上世撞名),亦是「N 世」在界面上一眼可辨的体现 ——
       // 否则转世后顶栏仍是同一个道号,「这一世是全新的一世」无从感知(见 samsaraAudit 的姓名一行)。
@@ -666,6 +765,22 @@ export const usePlayerStore = defineStore(
       if (!Number.isFinite(age.value)) age.value = START_AGE
       if (!Number.isFinite(major.value) || major.value < 0) major.value = 0
       if (!Number.isFinite(sub.value) || sub.value < 0) sub.value = 0
+      // 性别字段安全修复: 若旧存档缺失,智能根据已有的道侣推断,避免破坏既有羁绊
+      if (gender.value !== 'male' && gender.value !== 'female') {
+        let inferred: CharacterGender = 'male'
+        if (bond.value) {
+          const d = daoluDef(bond.value.daoluId)
+          if (d?.gender === 'male') inferred = 'female'
+          else if (d?.gender === 'female') inferred = 'male'
+        } else if (reincarnation.value?.bonds?.length) {
+          const lastBond = reincarnation.value.bonds[reincarnation.value.bonds.length - 1]
+          const d = lastBond ? daoluDef(lastBond.daoluId) : undefined
+          if (d?.gender === 'male') inferred = 'female'
+        }
+        gender.value = inferred
+      }
+      // 先天资质字段安全修复
+      aptitudes.value = asStringArray(aptitudes.value).filter(id => aptitudeDef(id) !== undefined)
       // 寿元加算:lifespanMax = floor(base×(1+pct) + 此栏),写坏(字符串/NaN)会让它变 NaN,
       // 而引擎死亡判据 `age < lifespanMax` 恒为 false → 下一拍即「油尽灯枯」。坏档必死,必须修回
       lifespanBonusYears.value = asFiniteNumber(lifespanBonusYears.value, 0)
@@ -1047,6 +1162,8 @@ export const usePlayerStore = defineStore(
 
     return {
       name,
+      gender,
+      aptitudes,
       linggen,
       major,
       sub,
@@ -1146,7 +1263,9 @@ export const usePlayerStore = defineStore(
       setDivination,
       setBreakthroughPrep,
       setEnlightenmentAt,
-      setFortuneChoices
+      setFortuneChoices,
+      consumeSpiritRootFruit,
+      maxAllSpiritRoots
     }
   },
   { persist: persistConfig('player') }

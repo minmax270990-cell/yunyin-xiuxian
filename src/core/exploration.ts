@@ -3,7 +3,7 @@
  */
 import type { AdventureSession, CombatRules, ExploreMode, FoeOrigin, RegionDef } from '@/types'
 import { rng } from '@/utils/random'
-import { add, gnZero } from '@/utils/gnum'
+import { add, gnZero, mulN } from '@/utils/gnum'
 import { formatGN } from '@/utils/format'
 import { enemyDef } from '@/data/enemies'
 import { beastIcon } from '@/data/beastFamilies'
@@ -16,7 +16,7 @@ import {
   EXPLORE_MODES
 } from '@/data/constants'
 import { mansionEventLuck } from './astronomy'
-import type { StatMods } from '@/types'
+import type { StatMods, GNum } from '@/types'
 import { applyCombatRuleSnap, makeEnemySnap, mortalFoeOriginFromParts, resolveCombat, snapPower } from './combat'
 import { petDef } from '@/data/pets'
 import type { RegionEventId } from './regionEvent'
@@ -34,6 +34,7 @@ import { useAdventureStore } from '@/stores/adventure'
 import type { LastBattleView } from '@/stores/adventure'
 import { useCultivationStore } from '@/stores/cultivation'
 import { useSettingsStore } from '@/stores/settings'
+import { useGameStore } from '@/stores/game'
 import { useUiStore } from '@/stores/ui'
 import { checkSuppression, memorialLine, MEMORIAL_CHANCE } from './suppress'
 import { recordLoss, isNemesis, markAvenged, ghostOf, ghostTitle, ghostLeadIn, ECHO_GHOST_CHANCE, NEMESIS_THRESHOLD } from './worldMemory'
@@ -47,16 +48,20 @@ import { noteEnemy } from './loreService'
 import { noteTaboo } from './samsaraService'
 import { useInventoryStore } from '@/stores/inventory'
 import { advanceRoute, canEnterRegion, entryBlockReason, placeContent } from './mortalWorldService'
-import { terrainOf } from './mortalIdentity'
+import { aptitudeDef } from '@/data/aptitudes'
 import {
   advanceBond,
-  candidatesFor,
-  destinedCandidate,
-  meet,
   offerBondEvent,
   sparkIntent,
-  speakIntent
+  speakIntent,
+  currentBond,
+  currentDaolu,
+  type DaoluAdventureEntry
 } from './daoluService'
+import { daoluDef } from '@/data/daolu'
+import { triggerDaoluAdventure } from './daoluInteractionService'
+import { powerScale, gameDay } from './formulas'
+import { displayDaoluName } from '@/ui/displayZhVi'
 
 /**
  * 该区域这一世能否进入。
@@ -70,7 +75,71 @@ function routeAllows(regionId: string): boolean {
   return canEnterRegion(regionId)
 }
 
-export function startExploration(regionId: string, mode: ExploreMode): boolean {
+/**
+ * Đánh giá tương quan thực lực và mức độ nguy hiểm của khu vực đối với Đạo lữ đồng hành
+ */
+export interface DaoluCompanionEval {
+  partnerId: string
+  partnerName: string
+  partnerMajor: number
+  partnerPower: GNum
+  enemyEstPower: GNum
+  dangerLevel: 'safe' | 'perilous' | 'deadly'
+  dangerTitle: string
+  dangerDesc: string
+}
+
+export function evaluateDaoluCompanion(regionId: string): DaoluCompanionEval | null {
+  const bond = currentBond()
+  const def = currentDaolu()
+  if (!bond || !def || bond.fallen || bond.departed) return null
+
+  const region = regionDef(regionId)
+  if (!region) return null
+
+  const daoluMajor = bond.daoluMajor ?? def.startMajor
+  const scale = powerScale(daoluMajor)
+  // Ước lượng chiến lực đạo lữ (định hướng chiến đấu tăng 35% thực lực bảo hộ)
+  const combatMultiplier = bond.daoluFocus === 'combat' ? 1.35 : 1.0
+  const partnerPower = mulN(scale, Math.floor(120 * combatMultiplier))
+
+  // Ước lượng chiến lực yêu ma khu vực
+  const enemyScale = powerScale(region.tier)
+  const dangerRatio = 1 + (region.danger - 1) * 0.05
+  const enemyEstPower = mulN(enemyScale, 110 * dangerRatio)
+
+  // So sánh tương quan
+  const ratio = partnerPower.e !== enemyEstPower.e
+    ? Math.pow(10, partnerPower.e - enemyEstPower.e) * (partnerPower.m / enemyEstPower.m)
+    : partnerPower.m / enemyEstPower.m
+
+  let dangerLevel: 'safe' | 'perilous' | 'deadly' = 'safe'
+  let dangerTitle = 'An toàn tương đối'
+  let dangerDesc = 'Đạo lữ tu vi thâm hậu, thực lực áp chế hung thú yêu ma nơi đây. Hai người có thể an tâm cùng nhau hộ trì lịch luyện.'
+
+  if (ratio < 0.7) {
+    dangerLevel = 'deadly'
+    dangerTitle = 'Cực kỳ nguy hiểm'
+    dangerDesc = 'Hiểm cảnh vượt xa tu vi hiện tại của Đạo lữ! Yêu ma hung hãn khôn cùng, nếu thất thủ Đạo lữ có nguy cơ VẪN LẠC TỬ VONG VĨNH VIỄN!'
+  } else if (ratio < 1.2) {
+    dangerLevel = 'perilous'
+    dangerTitle = 'Nguy hiểm tiềm tàng'
+    dangerDesc = 'Thực lực Đạo lữ ngang ngửa hiểm cảnh nơi này. Nếu gặp phải biến cố hoặc yêu thú hung hãn, Đạo lữ có nguy cơ thụ thương.'
+  }
+
+  return {
+    partnerId: def.id,
+    partnerName: def.name,
+    partnerMajor: daoluMajor,
+    partnerPower,
+    enemyEstPower,
+    dangerLevel,
+    dangerTitle,
+    dangerDesc
+  }
+}
+
+export function startExploration(regionId: string, mode: ExploreMode, accompanyPartner = false): boolean {
   const adventure = useAdventureStore()
   const player = usePlayerStore()
   const ui = useUiStore()
@@ -78,25 +147,35 @@ export function startExploration(regionId: string, mode: ExploreMode): boolean {
   if (!region || player.dead) return false
   // Phase 28 闭关禁令:闭关期间不得外出历练(与 startRetreat 的互斥守卫配对,双向互斥)
   if (isRetreating()) {
-    ui.toast('你正在闭关静修,心无旁骛,暂勿外出历练', 'warn')
+    ui.toast('Ngươi đang bế quan tĩnh tu, tâm vô bàng vụ, tạm thời chớ nên ra ngoài lịch luyện', 'warn')
     return false
   }
   // 拒绝必须让玩家看见 —— 静默 return false 在界面上等同于「点了没反应」
   if (adventure.session) {
-    ui.toast('你正在历练途中,先了结眼下这一程', 'warn')
+    ui.toast('Ngươi đang trong chuyến lịch luyện, hãy hoàn thành chặng này trước', 'warn')
     return false
   }
   // 秘境与历练互斥:身处秘境者不许再开一程历练,免得两段「在途」同跑
   if (player.secretRealm) {
-    ui.toast('你正身处秘境之中,先出了秘境再行历练', 'warn')
+    ui.toast('Ngươi đang ở trong bí cảnh, hãy rời khỏi bí cảnh trước khi lịch luyện', 'warn')
     return false
   }
   if (!routeAllows(regionId)) {
-    ui.toast(entryBlockReason(regionId) ?? `${region.name}此时去不得`, 'warn')
+    ui.toast(entryBlockReason(regionId) ?? `${region.name} lúc này chưa thể đi`, 'warn')
     return false
   }
   // 踏入一处新地界 —— 眼前是没走过的路,她可能有话要说
   offerBondEvent('enterPlace')
+
+  let partnerId: string | undefined = undefined
+  if (accompanyPartner) {
+    const bond = currentBond()
+    const def = currentDaolu()
+    if (bond && def && !bond.fallen && !bond.departed) {
+      partnerId = def.id
+    }
+  }
+
   const now = Date.now()
   const modeDef = EXPLORE_MODES[mode]
   const durationSec = exploreDurationSec(mode, player.petId)
@@ -111,15 +190,22 @@ export function startExploration(regionId: string, mode: ExploreMode): boolean {
     events: 0,
     stoneGain: gnZero(),
     expGain: gnZero(),
-    itemGain: 0
+    itemGain: 0,
+    accompanyPartnerId: partnerId,
+    partnerHpPct: partnerId ? 1.0 : undefined,
+    playerHpPct: 1.0
   }
   adventure.setSession(session)
-  ui.toast(`你动身前往${region.name},开始${modeDef.name}`, 'info')
+  ui.toast(`Ngươi khởi hành đến ${region.name}, bắt đầu ${modeDef.name}`, 'info')
+  if (partnerId) {
+    const dName = displayDaoluName(currentDaolu()?.name ?? 'Đạo lữ')
+    ui.toast(`Cùng đạo lữ 【${dName}】song hành xuất chinh lịch luyện!`, 'rare')
+  }
   // Phase 31 A2:出发时低频判定区域事件(妖潮等,30~120 分钟)
   const ev = rollRegionEvent(region)
   if (ev) {
     const def = regionEventDef(ev.eventId)
-    ui.toast(`${region.name}风云突变——${def?.name ?? '异象'}!`, 'warn')
+    ui.toast(`${region.name} phong vân biến ảo —— ${def?.name ?? 'Dị tượng'}!`, 'warn')
   }
   // Phase 31.4 区域凭吊:重访已镇压之地,低概率世界说起你的旧事
   if (player.suppressedRegions.includes(region.id) && rng.chance(MEMORIAL_CHANCE)) {
@@ -142,17 +228,21 @@ export function stopExploration(reason: 'manual' | 'defeat' | 'complete' | 'retr
   }
   // 总结带上这一趟的实际所得(会话账目即 afterWin 的真实入账):只说胜场与际遇,
   // 玩家还得自己去翻行囊才知道赚没赚
-  const haul = `得灵石 ${formatGN(s.stoneGain)}、修为 ${formatGN(s.expGain)}${
-    s.itemGain > 0 ? `、拾获 ${s.itemGain} 件` : ''
+  const haul = `Thu hoạch: Linh thạch ${formatGN(s.stoneGain)}, tu vi ${formatGN(s.expGain)}${
+    s.itemGain > 0 ? `, nhặt được ${s.itemGain} món` : ''
   }`
   if (reason === 'complete') {
-    ui.toast(`此行${region?.name ?? ''}历练圆满,胜 ${s.wins} 场,际遇 ${s.events} 次;${haul}`, 'success')
+    ui.toast(`Chuyến lịch luyện tại ${region?.name ?? ''} viên mãn, thắng ${s.wins} trận, gặp cơ duyên ${s.events} lần; ${haul}`, 'success')
+    if (s.accompanyPartnerId) {
+      const def = daoluDef(s.accompanyPartnerId)
+      ui.toast(`Cùng đạo lữ 【${displayDaoluName(def?.name ?? '')}】hoàn thành xuất sắc chuyến lịch luyện, đạo tâm hai người thêm phần gắn kết!`, 'rare')
+    }
   } else if (reason === 'defeat') {
-    ui.toast(`你身负重伤,不得不中断历练归来疗伤;此行${haul}`, 'warn')
+    ui.toast(`Ngươi mang trọng thương, đành phải gián đoạn lịch luyện trở về trị thương; chuyến này ${haul}`, 'warn')
   } else if (reason === 'retreat') {
-    ui.toast(`你与此敌鏖战多时难分胜负,对方遁走,你无功而返;此行${haul}`, 'info')
+    ui.toast(`Ngươi cùng địch huyết chiến nhiều hiệp bất phân thắng bại, đối phương đào tẩu, ngươi đành lui bước; chuyến này ${haul}`, 'info')
   } else {
-    ui.toast(`你收拾行囊,提前结束了这次历练;此行${haul}`, 'info')
+    ui.toast(`Ngươi thu dọn hành trang, kết thúc sớm chuyến lịch luyện; chuyến này ${haul}`, 'info')
   }
 }
 
@@ -297,7 +387,10 @@ function runBattle(now: number): void {
   const eSnap = makeEnemySnap(eDef, region.tier, dangerFactor, foeOrigin)
   // 道途在世,一切战斗皆循此规则
   // 逆旅契:本世签下的契对每一场历练战斗生效(道果的非效率出口)
-  const rules = explorationRules()
+  const rules: CombatRules = {
+    ...explorationRules(),
+    ...(s.playerHpPct !== undefined ? { playerStartHpPct: s.playerHpPct } : {})
+  }
   // 卡片那对「敌 X · 我 Y」用**开打那一刻**的双方有效快照(规则改过就按改过的算)折出,
   // 与 resolveCombat 同一份 applyCombatRuleSnap —— 战斗后换装不会让它飘,规则生效也不谎报。
   // 离线结算时玩家未必在场,这一对只随在线战报走(离线归来卷轴另有旧账口径)。
@@ -307,6 +400,32 @@ function runBattle(now: number): void {
   const result = resolveCombat(pSnap, eSnap, rng, rules)
   // Phase 32.5:「独行」之誓看的是有没有真的祭出法宝,不是有没有法宝在身
   if (useInventoryStore().equippedArtifacts.length > 0) noteTaboo('artifact')
+
+  // Tính toán hao tổn khí huyết của Đạo Lữ đồng hành trong trận
+  const partnerStartHpPct = s.partnerHpPct ?? 1.0
+  let partnerEndHpPct = partnerStartHpPct
+  if (s.accompanyPartnerId) {
+    const bond = player.bond
+    const def = daoluDef(s.accompanyPartnerId)
+    const daoluMajor = bond?.daoluMajor ?? def?.startMajor ?? 1
+    const partnerScale = powerScale(daoluMajor)
+    const enemyScale = powerScale(region.tier)
+    const ratio = partnerScale.e !== enemyScale.e
+      ? Math.pow(10, partnerScale.e - enemyScale.e) * (partnerScale.m / enemyScale.m)
+      : partnerScale.m / enemyScale.m
+
+    let factor = 0.8
+    if (ratio >= 1.5) factor = 0.35
+    else if (ratio >= 1.0) factor = 0.65
+    else if (ratio >= 0.7) factor = 1.05
+    else factor = 1.5
+
+    if (bond?.daoluFocus === 'combat') factor *= 0.75
+
+    const damageTakenPct = Math.max(0, (rules.playerStartHpPct ?? 1) - result.playerHpPct)
+    const baseDmg = damageTakenPct > 0 ? damageTakenPct * factor : (ratio < 1.0 ? 0.04 : 0.01)
+    partnerEndHpPct = Math.max(0, Math.min(1, Math.round((partnerStartHpPct - baseDmg) * 100) / 100))
+  }
 
   maybeEncounter(s.regionId)
   // 战斗情境 → 关系事件:首胜之后是「刀下」,濒死之际是「重伤」
@@ -323,7 +442,9 @@ function runBattle(now: number): void {
     enemyPower,
     playerPower,
     result,
-    at: now
+    at: now,
+    partnerHpPct: s.accompanyPartnerId ? partnerEndHpPct : undefined,
+    partnerStartHpPct: s.accompanyPartnerId ? partnerStartHpPct : undefined
   }
   adventure.recordBattle(view)
   track('battles')
@@ -347,11 +468,21 @@ function runBattle(now: number): void {
       stoneGain: add(s.stoneGain, drops.stone),
       expGain: add(s.expGain, drops.exp),
       itemGain: s.itemGain + drops.items,
-      nextBattleAt: nextBattleTime(now)
+      nextBattleAt: nextBattleTime(now),
+      partnerHpPct: s.accompanyPartnerId ? partnerEndHpPct : undefined,
+      playerHpPct: result.playerHpPct
     })
     if (eDef.isBoss) {
       track('bossKills')
       clearRegionAndUnlockNext(region.id)
+    }
+
+    // Đạo lữ đồng hành cùng chia sẻ kinh nghiệm chiến thắng
+    if (s.accompanyPartnerId) {
+      advanceBond({ fate: 1, trust: 1, shared: true })
+      if (rng.chance(0.12)) {
+        triggerDaoluAdventure()
+      }
     }
 
     // Phase 30: 更新区域统计并判定镇压
@@ -365,13 +496,13 @@ function runBattle(now: number): void {
     if (suppressed && !player.suppressQualified.includes(region.id)) {
       player.markSuppressQualified(region.id)
       player.suppressRegion(region.id)
-      ui.toast(`你已彻底镇压${region.name},此地将自动产出资源`, 'rare')
+      ui.toast(`Ngươi đã triệt để trấn áp ${region.name}, nơi này sẽ tự động sản xuất tài nguyên`, 'rare')
     }
 
     // Phase 30.9 S2: 击中宿敌 → 雪耻
     if (isNemesis(player.nemeses, eDef.id)) {
       player.setNemeses(markAvenged(player.nemeses, eDef.id, now))
-      ui.toast(`【雪耻】宿敌${eDef.name}已被斩于剑下!`, 'rare')
+      ui.toast(`【Tuyết Sỉ】Túc địch ${eDef.name} đã bị trảm dưới kiếm!`, 'rare')
     }
   } else {
     // 回合耗尽而遁走(敌未死你亦未死)不是败亡:无功而返,但不重伤、不计宿敌败绩。
@@ -382,7 +513,7 @@ function runBattle(now: number): void {
     // Phase 31 S4:灵兽护主 —— 只在真正危急(身死)时低概率护住这一击
     if (!timeout && rng.chance(personalityEffects(player.petId).lossReduction)) {
       adventure.setSession({ ...s, nextBattleAt: nextBattleTime(now) })
-      ui.toast('灵兽机警,替你挡开了这一击,历练继续', 'info')
+      ui.toast('Linh thú cơ cảnh, thay ngươi đỡ đòn công kích này, lịch luyện tiếp tục', 'info')
       return
     }
     if (!timeout) cultivation.addBuff('injury', now)
@@ -395,9 +526,60 @@ function runBattle(now: number): void {
       const { list, becameNemesis } = recordLoss(player.nemeses, eDef.id, eDef.name, region.id, now)
       player.setNemeses(list)
       if (becameNemesis) {
-        ui.toast(`【宿敌】你已在${eDef.name}手下败北${NEMESIS_THRESHOLD}次——此敌已成你的宿敌!`, 'warn')
+        ui.toast(`败北${NEMESIS_THRESHOLD}次,此獠成了你的宿敌!`, 'warn')
       }
     }
+
+    // Xử lý biến cố Đạo lữ khi thất bại
+    if (s.accompanyPartnerId) {
+      const def = daoluDef(s.accompanyPartnerId)
+      if (timeout) {
+        if (def) ui.toast(`Đạo lữ ${displayDaoluName(def.name)} cùng ngươi an toàn rút lui khỏi vòng vây`, 'info')
+      } else {
+        // Thất bại nặng nề (HP <= 0), Đạo lữ liều mình giải nguy
+        const bond = player.bond
+        if (bond && def && !bond.fallen) {
+          const dName = displayDaoluName(def.name)
+          const daoluMajor = bond.daoluMajor ?? def.startMajor
+          const partnerScale = powerScale(daoluMajor)
+          const enemyScale = powerScale(region.tier)
+          const ratio = partnerScale.e !== enemyScale.e
+            ? Math.pow(10, partnerScale.e - enemyScale.e) * (partnerScale.m / enemyScale.m)
+            : partnerScale.m / enemyScale.m
+
+          // Nguy cơ tử vong nếu quái quá mạnh hoặc là Boss (định hướng combat giảm 50% tỷ lệ tử vong)
+          const baseDeath = ratio < 0.7 ? 0.45 : (eDef.isBoss ? 0.3 : 0.1)
+          const deathChance = bond.daoluFocus === 'combat' ? baseDeath * 0.5 : baseDeath
+          if (rng.chance(deathChance)) {
+            // Đạo lữ vẫn lạc (tử vong vĩnh viễn)
+            const fallenAdv: DaoluAdventureEntry = {
+              id: `adv_fallen_${Date.now()}`,
+              title: 'Liều Mình Đoạn Hậu',
+              desc: `Tại ${region.name}, gặp phải ${eDef.name} hung hãn dị thường. Vì bảo vệ đạo hữu thoát thân, ${dName} liều mình chặn đòn chí mạng, thân tử đạo tiêu!`,
+              atDay: gameDay(useGameStore().totalPlaySec),
+              kind: 'peril'
+            }
+            const prevAdv = bond.adventures ?? []
+            player.setBond({
+              ...bond,
+              fallen: true,
+              adventures: [fallenAdv, ...prevAdv].slice(0, 10)
+            })
+            // Xóa người đồng hành khỏi session
+            adventure.setSession({ ...s, accompanyPartnerId: undefined, losses: s.losses + 1 })
+            ui.toast(`【Bi Biến Đoạn Trường】Tại ${region.name}, ${dName} vì bảo vệ ngươi mà trúng phải đòn chí mạng, thân tử đạo tiêu!`, 'warn')
+          } else {
+            // Đạo lữ trọng thương cùng thoát thân
+            player.setBond({
+              ...bond,
+              daoluStatus: 'injured'
+            })
+            ui.toast(`Trong cơn nguy cấp, ${dName} liều mình mở đường máu đưa ngươi thoát khỏi vuốt yêu ma, đạo lữ khí huyết chấn động thụ thương!`, 'warn')
+          }
+        }
+      }
+    }
+
     stopExploration(timeout ? 'retreat' : 'defeat')
   }
 }
@@ -413,33 +595,26 @@ const MEET_CHANCE = 0.06
  *
  * 注意这里只推进关系,不发放任何东西
  */
-function maybeEncounter(regionId: string): void {
+function maybeEncounter(_regionId: string): void {
   const player = usePlayerStore()
   const w = useAdventureStore().mortalWorld
   if (!w) return
+  const charmBonus = (player.aptitudes ?? []).reduce((acc, id) => acc + (aptitudeDef(id)?.charmBonus ?? 0), 0)
+  const effectiveMeetChance = MEET_CHANCE * (1 + charmBonus)
   const bond = player.bond
-  if (bond) {
-    // 已相识:并肩走过一段险路,缘分与信任增长,契合另算
-    if (!bond.fallen && rng.chance(MEET_CHANCE)) {
-      advanceBond({ fate: 3, trust: 2, shared: true })
-      // 又一次并肩 —— 她心里那件事又近了一点
-      sparkIntent('shared')
-    }
-    // 她想说的时候就说,不必等世界给一个情境位
-    speakIntent()
+  if (!bond) {
+    // Đạo lữ hiện tại tự chọn qua hệ thống tương tác NPC, không tự động gặp trong lịch luyện
     return
   }
-  if (!rng.chance(MEET_CHANCE)) return
-  const terrains = w.chain.map(p => terrainOf(p.fromId))
-  // 宿缘优先:上一世走得深的人有机会再遇,但绝不保证
-  const destined = destinedCandidate(player.reincarnation.bonds, terrains)
-  const pool = destined ? [destined] : candidatesFor(terrains)
-  if (pool.length === 0) return
-  const here = regionDef(regionId)
-  // 同地貌的人更可能在此处照面
-  const local = here ? pool.filter(d => d.terrains.length === 0 || d.terrains.includes(terrainOf(regionId))) : pool
-  const pick = (local.length > 0 ? local : pool)[rng.int(0, (local.length > 0 ? local : pool).length - 1)]!
-  meet(pick.id)
+
+  // 已相识:并肩走过一段险路,缘分与信任增长,契合另算
+  if (!bond.fallen && rng.chance(effectiveMeetChance)) {
+    advanceBond({ fate: 3, trust: 2, shared: true })
+    // 又一次并肩 —— 她心里那件事又近了一点
+    sparkIntent('shared')
+  }
+  // 她想说的时候就说,不必等世界给一个情境位
+  speakIntent()
 }
 
 /** 标记区域首领已清并连锁解锁后续区域(在线/离线共用) */
@@ -449,21 +624,21 @@ export function clearRegionAndUnlockNext(regionId: string): void {
   // 旧链记账与连锁解锁只在「首次清」时做;已清(如旧档全解锁)不重播
   if (adventure.markCleared(regionId)) {
     const region = regionDef(regionId)
-    ui.toast(`你击败了${region?.name ?? ''}之主!`, 'rare')
+    ui.toast(`Ngươi đã đánh bại thủ lĩnh của ${region?.name ?? ''}!`, 'rare')
     // 击破首领 —— 打开了本不该开的地方
     offerBondEvent('bossDefeated')
     // 也可能翻出与她未了之事有关的东西
     if (rng.chance(0.5)) sparkIntent('omen')
     for (const r of REGIONS) {
       if (r.requireCleared === regionId && adventure.unlock(r.id)) {
-        ui.toast(`新的历练之地已开放——${r.name}`, 'rare')
+        ui.toast(`Vùng đất lịch luyện mới đã mở ra —— ${r.name}`, 'rare')
       }
     }
   }
   // 本世路线推进永远照跑(与旧链是否已含此区域无关):旧档已清的区域也得以把
   // 本世节点推进 —— 此前 `if (!markCleared) return` 在旧档全清处把路线整个锁死
   const nextPlace = advanceRoute(regionId)
-  if (nextPlace) ui.toast(`此世前路已明——${nextPlace}`, 'rare')
+  if (nextPlace) ui.toast(`Tiền đồ kiếp này đã sáng tỏ —— ${nextPlace}`, 'rare')
 }
 
 function nextBattleTime(now: number): number {
@@ -560,8 +735,8 @@ export function tickExploration(now: number): void {
          * 档名与颜色取自 core/eventTier,不在这里另写一份判据。
          */
         const tier = eventTierDef(eventTierOf(ev.id))
-        if (tier.id === 'jiyuan') useUiStore().toast(`千载难逢 —— 机缘「${ev.title}」`, 'rare')
-        else if (tier.id === 'qiyuan') useUiStore().toast(`缘分再续 —— 「${ev.title}」`, 'info')
+        if (tier.id === 'jiyuan') useUiStore().toast(`Nghìn năm khó gặp —— Cơ duyên「${ev.title}」`, 'rare')
+        else if (tier.id === 'qiyuan') useUiStore().toast(`Duyên phận tương phùng ——「${ev.title}」`, 'info')
         return
       }
     }
@@ -576,5 +751,59 @@ export function afterEventResolved(now: number): void {
   const s = adventure.session
   if (s) {
     adventure.setSession({ ...s, events: s.events + 1, nextBattleAt: nextBattleTime(now) })
+  }
+}
+
+export interface HealDaoluBloodResult {
+  ok: boolean
+  reason?: string
+  playerHpLoss?: number
+  newPlayerHp?: number
+  partnerHpRestored?: number
+}
+
+/**
+ * Dùng khí huyết của bản thân để chữa thương hồi phục cho Đạo lữ đồng hành
+ * Người chơi mất số máu theo tỉ lệ máu đã mất của đạo lữ (tỷ lệ 60%).
+ */
+export function healDaoluWithPlayerBlood(): HealDaoluBloodResult {
+  const adventure = useAdventureStore()
+  const ui = useUiStore()
+  const s = adventure.session
+  if (!s || !s.accompanyPartnerId) {
+    return { ok: false, reason: 'Hiện tại không có Đạo lữ cùng lịch luyện' }
+  }
+  const currentPartnerHp = s.partnerHpPct ?? 1.0
+  if (currentPartnerHp >= 0.99) {
+    return { ok: false, reason: 'Khí huyết Đạo lữ dồi dào, không cần chữa trị' }
+  }
+  const missingPartnerHp = 1.0 - currentPartnerHp
+  // Tỷ lệ quy đổi: người chơi mất 60% lượng máu mà đạo lữ đã mất
+  const playerLossRatio = 0.6
+  const playerHpLoss = Math.round(missingPartnerHp * playerLossRatio * 100) / 100
+  const curPlayerHp = s.playerHpPct ?? 1.0
+  // Tối thiểu giữ lại 10% máu cho người chơi để tránh nguy hiểm
+  const newPlayerHp = Math.max(0.1, Math.round((curPlayerHp - playerHpLoss) * 100) / 100)
+
+  adventure.setSession({
+    ...s,
+    partnerHpPct: 1.0,
+    playerHpPct: newPlayerHp
+  })
+
+  // Gia tăng tình cảm đạo lữ khi hy sinh cứu nhau
+  advanceBond({ fate: 3, trust: 3, shared: true })
+  const def = daoluDef(s.accompanyPartnerId)
+  const dName = displayDaoluName(def?.name ?? 'Đạo lữ')
+  ui.toast(
+    `Ngươi vận dụng khí huyết bản thân độ vào kinh mạch của 【${dName}】, giúp nàng bình phục hoàn toàn! (Tiêu hao ${Math.round(playerHpLoss * 100)}% khí huyết)`,
+    'rare'
+  )
+
+  return {
+    ok: true,
+    playerHpLoss,
+    newPlayerHp,
+    partnerHpRestored: missingPartnerHp
   }
 }

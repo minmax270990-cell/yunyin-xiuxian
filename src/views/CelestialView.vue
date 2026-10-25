@@ -38,34 +38,34 @@
           <div v-if="currentDao" class="card-ink mt-2 px-4 py-3">
             <p class="flex items-center gap-3">
               <span class="grid h-10 w-10 place-items-center rounded-md bg-cinnabar/90 font-kai text-[20px] seal-face">
-                {{ currentDao.seal }}
+                {{ displayDaoPathSeal(currentDao.seal) }}
               </span>
-              <span class="font-kai text-[16px] tracking-widest text-ink">{{ currentDao.name }}</span>
+              <span class="font-kai text-[16px] tracking-widest text-ink">{{ displayDaoPathName(currentDao.name) }}</span>
             </p>
-            <p class="mt-2 text-[11px] leading-relaxed text-ink-faint">{{ currentDao.desc }}</p>
-            <p v-for="(r, i) in currentDao.ruleText" :key="i" class="mt-0.5 text-[11px] text-azure">· {{ r }}</p>
-            <p v-for="(r, i) in currentDao.deepText" :key="`d${i}`" class="mt-0.5 text-[11px] text-gold-ink">◈ {{ r }}</p>
+            <p class="mt-2 text-[11px] leading-relaxed text-ink-faint">{{ displayDaoPathDesc(currentDao.desc) }}</p>
+            <p v-for="(r, i) in currentDao.ruleText" :key="i" class="mt-0.5 text-[11px] text-azure">· {{ displayDaoPathRule(r) }}</p>
+            <p v-for="(r, i) in currentDao.deepText" :key="`d${i}`" class="mt-0.5 text-[11px] text-gold-ink">◈ {{ displayDaoPathDeep(r) }}</p>
             <p v-if="swordInfo" class="mt-1.5 text-[11px] text-violet-ink tabular">
-              Kiếm ý hiện tại {{ swordInfo.layers }}/{{ SWORD_PURITY_MAX_LAYERS }} 层 (tầng) ({{
+              Kiếm ý hiện tại {{ swordInfo.layers }}/{{ SWORD_PURITY_MAX_LAYERS }} tầng ({{
                 swordInfo.checks
                   .filter(c => c.ok)
                   .map(c => c.name)
                   .join(', ') || 'Chưa thuần khiết'
               }})
             </p>
-            <p v-if="daoStory" class="mt-1.5 font-kai text-[11px] leading-relaxed text-ink-soft">「{{ daoStory }}」</p>
+            <p v-if="daoStory" class="mt-1.5 font-kai text-[11px] leading-relaxed text-ink-soft">「{{ displayDaoStory(daoStory) }}」</p>
           </div>
           <div v-else class="mt-2 grid grid-cols-2 gap-2.5">
             <button v-for="dao in DAO_PATHS" :key="dao.id" class="card-ink px-3 py-3 text-left active:scale-98" @click="pickDao(dao.id)">
               <p class="flex items-center gap-2">
                 <span class="grid h-8 w-8 place-items-center rounded-md bg-cinnabar/85 font-kai text-[16px] seal-face">
-                  {{ dao.seal }}
+                  {{ displayDaoPathSeal(dao.seal) }}
                 </span>
-                <span class="font-kai text-[14px] tracking-widest text-ink">{{ dao.name }}</span>
+                <span class="font-kai text-[14px] tracking-widest text-ink">{{ displayDaoPathName(dao.name) }}</span>
               </p>
-              <p class="mt-1.5 text-[10px] leading-relaxed text-ink-faint">{{ dao.desc }}</p>
-              <p v-for="(r, i) in dao.ruleText" :key="i" class="mt-0.5 text-[10px] text-azure">· {{ r }}</p>
-              <p v-for="(r, i) in dao.deepText" :key="`d${i}`" class="mt-0.5 text-[10px] text-gold-ink">◈ {{ r }}</p>
+              <p class="mt-1.5 text-[10px] leading-relaxed text-ink-faint">{{ displayDaoPathDesc(dao.desc) }}</p>
+              <p v-for="(r, i) in dao.ruleText" :key="i" class="mt-0.5 text-[10px] text-azure">· {{ displayDaoPathRule(r) }}</p>
+              <p v-for="(r, i) in dao.deepText" :key="`d${i}`" class="mt-0.5 text-[10px] text-gold-ink">◈ {{ displayDaoPathDeep(r) }}</p>
             </button>
           </div>
         </section>
@@ -100,7 +100,7 @@
       <template v-else-if="celTab === 'exped'">
         <!-- 进行中的远征 -->
         <section v-if="run && runWorld">
-          <SectionTitle :title="`Viễn Chinh · ${runWorld.name}`" :hint="runPact ? `Khế ước「${runPact.name}」` : 'Chưa lập khế ước'" />
+          <SectionTitle :title="`Viễn Chinh · ${displayCelestialWorldName(runWorld.name)}`" :hint="runPact ? `Khế ước「${displayPactName(runPact.name)}」` : 'Chưa lập khế ước'" />
           <div class="card-ink mt-2 px-4 py-3">
             <!-- 行程点列:走到哪一重,一目了然 -->
             <div class="mb-2 flex items-center gap-1.5">
@@ -127,7 +127,7 @@
             <div class="mt-1.5 space-y-1">
               <p v-for="(row, i) in run.rows" :key="i" class="flex justify-between text-[11px]">
                 <span :class="row.win ? 'text-ink-soft' : 'text-cinnabar'">
-                  Trận {{ i + 1 }} {{ row.foeName }} · {{ row.win ? 'Thắng' : 'Bại' }}
+                  Trận {{ i + 1 }} {{ displayCombatBracket(row.foeName) }} · {{ row.win ? 'Thắng' : 'Bại' }}
                 </span>
                 <span class="tabular text-ink-faint">{{ row.rounds }} hiệp · Huyết lượng còn {{ Math.round(row.hpLeftPct * 100) }}%</span>
               </p>
@@ -143,22 +143,22 @@
                   class="rounded-md border border-ink/15 bg-paper-deep/60 px-2.5 py-2 text-left active:scale-98"
                   @click="pickNode(i as 0 | 1)"
                 >
-                  <p class="font-kai text-[13px] text-ink">{{ node.name }}</p>
-                  <p class="mt-0.5 text-[10px] text-ink-faint">{{ node.desc }}</p>
-                  <p class="mt-1 text-[10px] text-cinnabar">Hiểm: {{ node.riskText }}</p>
+                  <p class="font-kai text-[13px] text-ink">{{ displayRouteNodeName(node.name) }}</p>
+                  <p class="mt-0.5 text-[10px] text-ink-faint">{{ displayRouteNodeDesc(node.desc) }}</p>
+                  <p class="mt-1 text-[10px] text-cinnabar">Hiểm: {{ displayRouteRisk(node.riskText) }}</p>
                   <p class="text-[10px] text-gold-ink tabular">Đạo Nguyên +{{ node.bonus }}</p>
-                  <p v-if="nodePreviews[i]" class="mt-0.5 text-[10px] text-violet-ink">Thiên cơ: {{ nodePreviews[i]!.winText }}</p>
+                  <p v-if="nodePreviews[i]" class="mt-0.5 text-[10px] text-violet-ink">Thiên cơ: {{ displayFightPreviewWinText(nodePreviews[i]!.winText) }}</p>
                 </button>
               </div>
             </template>
             <!-- 界主 -->
             <template v-else-if="run.layer === EXPEDITION_GUARDIAN_LAYER">
-              <p class="mb-1.5 text-[11px] text-ink-faint">Đã qua {{ cnNumber(EXPEDITION_ROUTE_LAYERS) }} tầng, Giới Chủ lâm trận. Có thể về phàm giới chỉnh đốn, rồi quay lại quyết chiến.</p>
+              <p class="mb-1.5 text-[11px] text-ink-faint">Đã qua {{ displayCnNum(cnNumber(EXPEDITION_ROUTE_LAYERS)) }} tầng, Giới Chủ lâm trận. Có thể về phàm giới chỉnh đốn, rồi quay lại quyết chiến.</p>
               <p v-if="guardianPreview" class="mb-1.5 text-[10px] text-violet-ink">
-                Thiên cơ: {{ guardianPreview.winText }} · {{ guardianPreview.skillLines.join(' / ') }}
+                Thiên cơ: {{ displayFightPreviewWinText(guardianPreview.winText) }} · {{ guardianPreview.skillLines.map(displayFightPreviewSkillLine).join(' / ') }}
               </p>
               <button class="btn-seal w-full !py-2 !text-[13px] pulse-ready animate-glow-pulse" @click="fightBoss">
-                Quyết chiến · {{ runWorld.guardian.name }}
+                Quyết chiến · {{ displayCombatBracket(runWorld.guardian.name) }}
               </button>
             </template>
             <button
@@ -184,13 +184,13 @@
             <div v-for="world in CELESTIAL_WORLDS" :key="world.id" class="card-ink px-4 py-3">
               <p class="flex items-center gap-2">
                 <span class="grid h-8 w-8 place-items-center rounded-md bg-indigo-ink/85 font-kai text-[15px] seal-face">
-                  {{ world.seal }}
+                  {{ displayCelestialWorldSeal(world.seal) }}
                 </span>
-                <span class="font-kai text-[15px] tracking-widest text-ink">{{ world.name }}</span>
+                <span class="font-kai text-[15px] tracking-widest text-ink">{{ displayCelestialWorldName(world.name) }}</span>
                 <span v-if="endgame.worldClears[world.id]" class="chip-ink border-jade/60 text-[9px] text-jade">
                   Đã phá ×{{ endgame.worldClears[world.id] }}
                 </span>
-                <span class="ml-auto tabular text-[11px] text-ink-faint">Nhập giới + {{ cnNumber(EXPEDITION_ROUTE_LAYERS) }} tầng + Giới Chủ</span>
+                <span class="ml-auto tabular text-[11px] text-ink-faint">Nhập giới + {{ displayCnNum(cnNumber(EXPEDITION_ROUTE_LAYERS)) }} tầng + Giới Chủ</span>
               </p>
               <!--
                 这一界「该有的境界」:敌人按本界锚点层级定标(见 gauntlet.celestialAnchor),
@@ -198,12 +198,12 @@
                 哪天梯子挪了,这句自己跟上。
               -->
               <p class="mt-0.5 text-[10px]" :class="player.major < anchorMajorOf(world.anchorTier) ? 'text-cinnabar' : 'text-ink-faint'">
-                Giới này thích hợp {{ REALMS[anchorMajorOf(world.anchorTier)]?.name ?? '' }} trở lên
+                Giới này thích hợp {{ displayRealmName(REALMS[anchorMajorOf(world.anchorTier)]?.name ?? '') }} trở lên
                 <template v-if="player.major < anchorMajorOf(world.anchorTier)"> · Ngươi hiện dưới cảnh này, chịu cảnh giới áp chế</template>
               </p>
-              <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ world.desc }}</p>
+              <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ displayCelestialWorldDesc(world.desc) }}</p>
               <p class="mt-1 flex flex-wrap gap-x-3 text-[10px] text-violet-ink">
-                <span v-for="(r, i) in world.ruleText" :key="i">{{ r }}</span>
+                <span v-for="(r, i) in world.ruleText" :key="i">{{ displayCelestialWorldRule(r) }}</span>
               </p>
               <button class="btn-seal mt-2.5 w-full !py-2 !text-[13px]" :disabled="run !== null" @click="openPrep(world.id)">
                 {{ run ? 'Đang viễn chinh' : `Khởi Hành (Đạo Nguyên ${world.entryCost} · Còn ${formatNum(endgame.daoSource)} · Thưởng cơ bản phá giới ${world.rewardDaoSource})` }}
@@ -214,23 +214,23 @@
             <div class="card-ink border border-violet-ink/25 px-4 py-3">
               <p class="flex items-center gap-2">
                 <span class="grid h-8 w-8 place-items-center rounded-md bg-violet-ink/85 font-kai text-[15px] seal-face">
-                  {{ endgame.voidWorld?.seal ?? 'Hư' }}
+                  {{ displayVoidWorldSeal(endgame.voidWorld?.seal ?? 'Hư') }}
                 </span>
                 <span class="font-kai text-[15px] tracking-widest text-ink">
                   Hư Giới Chi Môn
-                  <template v-if="endgame.voidWorld">· {{ endgame.voidWorld.name }}</template>
+                  <template v-if="endgame.voidWorld">· {{ displayVoidWorldName(endgame.voidWorld.name) }}</template>
                 </span>
                 <span v-if="endgame.worldClears['void']" class="chip-ink border-jade/60 text-[9px] text-jade">
                   Đã phá ×{{ endgame.worldClears['void'] }}
                 </span>
               </p>
               <template v-if="endgame.voidWorld">
-                <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ endgame.voidWorld.desc }}</p>
+                <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ displayVoidWorldDesc(endgame.voidWorld.desc) }}</p>
                 <p class="mt-1 flex flex-wrap gap-x-3 text-[10px] text-violet-ink">
-                  <span v-for="(r, i) in endgame.voidWorld.ruleText" :key="i">{{ r }}</span>
+                  <span v-for="(r, i) in endgame.voidWorld.ruleText" :key="i">{{ displayVoidWorldRule(r) }}</span>
                 </p>
                 <p class="mt-1 text-[10px] text-ink-faint">
-                  Trú ngụ: {{ endgame.voidWorld.foes.map(f => f.name).join(', ') }} · Giới Chủ「{{ endgame.voidWorld.guardian.name }}」
+                  Trú ngụ: {{ endgame.voidWorld.foes.map(f => displayCombatBracket(f.name)).join(', ') }} · Giới Chủ「{{ displayCombatBracket(endgame.voidWorld.guardian.name) }}」
                 </p>
                 <div class="mt-2.5 flex gap-2">
                   <button class="btn-seal flex-1 !py-2 !text-[13px]" :disabled="run !== null" @click="openPrep('void')">
@@ -258,13 +258,13 @@
           <SectionTitle title="Thiên Đạo Hôm Nay" hint="Mặt trời lên ra đề, mặt trời lặn nghỉ ngơi" />
           <div class="card-ink mt-2 px-4 py-3">
             <p class="flex items-center gap-2">
-              <span class="font-kai text-[14px] tracking-widest text-ink">{{ dailyWorld?.name }}</span>
-              <span class="tabular text-[11px] text-ink-soft">{{ daily.verdict.difficulty }} · Khả thi {{ daily.verdict.viable }}/{{ BUILD_PROFILES.length }}</span>
+              <span class="font-kai text-[14px] tracking-widest text-ink">{{ displayCelestialWorldName(dailyWorld?.name ?? '') }}</span>
+              <span class="tabular text-[11px] text-ink-soft">{{ displayChallengeDifficulty(daily.verdict.difficulty) }} · Khả thi {{ daily.verdict.viable }}/{{ BUILD_PROFILES.length }}</span>
               <span class="ml-auto tabular text-[11px] text-gold-ink">Thưởng {{ daily.verdict.reward }}</span>
             </p>
             <p class="mt-1 flex flex-wrap gap-x-3 text-[10px] text-violet-ink">
-              <span v-for="m in dailyMutators" :key="m!.id">◇ {{ m!.name }}: {{ m!.text }}</span>
-              <span v-if="dailyPact" class="text-cinnabar">Khế · {{ dailyPact.name }}</span>
+              <span v-for="m in dailyMutators" :key="m!.id">◇ {{ displayMutatorName(m!.name) }}: {{ displayMutatorText(m!.text) }}</span>
+              <span v-if="dailyPact" class="text-cinnabar">Khế · {{ displayPactName(dailyPact.name) }}</span>
             </p>
             <button
               class="btn-seal mt-2 w-full !py-2 !text-[12px]"
@@ -288,7 +288,7 @@
           <SectionTitle title="Thiên Đạo Biến Số" hint="Quy tắc ngẫu nhiên, mỗi lần dò xét thiên cơ liền đổi một diện mạo" />
           <div class="card-ink mt-2 px-4 py-3">
             <template v-if="mutationDraw.length">
-              <p v-for="m in mutationRows" :key="m!.id" class="text-[11px] text-violet-ink">◇ {{ m!.name }}: {{ m!.text }}</p>
+              <p v-for="m in mutationRows" :key="m!.id" class="text-[11px] text-violet-ink">◇ {{ displayMutatorName(m!.name) }}: {{ displayMutatorText(m!.text) }}</p>
               <div class="mt-2 flex gap-2">
                 <button
                   class="btn-seal flex-1 !py-2 !text-[12px]"
@@ -306,7 +306,7 @@
               </div>
             </template>
             <template v-else>
-              <p class="text-[11px] leading-relaxed text-ink-faint">Thiên đạo vô thường, quy tắc vô định. Dò xét biến số lần này, rồi quyết định có ứng chiến hay không —— {{ cnNumber(MUTATION_FIGHTS) }} trận liên tiếp, quy tắc cộng dồn.</p>
+              <p class="text-[11px] leading-relaxed text-ink-faint">Thiên đạo vô thường, quy tắc vô định. Dò xét biến số lần này, rồi quyết định có ứng chiến hay không —— {{ displayCnNum(cnNumber(MUTATION_FIGHTS)) }} trận liên tiếp, quy tắc cộng dồn.</p>
               <button class="btn-ghost mt-2 w-full !py-2 !text-[12px]" @click="mutationDraw = rollMutators()">Dò xét biến số</button>
             </template>
           </div>
@@ -319,16 +319,16 @@
             <div v-for="trial in TRIALS" :key="trial.id" class="card-ink px-4 py-3">
               <p class="flex items-center gap-2">
                 <span class="grid h-8 w-8 place-items-center rounded-md bg-gold-ink/85 font-kai text-[15px] seal-face">
-                  {{ trial.seal }}
+                  {{ displayTrialSeal(trial.seal) }}
                 </span>
-                <span class="font-kai text-[15px] tracking-widest text-ink">{{ trial.name }}</span>
+                <span class="font-kai text-[15px] tracking-widest text-ink">{{ displayTrialName(trial.name) }}</span>
                 <span v-if="endgame.trialRecords[trial.id]" class="ml-auto tabular text-[10px] text-gold-ink">
                   Kỷ lục tốt nhất {{ endgame.trialRecords[trial.id]!.bestRounds }} hiệp
                 </span>
               </p>
-              <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ trial.desc }}</p>
+              <p class="mt-1.5 text-[11px] leading-relaxed text-ink-faint">{{ displayTrialDesc(trial.desc) }}</p>
               <p class="mt-1 flex flex-wrap gap-x-3 text-[10px] text-violet-ink">
-                <span v-for="(r, i) in trial.ruleText" :key="i">{{ r }}</span>
+                <span v-for="(r, i) in trial.ruleText" :key="i">{{ displayTrialRule(r) }}</span>
               </p>
               <button
                 class="btn-ghost mt-2.5 w-full !py-2 !text-[13px]"
@@ -362,7 +362,7 @@
                 :class="draft.worldId === w.id ? 'border-cinnabar text-cinnabar' : 'border-ink/25 text-ink-faint'"
                 @click="setDraftWorld(w.id)"
               >
-                {{ w.name }}
+                {{ displayCelestialWorldName(w.name) }}
               </button>
             </div>
             <div class="mt-1.5 flex flex-wrap gap-1.5">
@@ -371,16 +371,16 @@
                 :key="m.id"
                 class="chip-ink !py-1.5"
                 :class="draft.mutatorIds.includes(m.id) ? 'border-violet-ink text-violet-ink' : 'border-ink/25 text-ink-faint'"
-                :title="m.text"
+                :title="displayMutatorText(m.text)"
                 :aria-pressed="draft.mutatorIds.includes(m.id)"
                 @click="toggleDraftMutator(m.id)"
               >
-                {{ m.name }}
+                {{ displayMutatorName(m.name) }}
               </button>
             </div>
             <!-- 变数已选的,把效果正文亮出来 —— 手机没有 hover,赌约规则得看得见 -->
             <p v-if="selectedMutators.length" class="mt-1 text-[10px] leading-relaxed text-violet-ink">
-              {{ selectedMutators.map(m => `${m.name}: ${m.text}`).join('; ') }}
+              {{ selectedMutators.map(m => `${displayMutatorName(m.name)}: ${displayMutatorText(m.text)}`).join('; ') }}
             </p>
             <div class="mt-1.5 flex flex-wrap gap-1.5">
               <button
@@ -396,15 +396,15 @@
                 :key="p.id"
                 class="chip-ink !py-1.5"
                 :class="draft.pactId === p.id ? 'border-cinnabar text-cinnabar' : 'border-ink/25 text-ink-faint'"
-                :title="p.ruleText"
+                :title="`${displayPactDesc(p.desc)} · ${displayPactRule(p.ruleText)}`"
                 :aria-pressed="draft.pactId === p.id"
                 @click="setDraftPact(p.id)"
               >
-                {{ p.name }}
+                {{ displayPactName(p.name) }}
               </button>
             </div>
             <p v-if="challengePact" class="mt-1 text-[10px] leading-relaxed text-ink-soft">
-              Lập khế ước「{{ challengePact.name }}」: {{ challengePact.ruleText }}
+              Lập khế ước「{{ displayPactName(challengePact.name) }}」: {{ displayPactRule(challengePact.ruleText) }}
             </p>
             <input
               v-model="draft.name"
@@ -418,10 +418,10 @@
               :class="challengeVerdict.ok ? 'bg-paper-deep/70' : 'bg-cinnabar/10'"
             >
               <p v-if="challengeVerdict.ok" class="flex items-center justify-between text-[11px]">
-                <span class="text-ink-soft">Thiên đạo nhận khế ước này: {{ challengeVerdict.difficulty }} · Lưu phái khả thi {{ challengeVerdict.viable }}/{{ BUILD_PROFILES.length }}</span>
+                <span class="text-ink-soft">Thiên đạo nhận khế ước này: {{ displayChallengeDifficulty(challengeVerdict.difficulty) }} · Lưu phái khả thi {{ challengeVerdict.viable }}/{{ BUILD_PROFILES.length }}</span>
                 <span class="tabular text-gold-ink">Thưởng Đạo Nguyên {{ challengeVerdict.reward }}</span>
               </p>
-              <p v-else class="text-[11px] text-cinnabar">{{ challengeVerdict.reason }}</p>
+              <p v-else class="text-[11px] text-cinnabar">{{ displayChallengeReason(challengeVerdict.reason) }}</p>
             </div>
             <div class="mt-2 flex gap-2">
               <button class="btn-ghost flex-1 !py-2 !text-[12px]" @click="doVerify">Kiểm tra ước định</button>
@@ -457,22 +457,22 @@
             <p class="mb-1.5 font-kai text-[12px] tracking-[0.3em] text-ink-faint">So sánh xưa nay</p>
             <div v-for="lc in legacy" :key="lc.targetName" class="mb-2 last:mb-0">
               <p class="text-[12px] text-ink-soft tabular">
-                {{ lc.targetName }}: Đời thứ {{ lc.earlyLife }} ({{ lc.earlyBuild }}) {{ lc.earlyText }}
+                {{ displayCombatBracket(lc.targetName) }}: Đời thứ {{ lc.earlyLife }} ({{ displayBuildName(lc.earlyBuild) }}) {{ displayLegacyRateText(lc.earlyText) }}
                 <span class="mx-1 text-ink-faint">→</span>
-                Đời thứ {{ lc.lateLife }} ({{ lc.lateBuild }})
-                <span class="text-jade">{{ lc.lateText }}</span>
+                Đời thứ {{ lc.lateLife }} ({{ displayBuildName(lc.lateBuild) }})
+                <span class="text-jade">{{ displayLegacyRateText(lc.lateText) }}</span>
               </p>
-              <p v-if="lc.diffLines.length" class="text-[10px] text-azure tabular">{{ lc.diffLines.join(' · ') }}</p>
+              <p v-if="lc.diffLines.length" class="text-[10px] text-azure tabular">{{ lc.diffLines.map(displayLegacyDiffLine).join(' · ') }}</p>
             </div>
           </div>
           <div v-if="endgame.marks.length" class="card-ink mt-2 max-h-64 divide-y divide-ink/6 overflow-y-auto px-4">
             <div v-for="(mark, i) in endgame.marks" :key="i" class="flex items-center gap-2 py-2">
               <span class="shrink-0 font-kai text-[11px] text-ink-faint">Đời thứ {{ mark.life }}</span>
-              <span class="shrink-0 text-[11px] text-violet-ink">{{ mark.daoPathId ? daoPathDef(mark.daoPathId)?.name : 'Vô Đạo' }}</span>
+              <span class="shrink-0 text-[11px] text-violet-ink">{{ mark.daoPathId ? displayDaoPathName(daoPathDef(mark.daoPathId)?.name ?? '') : 'Vô Đạo' }}</span>
               <span class="min-w-0 truncate font-kai text-[12px]" :class="mark.cleared ? 'text-ink' : 'text-ink-faint'">
-                {{ mark.targetName }}{{ mark.cleared ? ' · Phá' : ' · Tạ thế' }}
+                {{ displayCombatBracket(mark.targetName) }}{{ mark.cleared ? ' · Phá' : ' · Tạ thế' }}
               </span>
-              <span class="ml-auto shrink-0 tabular text-[10px] text-ink-faint">{{ mark.rounds }} hiệp · {{ mark.buildName }}</span>
+              <span class="ml-auto shrink-0 tabular text-[10px] text-ink-faint">{{ mark.rounds }} hiệp · {{ displayBuildName(mark.buildName) }}</span>
               <button
                 v-if="isStaleRuleset(mark.ruleset)"
                 class="shrink-0 min-h-[28px] rounded border border-cinnabar/50 bg-cinnabar/10 px-1 py-0.5 font-kai text-[9px] text-cinnabar active:scale-90"
@@ -524,10 +524,10 @@
     </template>
 
     <!-- 远征准备:择契 -->
-    <BaseModal :open="prepWorld !== null" :title="prepWorld ? `Viễn Chinh · ${prepWorld.name}` : ''" @close="prepWorldId = null">
+    <BaseModal :open="prepWorld !== null" :title="prepWorld ? `Viễn Chinh · ${displayCelestialWorldName(prepWorld.name)}` : ''" @close="prepWorldId = null">
       <template v-if="prepWorld">
         <p class="text-[11px] leading-relaxed text-ink-faint">
-          Vào giới một trận → {{ cnNumber(EXPEDITION_ROUTE_LAYERS) }} tầng chọn đường (dọc đường nhận Đạo Nguyên) → Giới Chủ. Giữa các tầng có thể về phàm giới đổi cấu hình. Trước khi khởi hành, có thể lập khế ước với Thiên Đạo —— Đổi rủi ro lấy Đạo Nguyên.
+          Vào giới một trận → {{ displayCnNum(cnNumber(EXPEDITION_ROUTE_LAYERS)) }} tầng chọn đường (dọc đường nhận Đạo Nguyên) → Giới Chủ. Giữa các tầng có thể về phàm giới đổi cấu hình. Trước khi khởi hành, có thể lập khế ước với Thiên Đạo —— Đổi rủi ro lấy Đạo Nguyên.
         </p>
         <div class="mt-2 space-y-1.5">
           <button
@@ -543,12 +543,13 @@
             :key="pact.id"
             class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left"
             :class="prepPact === pact.id ? 'bg-cinnabar/10 border border-cinnabar/40' : 'bg-paper-deep/60 border border-transparent'"
+            :title="displayPactDesc(pact.desc)"
             @click="prepPact = pact.id"
           >
-            <span class="grid h-6 w-6 shrink-0 place-items-center rounded bg-ink/80 font-kai text-[11px] text-paper">{{ pact.seal }}</span>
+            <span class="grid h-6 w-6 shrink-0 place-items-center rounded bg-ink/80 font-kai text-[11px] text-paper">{{ displayPactSeal(pact.seal) }}</span>
             <span class="min-w-0">
-              <span class="block font-kai text-[12px] text-ink">{{ pact.name }}</span>
-              <span class="block text-[10px] text-ink-faint">{{ pact.ruleText }}</span>
+              <span class="block font-kai text-[12px] text-ink">{{ displayPactName(pact.name) }}</span>
+              <span class="block text-[10px] text-ink-faint">{{ displayPactRule(pact.ruleText) }}</span>
             </span>
           </button>
         </div>
@@ -588,7 +589,7 @@
         <div v-if="prepForecast" class="mt-2.5 rounded-md bg-paper-deep/70 px-3 py-2">
           <p class="flex items-center justify-between text-[11px]">
             <span class="font-kai text-ink-soft">Thiên Đạo suy diễn</span>
-            <span class="tabular text-ink-soft">Chuyến này {{ prepForecast.difficulty }}</span>
+            <span class="tabular text-ink-soft">Chuyến này {{ displayChallengeDifficulty(prepForecast.difficulty) }}</span>
           </p>
           <p class="mt-0.5 flex items-center justify-between text-[10px] text-ink-faint">
             <span>
@@ -602,23 +603,23 @@
             判定的文案与数值同源(core/gauntlet.celestialJudgementLines),界面不再另编一套说法。
           -->
           <p v-for="(line, i) in prepForecast.judgementLines" :key="i" class="mt-0.5 text-[10px] leading-relaxed text-cinnabar">
-            {{ line }}
+            {{ displayJudgementLine(line) }}
           </p>
         </div>
         <p v-if="prepPreview" class="mt-2 text-[10px] leading-relaxed text-violet-ink">
-          Thiên cơ thấu thị · Địch vào giới: {{ prepPreview.skillLines.join(' / ') }} —— {{ prepPreview.winText }}
+          Thiên cơ thấu thị · Địch vào giới: {{ prepPreview.skillLines.map(displayFightPreviewSkillLine).join(' / ') }} —— {{ displayFightPreviewWinText(prepPreview.winText) }}
         </p>
         <p v-if="prepPreview?.riskLines.length" class="mt-1 text-[10px] leading-relaxed text-cinnabar">
-          Nguy cục: {{ prepPreview.riskLines.join('; ') }}
+          Nguy cục: {{ prepPreview.riskLines.map(displayFightPreviewRiskLine).join('; ') }}
         </p>
       </template>
       <template #footer>
-        <button class="btn-seal w-full" @click="depart">Khởi Hành{{ selectedPact ? ` (Mang theo「${selectedPact.name}」)` : '' }}</button>
+        <button class="btn-seal w-full" @click="depart">Khởi Hành{{ selectedPact ? ` (Mang theo「${displayPactName(selectedPact.name)}」)` : '' }}</button>
       </template>
     </BaseModal>
 
     <!-- 战报(远征终局 / 试炼 / 变数) -->
-    <BaseModal :open="expedition !== null" :title="expedition?.title ?? ''" @close="expedition = null">
+    <BaseModal :open="expedition !== null" :title="expedition ? displayCelestialWorldName(expedition.title) : ''" @close="expedition = null">
       <template v-if="expedition">
         <p class="font-kai text-[13px] tracking-wider" :class="expedition.cleared ? 'text-jade' : 'text-cinnabar'">
           {{ expedition.markText }}
@@ -637,7 +638,7 @@
             class="flex items-center justify-between rounded bg-paper-deep/70 px-3 py-1.5 text-[12px]"
           >
             <span :class="row.win ? 'text-ink-soft' : 'text-cinnabar'">
-              Trận {{ i + 1 }} · {{ row.foeName }} · {{ row.win ? 'Thắng' : 'Bại' }}
+              Trận {{ i + 1 }} · {{ displayCombatBracket(row.foeName) }} · {{ row.win ? 'Thắng' : 'Bại' }}
             </span>
             <span class="tabular text-[11px] text-ink-faint">{{ row.rounds }} hiệp · Huyết lượng còn {{ Math.round(row.hpLeftPct * 100) }}%</span>
           </p>
@@ -649,7 +650,7 @@
         <div v-if="expedition.judgementLines?.length" class="mt-2 rounded-md bg-cinnabar/5 px-3 py-2">
           <p class="font-kai text-[11px] tracking-widest text-cinnabar">Phán đoán trận này</p>
           <p v-for="(line, i) in expedition.judgementLines" :key="i" class="mt-0.5 text-[10px] leading-relaxed text-ink-faint">
-            {{ line }}
+            {{ displayJudgementLine(line) }}
           </p>
         </div>
         <p v-if="expedition.reward > 0" class="mt-2 text-[12px] text-gold-ink tabular">
@@ -668,7 +669,7 @@
       <div class="card-ink divide-y divide-ink/6 px-4">
         <div v-for="row in furnaceRows" :key="row.rate.resource" class="py-2.5">
           <div class="flex items-center justify-between gap-2">
-            <span class="text-[12px] text-ink-soft">{{ row.rate.resource === 'herb' ? `Linh thảo (Tiên phẩm+ còn ${formatNum(row.have)})` : `${row.rate.name} (Còn ${formatNum(row.have)})` }}</span>
+            <span class="text-[12px] text-ink-soft">{{ row.rate.resource === 'herb' ? `Linh thảo (Tiên phẩm+ còn ${formatNum(row.have)})` : `${displayFurnaceRateName(row.rate.name)} (Còn ${formatNum(row.have)})` }}</span>
             <!-- 全熔防误触:文案亮出『整包』与可得道源(不再是『按 25:1 换』的可兑换暗示),再按一下才熔 -->
             <button
               class="btn-ghost !px-3 !py-2 !text-[11px] tabular"
@@ -680,7 +681,7 @@
           </div>
           <div v-if="furnaceConfirm === row.rate.resource" class="mt-1.5 rounded-md bg-cinnabar/5 px-3 py-2">
             <p class="text-[10px] leading-relaxed text-cinnabar">
-              Sẽ dùng <span class="tabular">{{ row.rate.name }} ×{{ formatNum(furnacePreview(row.rate) * row.rate.per) }}</span> luyện thành
+              Sẽ dùng <span class="tabular">{{ displayFurnaceRateName(row.rate.name) }} ×{{ formatNum(furnacePreview(row.rate) * row.rate.per) }}</span> luyện thành
               <span class="tabular">+{{ furnacePreview(row.rate) }}</span> sợi Đạo Nguyên, còn
               <span class="tabular">{{ formatNum(row.have - furnacePreview(row.rate) * row.rate.per) }}</span> giữ lại —— Hành động này không thể hoàn tác, tài nguyên đã luyện không còn dùng cho luyện đan / đúc tạo / tham ngộ được nữa.
             </p>
@@ -719,10 +720,10 @@
     <!-- 道途选择确认:一世只此一次,点了就锁到转世 -->
     <BaseModal :open="pendingDao !== undefined" title="Định Xuống Đạo Đồ" @close="pendingDaoId = null">
       <template v-if="pendingDao">
-        <p class="font-kai text-[14px] tracking-wider text-ink">{{ pendingDao.name }}</p>
-        <p class="mt-1.5 text-[12px] leading-relaxed text-ink-soft">{{ pendingDao.desc }}</p>
-        <p v-for="(r, i) in pendingDao.ruleText" :key="i" class="mt-0.5 text-[11px] text-azure">· {{ r }}</p>
-        <p v-for="(r, i) in pendingDao.deepText" :key="`confirm-${i}`" class="mt-0.5 text-[11px] text-gold-ink">◈ {{ r }}</p>
+        <p class="font-kai text-[14px] tracking-wider text-ink">{{ displayDaoPathName(pendingDao.name) }}</p>
+        <p class="mt-1.5 text-[12px] leading-relaxed text-ink-soft">{{ displayDaoPathDesc(pendingDao.desc) }}</p>
+        <p v-for="(r, i) in pendingDao.ruleText" :key="i" class="mt-0.5 text-[11px] text-azure">· {{ displayDaoPathRule(r) }}</p>
+        <p v-for="(r, i) in pendingDao.deepText" :key="`confirm-${i}`" class="mt-0.5 text-[11px] text-gold-ink">◈ {{ displayDaoPathDeep(r) }}</p>
         <p class="mt-3 border-l-2 border-cinnabar/60 pl-2 text-[11px] text-cinnabar">Đạo đồ đã định, kiếp này không thể đổi; chọn nhầm phải đợi binh giải chuyển thế mới được chọn lại</p>
       </template>
       <template #footer>
@@ -868,6 +869,48 @@
   } from '@/core/endgameService'
   import { currentDaoNarrative } from '@/core/identity'
   import { RULESET_CHANGELOG, RULESET_VERSION, isStaleRuleset, rulesetChangesSince } from '@/data/ruleset'
+  import {
+    displayFightPreviewSkillLine,
+    displayFightPreviewRiskLine,
+    displayFightPreviewWinText,
+    displayMutatorName,
+    displayMutatorText,
+    displayDaoPathName,
+    displayDaoPathSeal,
+    displayDaoPathDesc,
+    displayDaoPathRule,
+    displayDaoPathDeep,
+    displayCelestialWorldName,
+    displayCelestialWorldSeal,
+    displayCelestialWorldDesc,
+    displayCelestialWorldRule,
+    displayVoidWorldName,
+    displayVoidWorldSeal,
+    displayVoidWorldDesc,
+    displayVoidWorldRule,
+    displayRouteNodeName,
+    displayRouteNodeDesc,
+    displayRouteRisk,
+    displayTrialName,
+    displayTrialSeal,
+    displayTrialDesc,
+    displayTrialRule,
+    displayPactName,
+    displayPactSeal,
+    displayPactDesc,
+    displayPactRule,
+    displayFurnaceRateName,
+    displayJudgementLine,
+    displayChallengeDifficulty,
+    displayChallengeReason,
+    displayDaoStory,
+    displayLegacyRateText,
+    displayLegacyDiffLine,
+    displayCombatBracket,
+    displayRealmName,
+    displayBuildName,
+    displayCnNum
+  } from '@/ui/displayZhVi'
   import {
     abandonExpedition,
     challengeGuardian,
@@ -1170,7 +1213,7 @@
     openReport({
       title: 'Thiên Đạo Biến Số',
       cleared: result.report.cleared,
-      markText: result.report.cleared ? `${cnNumber(MUTATION_FIGHTS)} trận toàn thắng, tổng cộng ${result.report.totalRounds} hiệp` : `Dừng bước tại trận thứ ${result.report.fightsWon + 1}`,
+      markText: result.report.cleared ? `${displayCnNum(cnNumber(MUTATION_FIGHTS))} trận toàn thắng, tổng cộng ${result.report.totalRounds} hiệp` : `Dừng bước tại trận thứ ${result.report.fightsWon + 1}`,
       rows: result.report.rows,
       reward: result.rewardDaoSource
     })

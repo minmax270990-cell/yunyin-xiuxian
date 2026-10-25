@@ -15,6 +15,7 @@ import { ENEMIES, enemyDef } from '@/data/enemies'
 import { beastIcon } from '@/data/beastFamilies'
 import { maxTierForMajor } from '@/data/regions'
 import { HERB_GRADE_SHORT, herbGradeOfMajor } from '@/data/herbGrades'
+import { SPIRIT_ROOT_FRUITS, type SpiritRootFruitTier } from '@/data/spiritRootFruit'
 import { SECRET_LAYERS, SECRET_MAX_LOSSES, SECRET_REALMS, SECRET_RULES, secretRealmDef, type SecretRealmDef } from '@/data/secretRealms'
 import { resolveCombat } from './combat'
 import { mergeRules, worldFoeSnap } from './gauntlet'
@@ -107,23 +108,23 @@ export function enterSecretRealm(defId: string): EnterResult {
   // 拒绝必须让玩家看见(与 startExploration 的拒绝同规:静默 return 等于「点了没反应」)
   const adventure = useAdventureStore()
   if (adventure.session) {
-    ui.toast('你正在历练途中,先了结这一程,再入秘境', 'warn')
+    ui.toast('Ngươi đang trên đường lịch luyện, hãy hoàn tất chặng này trước khi vào bí cảnh', 'warn')
     return { ok: false, reason: '正在历练途中' }
   }
   if (endgame.worldRun) {
-    ui.toast('远征在途,须先结束远征方能入秘境', 'warn')
+    ui.toast('Đang trong viễn chinh, phải kết thúc viễn chinh mới có thể vào bí cảnh', 'warn')
     return { ok: false, reason: '远征在途' }
   }
   const cost = entryCostOf(def, player.major)
   if (cost.kind === 'stone') {
     if (!resources.hasStone(cost.stone)) {
-      ui.toast(`灵石不足 ${formatGN(cost.stone)}`, 'warn')
+      ui.toast(`Linh thạch không đủ ${formatGN(cost.stone)}`, 'warn')
       return { ok: false, reason: '灵石不足' }
     }
     resources.spendStone(cost.stone)
   } else {
     if (!endgame.spendDaoSource(cost.daoSource)) {
-      ui.toast(`道源不足 ${cost.daoSource}`, 'warn')
+      ui.toast(`Đạo nguyên không đủ ${cost.daoSource}`, 'warn')
       return { ok: false, reason: '道源不足' }
     }
   }
@@ -237,13 +238,38 @@ export function fightSecretLayer(): SecretLayerResult | null {
     if (nextLayer > SECRET_LAYERS) {
       // 通关:最终宝藏
       const inst = generateEquipment(tier, rng, { minQualityRank: 2 })
-      lines.push(`破境而出!${acquireEquipment(inst).line}`)
+      lines.push(`Phá cảnh mà ra! ${acquireEquipment(inst).line}`)
       resources.addSmall('wudao', 3)
-      lines.push('悟道点 +3')
+      lines.push('Điểm Ngộ Đạo +3')
+
+      // Tỉ lệ rơi Linh Căn Quả khi hoàn tất bí cảnh (tỉ lệ thấp ~20%)
+      if (rng.chance(0.20)) {
+        let dropTier: SpiritRootFruitTier = 'mortal'
+        if (def.gate === 'celestial') {
+          dropTier = rng.chance(0.35) ? 'heaven' : 'earth'
+        } else {
+          dropTier = rng.chance(0.25) ? 'earth' : 'mortal'
+        }
+        resources.addFruit(dropTier, 1)
+        const fDef = SPIRIT_ROOT_FRUITS[dropTier]
+        lines.push(`Kỳ ngộ đoạt bảo: Thu hoạch được 1 trái [${fDef.name}]!`)
+        ui.toast(`Bí cảnh ban thưởng: ${fDef.name}!`, 'rare')
+      }
+
       player.setSecretRealm(null)
-      ui.toast(`${def.name}已探尽`, 'rare')
+      ui.toast(`${def.name} đã thám hiểm hết`, 'rare')
       return { win: true, finished: true, cleared: true, lines }
     }
+
+    // Tỉ lệ rơi Linh Căn Quả ở mỗi tầng (tỉ lệ thấp ~6%)
+    if (rng.chance(0.06)) {
+      const dropTier: SpiritRootFruitTier = def.gate === 'celestial' ? 'earth' : 'mortal'
+      resources.addFruit(dropTier, 1)
+      const fDef = SPIRIT_ROOT_FRUITS[dropTier]
+      lines.push(`Cơ duyên bí cảnh: Bẻ được 1 trái [${fDef.name}]!`)
+      ui.toast(`Nhặt được ${fDef.name}!`, 'rare')
+    }
+
     const carried = Math.min(1, result.playerHpPct + def.healBetweenPct)
     player.setSecretRealm({
       ...state,
@@ -256,11 +282,11 @@ export function fightSecretLayer(): SecretLayerResult | null {
   }
 
   const losses = state.losses + 1
-  lines.push(`不敌 ${snap.name} · 气血余 ${Math.round(result.playerHpPct * 100)}%`)
+  lines.push(`Không địch lại ${snap.name} · Khí huyết còn ${Math.round(result.playerHpPct * 100)}%`)
   if (losses >= SECRET_MAX_LOSSES) {
     player.setSecretRealm(null)
-    lines.push('连败两场,被逐出秘境')
-    ui.toast('你被逐出了秘境', 'warn')
+    lines.push('Thua liên tiếp hai trận, bị trục xuất khỏi bí cảnh')
+    ui.toast('Ngươi đã bị trục xuất khỏi bí cảnh', 'warn')
     return { win: false, finished: true, cleared: false, lines }
   }
   player.setSecretRealm({

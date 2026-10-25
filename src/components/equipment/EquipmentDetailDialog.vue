@@ -7,7 +7,7 @@
         <QualityTag :quality="inst.quality" />
         <!-- 界域 + 阶位:同一句「23 阶」在人间界与仙界完全不是一回事,故写清是哪一界 -->
         <span class="text-[11px] text-ink-faint">
-          {{ displayEquipSlot(EQUIP_SLOT_NAMES[template.slot]) }} · {{ worldNameOfTier(inst.tier) }} · Bậc {{ inst.tier }}
+          {{ displayEquipSlot(EQUIP_SLOT_NAMES[template.slot]) }} · {{ displayWorldName(worldNameOfTier(inst.tier)) }} · Bậc {{ inst.tier }}
         </span>
         <span v-if="inst.level > 0" class="text-[11px] text-gold-ink tabular">+{{ inst.level }}</span>
         <button
@@ -18,7 +18,7 @@
           <GameIcon :name="inst.locked ? 'lock' : 'unlock'" :size="15" />
         </button>
       </div>
-      <p class="mt-2 text-[12px] leading-relaxed text-ink-faint">{{ template.desc }}</p>
+      <p class="mt-2 text-[12px] leading-relaxed text-ink-faint">{{ displayEquipDesc(template.desc) }}</p>
       <!-- 装备标记(玩家反馈:同名装备想按不同流派区分) -->
       <div class="mt-2 flex items-center gap-2">
         <input
@@ -67,8 +67,8 @@
           </span>
         </p>
         <p v-for="row in fixedModRows" :key="row.label" class="flex justify-between text-[13px]">
-          <span class="text-ink-soft">{{ row.label }}</span>
-          <span class="tabular text-azure">{{ row.value }}</span>
+          <span class="text-ink-soft">{{ displayStatLabel(row.label) }}</span>
+          <span class="tabular text-azure">{{ displayStatValue(row.value) }}</span>
         </p>
       </div>
       <template v-if="resolved.affixLines.length">
@@ -105,15 +105,15 @@
             :style="{ borderLeft: `2px solid ${AFFIX_RARITY_META[line.rarity].color}` }"
           >
             <span class="shrink-0 font-kai text-[12px]" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">
-              「{{ line.name }}」
+              「{{ displayAffixName(line.name) }}」
             </span>
             <span class="shrink-0 text-[9px] opacity-80" :style="{ color: AFFIX_RARITY_META[line.rarity].color }">
-              {{ AFFIX_RARITY_META[line.rarity].name }}
+              {{ displayAffixRarity(AFFIX_RARITY_META[line.rarity].name) }}
             </span>
             <span class="ml-auto min-w-0 text-right text-[11px] leading-snug text-ink-soft">
-              {{ line.before }}<span class="tabular font-medium text-ink">{{ line.value }}</span>{{ line.after }}
+              {{ displayAffixDescParts(line).before }}<span class="tabular font-medium text-ink">{{ line.value }}</span>{{ displayAffixDescParts(line).after }}
               <!-- 浮动:这条掷到了它自己的几成 —— 封存/重铸的数,藏起来就是瞎赌 -->
-              <span class="text-[9px] text-ink-faint" :title="affixRollHint">{{ affixRollText(line.roll) }}</span>
+              <span class="text-[9px] text-ink-faint" :title="affixRollHint">{{ displayAffixRoll(affixRollText(line.roll)) }}</span>
             </span>
             <button
               v-if="canSealAffix(line.id)"
@@ -134,7 +134,7 @@
           </li>
         </ul>
         <p class="mt-1 text-[10px] leading-relaxed text-ink-faint">
-          Sắp xếp theo độ trân quý, viền màu bên trái là phẩm cấp;「{{ affixRollHint.slice(0, 3) }}」là đạt mấy phần giữa giới hạn trên dưới
+          Sắp xếp theo độ trân quý, viền màu bên trái là phẩm cấp;「dao động」là đạt mấy phần giữa giới hạn trên dưới
         </p>
       </template>
       <template v-if="buildPreview">
@@ -363,7 +363,7 @@
               {{ autoOpen ? 'Thu lại tự động trọng đúc' : 'Tự động trọng đúc' }}
             </button>
             <button v-if="canTransferOut" class="btn-ghost flex-1 !py-2 !text-[11px]" @click="openTransfer">
-              {{ TRANSFER_LABELS.entry }}
+              {{ displayTransferLabel(TRANSFER_LABELS.entry) }}
             </button>
           </div>
         </template>
@@ -372,7 +372,7 @@
             {{ inst.affixes.length === 0 ? 'Vật này không có từ điều nào, không thể trọng đúc, cũng không thể phong tồn. Muốn luyện vật này, trước phải khắc văn.' : 'Từ điều đã phong tồn hết, không thể trọng đúc' }}
           </p>
           <!-- 全封存的旧档件也能把词条转出去 -->
-          <button v-if="canTransferOut" class="btn-ghost w-full !py-2 !text-[11px]" @click="openTransfer">{{ TRANSFER_LABELS.entry }}</button>
+          <button v-if="canTransferOut" class="btn-ghost w-full !py-2 !text-[11px]" @click="openTransfer">{{ displayTransferLabel(TRANSFER_LABELS.entry) }}</button>
         </template>
         <div class="flex gap-2">
           <button class="btn-seal flex-1" @click="toggleEquip">{{ isEquipped ? 'Gỡ Xuống' : 'Trang Bị' }}</button>
@@ -422,7 +422,16 @@
     displayEquipName,
     displayEquipSlot,
     displayEquipSetName,
-    displayEquipSetDesc
+    displayEquipSetDesc,
+    displayWorldName,
+    displayEquipDesc,
+    displayStatLabel,
+    displayStatValue,
+    displayAffixName,
+    displayAffixRarity,
+    displayAffixRoll,
+    displayAffixDescParts,
+    displayTransferLabel
   } from '@/ui/displayZhVi'
   import { resolveEquipStats } from '@/core/equipGen'
   import { equippablePower } from '@/core/equipBest'

@@ -31,7 +31,7 @@ export function todayNumber(): number {
 /** 生成今日天道:日期种子确定性;裁判不受(无解/虚设)则顺延候选 */
 export function todayChallenge(): DailyChallenge | null {
   const day = todayNumber()
-  for (let t = 0; t < 16; t += 1) {
+  for (let t = 0; t < 64; t += 1) {
     const rng = new RandomService(mulberry32(day * 131 + t * 977))
     const world = CELESTIAL_WORLDS[rng.int(0, CELESTIAL_WORLDS.length - 1)]!
     const pool = [...MUTATORS]
@@ -57,7 +57,7 @@ export function undertakeDaily(daily: DailyChallenge): ExpeditionResult | null {
   // 今天就再清一次 —— 同一会话连领两份天道赏。落闸只认当下日期。
   const day = todayLocalNum()
   if (endgame.dailyDoneDay === day) {
-    ui.toast('今日天道已了,明日再会', 'info')
+    ui.toast('Hôm nay thiên đạo đã hoàn thành, ngày mai tái ngộ', 'info')
     return null
   }
   const result = undertakeChallenge(daily.draft, daily.verdict)

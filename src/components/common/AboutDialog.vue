@@ -1,7 +1,7 @@
 <template>
   <BaseModal :open="open" title="Về Chúng Tôi" @close="$emit('close')">
     <div class="space-y-3 text-[12px] leading-relaxed">
-      <p class="text-ink-faint">《Vân Ẩn Tu Tiên Lục》—— Nhất niệm tu hành, mây sâu khó biết chốn.</p>
+      <p class="text-ink-faint">《Thiên Đạo》—— Nhất niệm tu hành, vạn pháp quy tông.</p>
       <div class="card-ink px-3 py-2">
         <p class="text-[10px] text-ink-faint">Phiên bản hiện tại</p>
         <p class="font-kai text-[14px] text-ink tabular">v{{ version }}</p>

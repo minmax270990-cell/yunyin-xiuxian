@@ -180,7 +180,7 @@ export function confirmReincarnation(chosenTalentId: string | null, chosenThemeI
   const forged = lifeForge(player.major)
   if (forged) {
     player.addHeritage(forged.id)
-    ui.toast(`宿慧凝形,你留下一道传承 —— 「${forged.name}」`, 'rare')
+    ui.toast(`Túc tuệ ngưng hình, ngươi lưu lại một đạo truyền thừa —— 「${forged.name}」`, 'rare')
   }
 
   // 这一世的账:履历归档、宿慧落袋。二者都只在此处发生一次
@@ -206,6 +206,7 @@ export function confirmReincarnation(chosenTalentId: string | null, chosenThemeI
   resources.setQi(0, 1)
   resources.wudao = 0
   resources.resetHerbs()
+  resources.resetFruits()
   resources.ore = 0
   resources.page = 0
   resources.dust = 0
@@ -241,7 +242,7 @@ export function confirmReincarnation(chosenTalentId: string | null, chosenThemeI
   const releasedSuppressed = player.suppressedRegions.length
   player.rebirth(rollLinggen(rng, aptitudeFloorNow()))
   if (releasedSuppressed > 0) {
-    ui.toast(`${releasedSuppressed} 处昔日镇压之地,妖气复聚 —— 此世再走一遭`, 'info')
+    ui.toast(`${releasedSuppressed} nơi từng trấn áp ngày xưa, yêu khí lại tụ —— kiếp này hãy đi thêm một lần`, 'info')
   }
   // 新的一世:上一世的建号草稿作废,「逆天改命」额度归满
   useGameStore().resetCreateDraft()
@@ -253,7 +254,7 @@ export function confirmReincarnation(chosenTalentId: string | null, chosenThemeI
   track('reincarnations')
   ui.reincarnation = null
   ui.deathDialog = false
-  ui.toast(`一梦轮回,你以「${player.name}」的道号在云隐山下再度睁开双眼`, 'rare')
-  if (view.stageAdvanced) ui.toast(`宿慧渐厚,你已是「${view.stageName}」`, 'rare')
-  if (recognized > 0) ui.toast(`睁眼之际,${recognized} 味灵材的名字自行浮上心头`, 'info')
+  ui.toast(`Một giấc mộng luân hồi, ngươi với đạo hiệu「${player.name}」dưới chân núi Vân Ẩn lại mở hai mắt`, 'rare')
+  if (view.stageAdvanced) ui.toast(`Túc tuệ dần dày, ngươi đã là「${view.stageName}」`, 'rare')
+  if (recognized > 0) ui.toast(`Lúc mở mắt, tên của ${recognized} vị linh tài tự khắc hiện lên trong tâm trí`, 'info')
 }

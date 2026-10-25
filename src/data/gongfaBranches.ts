@@ -25,6 +25,7 @@
  * 分支不是发词条的由头,而是把这部功法本来就在说的话说到底。
  */
 import type { StatMods } from '@/types'
+import { EXPANDED_BRANCHES } from './gongfaBranchesExpanded'
 import { gongfaDef, gongfaMaxLevel } from './gongfa'
 
 export interface GongfaBranchDef {
@@ -338,7 +339,8 @@ export const GONGFA_BRANCHES: GongfaBranchDef[] = [
   b('m_shenmo', 'b_shenmo_mo', '神魔', '神魔一体,气血两旺', { maxHpPct: 0.3, attackPct: 0.24 }),
   // ---- 混沌道祖:道祖本源经 ----
   b('m_daozu', 'b_daozu_ben', '本源', '追本溯源,气机自归', { cultivationSpeed: 0.32, qiRegen: 0.28, breakthroughRate: 0.05 }),
-  b('m_daozu', 'b_daozu_dao', '道祖', '道生一,一化万', { attackPct: 0.3, defensePct: 0.21 })
+  b('m_daozu', 'b_daozu_dao', '道祖', '道生一,一化万', { attackPct: 0.3, defensePct: 0.21 }),
+  ...EXPANDED_BRANCHES
 ]
 
 const BY_ID = new Map(GONGFA_BRANCHES.map(b => [b.id, b]))

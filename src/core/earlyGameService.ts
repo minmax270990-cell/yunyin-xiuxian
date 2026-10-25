@@ -102,7 +102,7 @@ export function chooseEnlightenment(optionIndex: number): void {
   // 但那不再是"选项该有的样子"——守卫在这里兜住,让漏注册显式为错误而不是静默空转
   if (opt.reward) {
     useResourcesStore().addSmall('wudao', opt.reward.value)
-    ui.toast(`灵机一动,悟道点 +${opt.reward.value}`, 'success')
+    ui.toast(`Linh cơ nhất động, điểm Ngộ Đạo +${opt.reward.value}`, 'success')
   } else if (opt.buffId) {
     cult.addBuff(opt.buffId, now)
     ui.toast(enlightenmentOptionText(opt), 'success')
@@ -133,7 +133,7 @@ export function startRetreat(): boolean {
 
   const adventure = useAdventureStore()
   if (adventure.session) {
-    useUiStore().toast('你正在历练途中,先了结眼下这一程', 'warn')
+    useUiStore().toast('Ngươi đang trong chuyến lịch luyện, hãy hoàn thành chặng này trước', 'warn')
     return false
   }
 

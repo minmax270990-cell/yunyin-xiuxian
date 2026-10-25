@@ -6,6 +6,9 @@
         <p class="font-kai text-[15px] tracking-widest text-ink">
           {{ displayRegionName(region?.name ?? '') }}
           <span class="text-[11px] text-ink-faint">· {{ displayExploreMode(modeName) }}</span>
+          <span v-if="partnerName" class="ml-1.5 rounded bg-azure/10 px-1.5 py-0.5 text-[10px] text-azure">
+            Đồng hành: {{ displayDaoluName(partnerName) }}
+          </span>
         </p>
         <span class="tabular text-[12px] text-ink-soft">
           Còn <span class="countdown-slot">{{ formatCountdown(timeLeft) }}</span>
@@ -118,21 +121,74 @@
       </div>
 
       <!-- Phía ta -->
-      <div class="relative mt-3" :class="[shakeCls.p, defeated === 'p' ? 'foe-defeated' : '']">
+      <div class="relative mt-3 space-y-2.5" :class="[shakeCls.p, defeated === 'p' ? 'foe-defeated' : '']">
+        <!-- Nhân vật chính -->
         <div class="flex items-center gap-2">
-          <span class="grid h-10 w-10 place-items-center rounded-full border border-azure/50 bg-azure/5 text-azure">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-azure/50 bg-azure/5 text-azure">
             <GameIcon name="user" :size="18" />
           </span>
-          <div class="grow">
-            <p class="font-kai text-[14px] text-ink">{{ player.name }}</p>
+          <div class="grow min-w-0">
+            <div class="flex items-center justify-between">
+              <p class="font-kai text-[14px] text-ink truncate">{{ player.name }}</p>
+              <span class="text-[10px] tabular text-ink-soft">{{ Math.round(php * 100) }}% Khí huyết</span>
+            </div>
             <ProgressBar :value="php" color="var(--color-jade)" :height="6" class="mt-1" />
           </div>
         </div>
+
+        <!-- Đạo lữ đồng hành -->
+        <div v-if="partnerName" class="flex items-center gap-2 rounded-md border border-ink/10 bg-ink/4 px-2.5 py-1.5">
+          <span
+            class="grid h-9 w-9 shrink-0 place-items-center rounded-full border"
+            :class="dhp <= 0.3 ? 'border-cinnabar text-cinnabar bg-cinnabar/10 animate-pulse' : 'border-azure/40 text-azure bg-azure/5'"
+          >
+            <GameIcon name="heart" :size="16" />
+          </span>
+          <div class="grow min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <p class="font-kai text-[13px] text-ink truncate">{{ displayDaoluName(partnerName) }}</p>
+                <span class="chip-ink border-azure/40 text-[9px] text-azure shrink-0">Đạo Lữ Đồng Hành</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span
+                  class="text-[10px] tabular"
+                  :class="dhp <= 0.3 ? 'text-cinnabar font-semibold' : 'text-ink-soft'"
+                >
+                  {{ Math.round(dhp * 100) }}% Khí huyết
+                </span>
+                <button
+                  v-if="dhp < 0.98"
+                  class="chip-ink min-h-[22px] !text-[9px] px-1.5"
+                  :class="dhp <= 0.3 ? 'border-cinnabar text-cinnabar bg-cinnabar/10 font-semibold' : 'text-azure'"
+                  @click="openHealModal"
+                >
+                  Truyền Khí Huyết
+                </button>
+              </div>
+            </div>
+            <ProgressBar
+              :value="dhp"
+              :color="dhp <= 0.3 ? 'var(--color-cinnabar)' : 'var(--color-jade)'"
+              :height="6"
+              class="mt-1"
+            />
+          </div>
+        </div>
+
         <span
           v-for="f in floats.filter(x => x.side === 'p')"
           :key="f.id"
           class="pointer-events-none absolute right-2 top-0 tabular font-kai"
           :class="f.crit ? 'animate-float-crit text-[17px] text-cinnabar' : 'animate-float-dmg text-[13px] text-cinnabar'"
+        >
+          {{ f.text }}
+        </span>
+        <span
+          v-for="f in floats.filter(x => x.side === 'd')"
+          :key="f.id"
+          class="pointer-events-none absolute right-2 bottom-0 tabular font-kai"
+          :class="f.crit ? 'animate-float-crit text-[17px] text-cinnabar' : 'animate-float-dmg text-[13px] text-jade'"
         >
           {{ f.text }}
         </span>
@@ -172,7 +228,7 @@
         </p>
         <p v-for="s in lore.skills" :key="s.name" class="mt-1 text-[11px] leading-relaxed text-ink-soft">
           ·
-          <span class="text-ink">{{ s.name }}</span>
+          <span class="text-ink">{{ displayEnemySkillName(s.name) }}</span>
           —— {{ displayLoreSkillNote(s.note) }}
         </p>
         <p v-for="ph in lore.phases" :key="ph.at" class="mt-1 text-[11px] leading-relaxed text-cinnabar">
@@ -203,7 +259,7 @@
             aria-hidden="true"
           ></span>
           <span class="font-kai text-[12px] tracking-wider" :class="battle?.result.win ? 'text-jade' : 'text-cinnabar'">
-            {{ analysis.headline }}
+            {{ displayBattleAnalysisText(analysis.headline) }}
           </span>
           <span class="chip-ink border-ink/15 text-[9px]" :class="battle?.result.win ? 'text-jade' : 'text-cinnabar'">
             {{ battle?.result.win ? 'Nguyên nhân thắng' : 'Nguyên nhân bại' }}
@@ -212,7 +268,7 @@
         <ul v-if="analysis.findings.length" class="mt-1.5 space-y-1">
           <li v-for="(f, i) in analysis.findings" :key="i" class="flex gap-1.5 text-[11px] leading-relaxed text-ink-soft">
             <span class="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-ink/30" aria-hidden="true"></span>
-            <span>{{ f.text }}</span>
+            <span>{{ displayBattleAnalysisText(f.text) }}</span>
           </li>
         </ul>
         <div v-if="analysis.directions.length" class="mt-2 rounded-md border border-violet-ink/15 bg-violet-ink/5 px-2.5 py-2">
@@ -221,8 +277,8 @@
           </p>
           <ul class="mt-1 flex flex-col gap-1">
             <li v-for="d in analysis.directions" :key="d.styleName" class="flex flex-col">
-              <span class="text-[11px] text-violet-ink">{{ d.styleName }}</span>
-              <span class="text-[10px] leading-relaxed text-ink-faint">{{ d.reason }}</span>
+              <span class="text-[11px] text-violet-ink">{{ displayBattleAnalysisText(d.styleName) }}</span>
+              <span class="text-[10px] leading-relaxed text-ink-faint">{{ displayBattleAnalysisText(d.reason) }}</span>
             </li>
           </ul>
         </div>
@@ -250,6 +306,51 @@
     </div>
 
     <button class="btn-ghost w-full" @click="stopExploration('manual')">Thu Quân Về Phủ</button>
+
+    <!-- Hộp thoại: Độ Huyết Trị Thương cho Đạo Lữ -->
+    <BaseModal :open="healModalOpen" title="Độ Huyết Trị Thương" @close="healModalOpen = false">
+      <div class="space-y-3">
+        <div class="rounded-md bg-cinnabar/10 p-3 text-cinnabar border border-cinnabar/20">
+          <p class="font-kai text-[13px] font-semibold flex items-center gap-1.5">
+            <GameIcon name="heart" :size="16" />
+            Khí Huyết Đạo Lữ Hao Tổn Nghiêm Trọng!
+          </p>
+          <p class="mt-1 text-[11px] leading-relaxed">
+            Đạo lữ <strong>{{ displayDaoluName(partnerName ?? '') }}</strong> trong lúc cùng ngươi xuất chinh lịch luyện đã bị thương tích, khí huyết hiện chỉ còn
+            <strong class="text-[12px] underline">{{ Math.round(dhp * 100) }}%</strong>!
+          </p>
+        </div>
+
+        <div class="rounded-md bg-ink/4 p-3 text-[11px] space-y-2 text-ink-soft border border-ink/10">
+          <p class="text-ink font-semibold">Quy tắc truyền huyết chữa thương:</p>
+          <p class="leading-relaxed text-ink-faint">
+            Ngươi có thể vận chuyển chân nguyên khí huyết của bản thân độ vào kinh mạch của đạo lữ để chữa lành thương tổn, giúp nàng lập tức hồi phục 100% khí huyết.
+          </p>
+          <div class="ink-divider my-1.5" />
+          <div class="flex justify-between items-center text-[11px] tabular">
+            <span class="text-ink-faint">Máu đạo lữ đã mất:</span>
+            <span class="text-cinnabar font-semibold">{{ Math.round((1 - dhp) * 100) }}%</span>
+          </div>
+          <div class="flex justify-between items-center text-[11px] tabular">
+            <span class="text-ink-faint">Khí huyết bản thân tiêu hao (tỷ lệ 60%):</span>
+            <span class="text-cinnabar font-semibold">-{{ Math.round((1 - dhp) * 60) }}%</span>
+          </div>
+          <div class="flex justify-between items-center text-[11px] tabular">
+            <span class="text-ink-faint">Khí huyết bản thân sau khi truyền:</span>
+            <span class="text-jade font-semibold">{{ Math.round(Math.max(10, php * 100 - (1 - dhp) * 60)) }}%</span>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <button class="btn-seal w-full !py-2.5 !text-[13px]" @click="confirmHeal">
+            Đồng Ý (Truyền Khí Huyết Cứu Đạo Lữ)
+          </button>
+          <button class="btn-ghost w-full !py-2 text-[12px]" @click="healModalOpen = false">
+            Tạm Thời Chưa Dùng
+          </button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -258,7 +359,7 @@
   import { useAdventureStore } from '@/stores/adventure'
   import { usePlayerStore } from '@/stores/player'
   import { useSettingsStore } from '@/stores/settings'
-  import { stopExploration, winsUntilRegionBoss, regionBossCleared } from '@/core/exploration'
+  import { stopExploration, winsUntilRegionBoss, regionBossCleared, healDaoluWithPlayerBlood } from '@/core/exploration'
   import { COMBAT_PLAYBACK_BASE_MS, COMBAT_PLAYBACK_MIN_MS, EXPLORE_MODES } from '@/data/constants'
   import { WIN_STREAK_REWARDS } from '@/data/earlyGame'
   import { formatClock, formatCountdown, formatGN } from '@/utils/format'
@@ -269,12 +370,14 @@
   import { isNemesis } from '@/core/worldMemory'
   import { playSfx } from '@/core/audio'
   import { enemyDef } from '@/data/enemies'
+  import { daoluDef } from '@/data/daolu'
   import { enemyLoreView } from '@/ui/enemyLore'
   import {
     displayLoreStageName,
     displayLoreElement,
     displayLoreFrame,
     displayLoreSkillNote,
+    displayEnemySkillName,
     displayLorePhaseAt,
     displayLorePhaseLabel,
     displayLoreArchetype,
@@ -282,11 +385,14 @@
     displayRegionName,
     displayExploreMode,
     displayEnemyName,
-    displayCombatLog
+    displayCombatLog,
+    displayDaoluName,
+    displayBattleAnalysisText
   } from '@/ui/displayZhVi'
   import type { CombatLogEntry } from '@/types'
   import ProgressBar from '@/components/common/ProgressBar.vue'
   import GameIcon from '@/components/common/GameIcon.vue'
+  import BaseModal from '@/components/common/BaseModal.vue'
 
   const adventure = useAdventureStore()
   const player = usePlayerStore()
@@ -296,7 +402,10 @@
   const displayed = ref<CombatLogEntry[]>([])
   const php = ref(1)
   const ehp = ref(1)
-  const floats = ref<{ id: number; text: string; side: 'p' | 'e'; crit: boolean }[]>([])
+  const dhp = ref(1)
+  const healModalOpen = ref(false)
+  const hasPromptedLowHp = ref(false)
+  const floats = ref<{ id: number; text: string; side: 'p' | 'e' | 'd'; crit: boolean }[]>([])
   const shakeCls = ref<{ p: string; e: string }>({ p: '', e: '' })
   const defeated = ref<'p' | 'e' | null>(null)
   const logBox = ref<HTMLElement | null>(null)
@@ -310,6 +419,11 @@
   const timeLeft = computed(() => (session.value ? Math.max(0, (session.value.endsAt - now.value) / 1000) : 0))
   const huntIn = computed(() => (session.value ? Math.max(0, (session.value.nextBattleAt - now.value) / 1000) : 0))
   const modeName = computed(() => (session.value ? EXPLORE_MODES[session.value.mode].name : ''))
+  const partnerName = computed(() => {
+    const id = session.value?.accompanyPartnerId
+    if (!id) return null
+    return daoluDef(id)?.name ?? null
+  })
 
   /** 本次历练已得(灵石/修为/拾获件数)—— 取自会话里如实累计的入账数,不是期望值 */
   const gains = computed(() => {
@@ -434,6 +548,7 @@
     const map: Record<string, string> = {
       '先手': 'Tiên thủ',
       '敌之加成': 'Gia thành của địch',
+      '总输出': 'Tổng gây sát thương',
       '总造成伤害': 'Tổng gây sát thương',
       '总承伤': 'Tổng chịu sát thương',
       '真伤承伤占比': 'Tỷ lệ sát thương chuẩn',
@@ -448,14 +563,15 @@
   }
 
   function formatRowValue(row: { label: string; value: string }): string {
+    let val = displayBattleAnalysisText(row.value)
     if (row.label === '先手') {
-      return row.value
+      return val
         .replace(/你抢先/g, 'Bạn ra tay trước')
         .replace(/敌先动/g, 'Địch ra tay trước')
         .replace(/你/g, 'Bạn')
         .replace(/敌/g, 'Địch')
     }
-    return row.value
+    return val
   }
 
   // 战败时自动展开分析;并按胜负配一声战果音
@@ -488,24 +604,72 @@
     }
   }
 
+  function checkLowHpPrompt(): void {
+    if (partnerName.value && dhp.value <= 0.30 && !hasPromptedLowHp.value) {
+      healModalOpen.value = true
+      hasPromptedLowHp.value = true
+    }
+  }
+
+  function openHealModal(): void {
+    healModalOpen.value = true
+  }
+
+  function confirmHeal(): void {
+    const res = healDaoluWithPlayerBlood()
+    if (res.ok) {
+      dhp.value = 1.0
+      if (res.newPlayerHp !== undefined) {
+        php.value = res.newPlayerHp
+      }
+      if (res.playerHpLoss) {
+        const id = floatSeq
+        floatSeq += 1
+        floats.value = [
+          ...floats.value.slice(-5),
+          { id, text: `-${Math.round(res.playerHpLoss * 100)}% Huyết`, side: 'p', crit: true }
+        ]
+        setTimeout(() => {
+          floats.value = floats.value.filter(f => f.id !== id)
+        }, 900)
+      }
+      const id2 = floatSeq
+      floatSeq += 1
+      floats.value = [
+        ...floats.value.slice(-5),
+        { id2, text: '+100% Khí Huyết', side: 'd', crit: false }
+      ]
+      setTimeout(() => {
+        floats.value = floats.value.filter(f => f.id !== id2)
+      }, 900)
+      healModalOpen.value = false
+    }
+  }
+
   function playBattle(instant = false): void {
     const b = battle.value
     if (!b) return
     stopPlayback()
     defeated.value = null
     const entries = b.result.log
+    const startDhp = b.partnerStartHpPct ?? session.value?.partnerHpPct ?? 1
+    const targetDhp = b.partnerHpPct ?? session.value?.partnerHpPct ?? 1
+
     // 减动效:同 GauntletPanel —— 直接给结果不逐条播,开关对两处战斗回放一视同仁
     if (instant || settings.reduceMotion) {
       displayed.value = entries.slice(-100)
       const last = entries[entries.length - 1]
       php.value = last?.php ?? 1
       ehp.value = last?.ehp ?? 1
+      dhp.value = targetDhp
       defeated.value = b.result.win ? 'e' : 'p'
+      checkLowHpPrompt()
       return
     }
     displayed.value = []
     php.value = 1
     ehp.value = 1
+    dhp.value = startDhp
     let idx = 0
     const interval = Math.max(COMBAT_PLAYBACK_MIN_MS, COMBAT_PLAYBACK_BASE_MS / settings.battleSpeed)
     playTimer = window.setInterval(() => {
@@ -513,11 +677,16 @@
       if (!entry) {
         stopPlayback()
         defeated.value = b.result.win ? 'e' : 'p'
+        dhp.value = targetDhp
+        checkLowHpPrompt()
         return
       }
       displayed.value = [...displayed.value.slice(-99), entry]
       php.value = entry.php
       ehp.value = entry.ehp
+      if (entries.length > 0) {
+        dhp.value = Math.max(0, Math.round((startDhp - (startDhp - targetDhp) * ((idx + 1) / entries.length)) * 100) / 100)
+      }
       if (entry.dmg) {
         const id = floatSeq
         floatSeq += 1
@@ -555,6 +724,19 @@
     (at, oldAt) => {
       if (at !== undefined && at !== oldAt) playBattle(false)
     }
+  )
+
+  watch(
+    () => session.value?.partnerHpPct,
+    val => {
+      if (val !== undefined && playTimer === undefined) {
+        dhp.value = val
+      }
+      if (val !== undefined && val > 0.5) {
+        hasPromptedLowHp.value = false
+      }
+    },
+    { immediate: true }
   )
 
   onMounted(() => {

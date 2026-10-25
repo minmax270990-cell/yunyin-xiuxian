@@ -27,6 +27,7 @@ export const PERSISTED_STORES = [
   'market',
   'apprentice',
   'bounty',
+  'npc',
   /**
    * 节奏遥测(store id 是 pacingTelemetry,分片键取 'pacing')。
    *
@@ -66,6 +67,7 @@ export const STORE_NAMES: Record<string, string> = {
   market: 'Phường thị',
   apprentice: 'Đạo đồng',
   bounty: 'Treo thưởng',
+  npc: 'Tu sĩ thế giới',
   pacing: 'Nhịp độ đo lường',
   diag: 'Nhật ký lỗi'
 }
@@ -357,7 +359,7 @@ export function buildExportPayload(): ExportPayload {
 export function validateImportPayload(obj: unknown): string | null {
   if (typeof obj !== 'object' || obj === null) return '存档内容不是有效对象'
   const p = obj as Partial<ExportPayload>
-  if (p.game !== 'yunyin-xiuxian') return '并非《云隐修仙录》的存档文件'
+  if (p.game !== 'yunyin-xiuxian') return 'Không phải tệp bản lưu của trò chơi 《Thiên Đạo》'
   if (typeof p.version !== 'number') return '存档缺少版本号'
   if (p.version > SAVE_VERSION) return '存档版本高于当前游戏版本,无法导入'
   if (typeof p.data !== 'object' || p.data === null) return '存档数据段缺失'

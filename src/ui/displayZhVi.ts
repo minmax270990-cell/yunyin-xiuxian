@@ -220,6 +220,7 @@ export function displayRewardPreview(preview: string): string {
   if (!preview) return ''
   let res = preview
   res = replaceAll(res, '灵石', 'Linh Thạch')
+  res = replaceAll(res, '玄铁', 'Huyền Thiết')
   res = replaceAll(res, '残页', 'Tàn Diệp')
   res = replaceAll(res, '凡品灵草', 'Phàm Phẩm Linh Thảo')
   res = replaceAll(res, '中品灵草', 'Trung Phẩm Linh Thảo')
@@ -234,6 +235,8 @@ export function displayRewardPreview(preview: string): string {
   res = replaceAll(res, '器灵尘', 'Khí Linh Trần')
   res = replaceAll(res, '强化石', 'Cường Hóa Thạch')
   res = replaceAll(res, '洗炼石', 'Tẩy Luyện Thạch')
+  res = res.replace(/称号「(.*?)」/g, (_m, name) => `Danh Hiệu「${displayTitleName(name)}」`)
+  res = res.replace(/丹药「(.*?)」/g, (_m, name) => `Đan Dược「${displayPillName(name)}」`)
   return res
 }
 
@@ -542,17 +545,6 @@ export function displayLorePhaseAt(at: string): string {
   return replaceAll(at, '血余 ', 'Máu còn lại ')
 }
 
-const PHASE_LABEL_MAP: Record<string, string> = {
-  '狂化': 'Cuồng Hóa',
-  '缠绕': 'Quấn Chặt',
-  '噬法': 'Thôn Pháp',
-  '真元迸发': 'Chân Nguyên Bộc Phát',
-  '神速': 'Thần Tốc',
-  '绝脉': 'Tuyệt Mạch',
-  '暴怒': 'Bạo Nộ',
-  '死战': 'Tử Chiến'
-}
-
 export function displayLorePhaseLabel(label: string): string {
   return PHASE_LABEL_MAP[label] ?? label
 }
@@ -640,8 +632,184 @@ import {
   PROSPERITY_NAME_MAP,
   FOE_ORIGIN_LABEL_MAP,
   SUPPRESS_RESOURCE_NAME_MAP,
-  GONGFA_DESC_MAP
+  GONGFA_DESC_MAP,
+  TITLE_NAME_MAP,
+  TITLE_DESC_MAP,
+  COMBO_ART_NAME_MAP,
+  COMBO_ART_DESC_MAP,
+  COMBO_ART_COST_MAP,
+  GONGFA_BRANCH_DESC_MAP,
+  ENEMY_SKILL_NAME_MAP,
+  PHASE_LABEL_MAP,
+  MUTATOR_NAME_MAP,
+  DAO_PATH_MAP,
+  DAO_SEAL_MAP,
+  DAO_DESC_MAP,
+  DAO_RULE_MAP,
+  DAO_DEEP_MAP,
+  CELESTIAL_WORLD_NAME_MAP,
+  CELESTIAL_WORLD_SEAL_MAP,
+  CELESTIAL_WORLD_DESC_MAP,
+  CELESTIAL_WORLD_RULE_MAP,
+  ROUTE_NODE_NAME_MAP,
+  ROUTE_NODE_DESC_MAP,
+  ROUTE_RISK_MAP,
+  TRIAL_NAME_MAP,
+  TRIAL_SEAL_MAP,
+  TRIAL_DESC_MAP,
+  TRIAL_RULE_MAP,
+  PACT_NAME_MAP,
+  PACT_SEAL_MAP,
+  PACT_DESC_MAP,
+  PACT_RULE_MAP,
+  FURNACE_RATE_MAP,
+  VOID_HEAD_MAP,
+  VOID_TAIL_MAP,
+  VOID_SEAL_MAP,
+  THEME_IDENTITY_MAP,
+  VOID_NODE_HEAD_MAP,
+  VOID_NODE_TAIL_MAP
 } from './displayMappings'
+
+export function displayEnemySkillName(name: string): string {
+  if (!name) return ''
+  return ENEMY_SKILL_NAME_MAP[name] ?? name
+}
+
+export function displayMutatorName(name: string): string {
+  if (!name) return ''
+  return MUTATOR_NAME_MAP[name] ?? name
+}
+
+export function displayCombatBracket(content: string): string {
+  if (!content) return ''
+  if (GONGFA_SKILL_NAME_MAP[content]) return GONGFA_SKILL_NAME_MAP[content]
+  if (ENEMY_SKILL_NAME_MAP[content]) return ENEMY_SKILL_NAME_MAP[content]
+  const enemy = displayEnemyName(content)
+  if (enemy !== content) return enemy
+  const art = displayArtifactName(content)
+  if (art !== content) return art
+  const artActive = displayArtifactActiveName(content)
+  if (artActive !== content) return artActive
+  const npc = displayDaoluName(content)
+  if (npc !== content) return npc
+  const gf = displayGongfaName(content)
+  if (gf !== content) return gf
+  const br = displayGongfaBranchName(content)
+  if (br !== content) return br
+  const title = displayTitleName(content)
+  if (title !== content) return title
+  return content
+}
+
+export function displayBuildSourceName(source: string): string {
+  if (!source) return ''
+  if (source.startsWith('称号·')) {
+    const raw = source.slice(3)
+    return `Danh hiệu · ${displayTitleName(raw)}`
+  }
+  if (source.startsWith('师承·')) {
+    const raw = source.slice(3)
+    return `Sư thừa · ${raw}`
+  }
+  if (source.startsWith('灵兽·')) {
+    const raw = source.slice(3)
+    return `Linh thú · ${displayPetName(raw)}`
+  }
+  if (source.startsWith('功法·')) {
+    const raw = source.slice(3)
+    return `Công pháp · ${displayGongfaName(raw)}`
+  }
+  if (source.startsWith('分支·')) {
+    const raw = source.slice(3)
+    return `Nhánh · ${displayGongfaBranchName(raw)}`
+  }
+  if (source.startsWith('丹效·')) {
+    const raw = source.slice(3)
+    return `Đan hiệu · ${displayPillName(raw)}`
+  }
+  if (source.startsWith('装备·')) {
+    const raw = source.slice(3)
+    return `Trang bị · ${raw}`
+  }
+  if (source.startsWith('法宝·')) {
+    const raw = source.slice(3)
+    return `Pháp bảo · ${displayArtifactName(raw)}`
+  }
+  return source
+}
+
+export function displayFightPreviewSkillLine(line: string): string {
+  if (!line) return ''
+  let res = line
+  res = res.replace(/【(.*?)】/g, (_m, name) => `【${displayEnemySkillName(name)}】`)
+  res = replaceAll(res, '重击', 'Trọng Kích')
+  res = replaceAll(res, '连击', 'Liên Kích')
+  res = replaceAll(res, '摄神', 'Nhiếp Thần')
+  res = replaceAll(res, '吸血', 'Hút Máu')
+  res = replaceAll(res, '护盾', 'Hộ Thuẫn')
+  res = replaceAll(res, '流血', 'Chảy Máu')
+  res = replaceAll(res, '贯穿', 'Xuyên Thấu')
+  res = replaceAll(res, '频频出手', 'Ra tay dồn dập')
+  res = replaceAll(res, '寻常出手', 'Ra tay bình thường')
+  res = replaceAll(res, '伺机偶发', 'Chờ cơ hội ngẫu phát')
+  res = replaceAll(res, '威力 ', 'Uy lực ')
+  res = replaceAll(res, ' 倍', ' lần')
+  res = replaceAll(res, '身法诡谲,闪避约 ', 'Thân pháp quỷ quyệt, né tránh ước ')
+  return res
+}
+
+export function displayFightPreviewRiskLine(line: string): string {
+  if (!line) return ''
+  let res = line
+  res = res.replace(/【(.*?)】/g, (_m, name) => `【${displayEnemySkillName(name)}】`)
+  res = res.replace(/天时仅 (\d+) 回合,拖延即败/, 'Thiên thời chỉ có $1 hiệp, kéo dài liền bại')
+  res = res.replace(/每 (\d+) 回合敌人杀意渐涨,战局越晚越凶/, 'Mỗi $1 hiệp sát ý kẻ địch tăng dần, càng muộn càng hung hiểm')
+  res = replaceAll(res, '足以重创,留足气血以备不测', 'đủ sức trọng thương, giữ đủ khí huyết đề phòng bất trắc')
+  res = replaceAll(res, '此地生机稀薄,回血难以为继', 'Nơi này sinh cơ thưa thớt, hồi máu khó duy trì')
+  return res
+}
+
+export function displayFightPreviewWinText(winText: string): string {
+  if (!winText) return ''
+  const WIN_TEXT_MAP: Record<string, string> = {
+    '胜算在握': 'Thắng phần nắm chắc',
+    '约有七成胜算': 'Ước chừng bảy phần thắng',
+    '五五之数,凶险参半': 'Năm ăn năm thua, hung hiểm chia đôi',
+    '凶多吉少': 'Lành ít dữ nhiều'
+  }
+  return WIN_TEXT_MAP[winText] ?? winText
+}
+
+export function displayTitleName(name: string): string {
+  if (!name) return ''
+  return TITLE_NAME_MAP[name] ?? name
+}
+
+export function displayTitleDesc(desc: string): string {
+  if (!desc) return ''
+  return TITLE_DESC_MAP[desc] ?? desc
+}
+
+export function displayComboArtName(name: string): string {
+  if (!name) return ''
+  return COMBO_ART_NAME_MAP[name] ?? name
+}
+
+export function displayComboArtDesc(desc: string): string {
+  if (!desc) return ''
+  return COMBO_ART_DESC_MAP[desc] ?? desc
+}
+
+export function displayComboArtCost(costText: string): string {
+  if (!costText) return ''
+  return COMBO_ART_COST_MAP[costText] ?? costText
+}
+
+export function displayGongfaBranchDesc(desc: string): string {
+  if (!desc) return ''
+  return GONGFA_BRANCH_DESC_MAP[desc] ?? desc
+}
 
 export function displayGongfaName(name: string): string {
   return GONGFA_NAME_MAP[name] ?? name
@@ -665,6 +833,16 @@ export function displayGongfaSkillLine(skill: { name: string; mult: number; rate
   const ratePct = Math.round(skill.rate * 100) + '%'
   const multPct = Math.round(skill.mult * 100) + '%'
   return `Kèm theo thần thông「${skillName}」: Ra chiêu xác suất ${ratePct}, uy lực ${multPct}. Cần đặt làm Chủ Tu, trong chiến đấu chỉ xuất chiêu thức này`
+}
+
+export function displayGongfaFuncText(text: string): string {
+  if (!text) return ''
+  let res = text
+  res = res.replace(/圆满\((\d+)\s*层\)可得:/g, 'Viên mãn ($1 tầng) nhận được: ')
+  res = res.replace(/附带神通「(.*?)」:出手\s*(.*?)\s*几率,\s*(.*?)\s*威力。须设为主修,战斗只出这一式/g, (_m, name, rate, mult) =>
+    `Kèm thần thông「${displayGongfaSkillName(name)}」: Xuất chiêu ${rate} xác suất, ${mult} uy lực. Cần đặt làm Chủ Tu, trong chiến đấu chỉ xuất chiêu thức này`
+  )
+  return res
 }
 
 export function displayRegionDesc(desc: string): string {
@@ -756,7 +934,18 @@ export function displayExploreMode(mode: string): string {
 }
 
 export function displayEnemyName(name: string): string {
-  return ENEMY_NAME_MAP[name] ?? name
+  if (!name) return ''
+  if (name.startsWith('残魂·')) {
+    const raw = name.replace(/^残魂·/, '')
+    return `Tàn Hồn · ${ENEMY_NAME_MAP[raw] ?? raw}`
+  }
+  if (ENEMY_NAME_MAP[name]) return ENEMY_NAME_MAP[name]
+  if (name.endsWith('之主')) {
+    const base = name.slice(0, -2)
+    const baseTrans = displayCelestialWorldName(base)
+    if (baseTrans !== base) return `${baseTrans} Chi Chủ`
+  }
+  return name
 }
 
 export function displayEquipName(name: string): string {
@@ -785,6 +974,10 @@ export function displayArtifactActiveName(name: string): string {
 
 export function displayQualityName(qualityOrName: string): string {
   return QUALITY_NAME_MAP[qualityOrName] ?? qualityOrName
+}
+
+export function displayTribulationName(name: string): string {
+  return TRIBULATION_NAME_MAP[name] ?? name
 }
 
 export function displayTribulationTitle(title: string): string {
@@ -817,24 +1010,153 @@ export function displayArtifactLevelLabel(label: string): string {
   return label.replace(/祭炼\s*(\d+\/\d+)\s*重/, 'Tế luyện $1 tầng')
 }
 
+export function displayArtifactDesc(desc: string): string {
+  if (!desc) return ''
+  return ARTIFACT_DESC_MAP[desc] ?? desc
+}
+
 export function displayArtifactPassive(line: string): string {
   if (!line) return ''
   let res = line
-  res = replaceAll(res, '攻击', 'Công kích')
+  // Stats
   res = replaceAll(res, '生命上限', 'Sinh mệnh tối đa')
+  res = replaceAll(res, '攻击', 'Công kích')
   res = replaceAll(res, '防御', 'Phòng ngự')
+  res = replaceAll(res, '气运', 'Khí vận')
+  res = replaceAll(res, '修炼速度', 'Tốc độ tu luyện')
+  res = replaceAll(res, '战斗修为', 'Tu vi chiến đấu')
+  res = replaceAll(res, '命中', 'Chuẩn xác')
+  res = replaceAll(res, '闪避', 'Né tránh')
+  res = replaceAll(res, '暴击率', 'Tỉ lệ bạo kích')
+  res = replaceAll(res, '暴击伤害', 'Sát thương bạo kích')
+  res = replaceAll(res, '破甲', 'Phá giáp')
+  res = replaceAll(res, '吸血', 'Hút máu')
+  res = replaceAll(res, '伤害增幅', 'Tăng sát thương')
+  res = replaceAll(res, '造成伤害', 'Sát thương tạo thành')
+  res = replaceAll(res, '受到伤害降低', 'Giảm sát thương')
+  res = replaceAll(res, '受到伤害', 'Sát thương gánh chịu')
+  res = replaceAll(res, '濒危减伤', 'Giảm thương khi nguy nan')
+  res = replaceAll(res, '背水增伤', 'Tăng thương khi máu thấp')
+  res = replaceAll(res, '锋芒增伤', 'Tăng thương khi đầy máu')
+  res = replaceAll(res, '罡盾增伤', 'Tăng thương khi có thuẫn')
+  res = replaceAll(res, '追击威力', 'Uy lực truy kích')
+  res = replaceAll(res, '反击威力', 'Uy lực phản kích')
+  res = replaceAll(res, '反击概率', 'Tỉ lệ phản kích')
+  res = replaceAll(res, '连击', 'Liên kích')
+  res = replaceAll(res, '震慑', 'Nhiếp thần')
+  res = replaceAll(res, '首回合伤害', 'Sát thương hiệp đầu')
+  res = replaceAll(res, '速度', 'Tốc độ')
+  res = replaceAll(res, '灵气回复', 'Hồi phục linh khí')
+  res = replaceAll(res, '灵气上限', 'Giới hạn linh khí')
+  res = replaceAll(res, '回合回复', 'Hồi phục mỗi hiệp')
+  res = replaceAll(res, '开战护盾', 'Hộ thuẫn khai chiến')
+  res = replaceAll(res, '溢疗成盾', 'Tràn trị liệu thành thuẫn')
+  res = replaceAll(res, '处决伤害', 'Sát thương xử quyết')
   res = replaceAll(res, '双枚成丹', 'Song Đan thành dược')
-  res = replaceAll(res, '(再得一枚之机;与手艺合计不过八成)', '(Cơ hội thêm 1 viên; cộng dồn không quá 80%)')
-  res = replaceAll(res, '（再得一枚之机；与手艺合计不过八成）', '(Cơ hội thêm 1 viên; cộng dồn không quá 80%)')
+  res = replaceAll(res, '双倍战利', 'Gấp đôi chiến lợi phẩm')
+  res = replaceAll(res, '历练遇敌', 'Tần suất gặp địch lịch luyện')
+  res = replaceAll(res, '历练际遇', 'Tế ngộ lịch luyện')
+  res = replaceAll(res, '装备掉落率', 'Tỉ lệ rơi trang bị')
+  res = replaceAll(res, '失败返还修为', 'Thất bại hoàn trả tu vi')
+  res = replaceAll(res, '小进阶成功率', 'Tỉ lệ tiểu tiến giai')
+  res = replaceAll(res, '突破率', 'Tỉ lệ đột phá')
+  res = replaceAll(res, '御劫', 'Ngự kiếp')
+  res = replaceAll(res, '灵兽效果', 'Hiệu quả linh thú')
+  res = replaceAll(res, '强化减耗', 'Giảm tiêu hao cường hóa')
+  res = replaceAll(res, '寿元上限', 'Giới hạn thọ nguyên')
+  res = replaceAll(res, '战利灵石', 'Linh thạch chiến lợi')
+
+  // Caveats
+  res = replaceAll(res, '只抵对手闪避;不闪则无增益', 'Chỉ khắc chế né tránh của địch; không né thì không có hiệu quả')
+  res = replaceAll(res, '叠于固有会心之伤', 'Cộng dồn trên sát thương bạo kích cơ bản')
+  res = replaceAll(res, '叠于固有会心', 'Cộng dồn trên bạo kích cơ bản')
+  res = replaceAll(res, '之上', '')
+  res = replaceAll(res, '先削其防,再入减免;不是真伤', 'Trừ phòng ngự trước khi tính giảm thương; không phải sát thương chuẩn')
+  res = replaceAll(res, '按造成之伤回血', 'Hồi máu theo sát thương tạo thành')
+  res = replaceAll(res, '须己身气血未满', 'Khi sinh mệnh bản thân dưới')
+  res = replaceAll(res, '须己身气血逾', 'Khi sinh mệnh bản thân vượt')
+  res = replaceAll(res, '须护盾仍在', 'Khi hộ thuẫn còn tồn tại')
+  res = replaceAll(res, '只化溢出之疗', 'Chỉ chuyển hóa trị liệu tràn')
+  res = replaceAll(res, '回合初回血;已满则无', 'Đầu hiệp hồi máu; đầy thì không hồi')
+  res = replaceAll(res, '主器物成色;小进阶另借此数半成', 'Chủ yếu ảnh hưởng phẩm chất vật phẩm; tiểu tiến giai hưởng 5% số này')
+  res = replaceAll(res, '须不弱于对手,方得抢先', 'Không thấp hơn đối thủ mới có thể xuất thủ trước')
+  res = replaceAll(res, '只重开局一合;不改谁先出手', 'Chỉ tăng hiệp đầu khai cuộc; không đổi thứ tự xuất chiêu')
+  res = replaceAll(res, '须高于对手命中,方得避开', 'Cao hơn chuẩn xác của địch mới có thể né tránh')
+  res = replaceAll(res, '只增装备现世;灵石草矿不与', 'Chỉ tăng rơi trang bị; linh thạch, thảo mộc, khoáng thạch không tính')
+  res = replaceAll(res, '同程妖踪更密;行程不减', 'Yêu thú xuất hiện dày đặc hơn; lộ trình không giảm')
+  res = replaceAll(res, '只入小进阶;大关天劫不与', 'Chỉ tính tiểu tiến giai; đại quan thiên kiếp không tính')
+  res = replaceAll(res, '只还败时所损修为;灵气不退', 'Chỉ hoàn trả tu vi tổn thất khi bại; linh khí không hoàn')
+  res = replaceAll(res, '再得一枚之机;与手艺合计不过八成', 'Cơ hội thêm 1 viên; cộng dồn không quá 80%')
+  res = replaceAll(res, '只入历练战胜之石;洞府所产不与', 'Chỉ tính linh thạch thắng lịch luyện; động phủ sản sinh không tính')
+  res = replaceAll(res, '只省装备强化之耗;法宝祭炼不与', 'Chỉ tiết kiệm tiêu hao cường hóa trang bị; tế luyện pháp bảo không tính')
+  res = replaceAll(res, '只增历练途中际遇;洞府巡游不与', 'Chỉ tăng tế ngộ trên đường lịch luyện; tuần du động phủ không tính')
+  res = replaceAll(res, '当场灵石、修为、材料与装备一并翻倍', 'Linh thạch, tu vi, nguyên liệu và trang bị đồng loạt gấp đôi')
+  res = replaceAll(res, '只入历练战胜之修为;静修不与', 'Chỉ tính tu vi thắng lịch luyện; tĩnh tu không tính')
+  res = replaceAll(res, '只减天劫之伤;小进阶之骰不改', 'Chỉ giảm sát thương thiên kiếp; xúc xắc tiểu tiến giai không đổi')
+  res = replaceAll(res, '灵气上限上浮,积余之仓随之', 'Giới hạn linh khí nâng lên, dung lượng tích trữ nâng theo')
+  res = replaceAll(res, '放大灵兽词条;灵兽园等级不在其中', 'Khuếch đại dòng linh thú; cấp Linh Thú Viên không tính')
+  res = replaceAll(res, '只伤气血未满', 'Chỉ gây thương tổn cho địch có sinh mệnh dưới')
+  res = replaceAll(res, '之敌', '')
+  res = replaceAll(res, '开战凝盾;总量不过', 'Khai chiến ngưng thuẫn; tổng lượng không quá')
+  res = replaceAll(res, '气血', 'sinh mệnh')
+  res = replaceAll(res, '另起一击,非连段暴击', 'Thêm một đòn tấn công, không phải bạo kích liên đoạn')
+  res = replaceAll(res, '只增追击,不增本击', 'Chỉ tăng truy kích, không tăng đòn chính')
+  res = replaceAll(res, '受击后方可还手', 'Sau khi trúng đòn mới có thể phản kích')
+  res = replaceAll(res, '只增反击,不增本击', 'Chỉ tăng phản kích, không tăng đòn chính')
+  res = replaceAll(res, '震慑一合;净念或可破之', 'Nhiếp thần một hiệp; định niệm có thể hóa giải')
   return res
 }
 
 export function displayArtifactActiveDesc(desc: string): string {
   if (!desc) return ''
   let res = desc
+
+  // Specific full phrases
+  res = replaceAll(res, '受慑时以七成概率当场挣脱,那一手照出', 'Khi bị nhiếp tâm có 70% xác suất lập tức thoát khống, chiêu thức vẫn phát ra như thường')
+  res = res.replace(/受慑时以\s*([一二三四五六七八九十\d]+)\s*成概率当场挣脱[,，]那一手照出/g, (_m, cheng) => {
+    const pct = cheng === '七' ? 70 : cheng === '九' ? 90 : cheng === '八' ? 80 : 70
+    return `Khi bị nhiếp tâm có ${pct}% xác suất lập tức thoát khống, chiêu thức vẫn phát ra như thường`
+  })
+
   res = res.replace(/每\s*(\d+)\s*回合/g, 'Mỗi $1 hiệp ')
   res = replaceAll(res, '喷吐真火', 'phun ra chân hỏa')
   res = replaceAll(res, '喷出三昧真火', 'phun ra Tam Muội Chân Hỏa')
+  res = replaceAll(res, '大印镇压', 'đại ấn trấn áp')
+  res = replaceAll(res, '降下雷霆', 'giáng xuống sấm sét')
+  res = replaceAll(res, '引星辉入体', 'dẫn ánh sao nhập thể')
+  res = replaceAll(res, '鼎压四方', 'đỉnh áp bốn phương')
+  res = replaceAll(res, '碧波洗身', 'sóng biếc gột thân')
+  res = replaceAll(res, '幡卷灵力', 'cờ cuộn linh lực')
+  res = replaceAll(res, '飞刀取首', 'phi đao đoạt mạng')
+  res = replaceAll(res, '钟镇万物', 'chuông trấn vạn vật')
+  res = replaceAll(res, '造化加身', 'tạo hóa gia thân')
+  res = replaceAll(res, '仙火护主', 'tiên hỏa hộ chủ')
+  res = replaceAll(res, '琴音摄神,打断敌人这一手', 'tiếng đàn nhiếp thần, đánh gãy chiêu này của địch')
+  res = replaceAll(res, '神钟自成壁垒', 'thần chung tự thành thành lũy')
+  res = replaceAll(res, '挥鞭裂其护体,余下回合敌人防御降低', 'vung roi xé rách hộ thể, các hiệp còn lại phòng ngự của địch giảm')
+  res = replaceAll(res, '开天一击', 'đòn đánh Khai Thiên')
+  res = replaceAll(res, '本源涌动', 'bản nguyên cuộn trào')
+  res = replaceAll(res, '剑气纵横', 'kiếm khí dọc ngang')
+  res = replaceAll(res, '踏云掠影', 'đạp mây lướt bóng')
+  res = replaceAll(res, '镇压四方,定住敌人这一手', 'trấn áp bốn phương, định trụ chiêu này của địch')
+  res = replaceAll(res, '引雷加身', 'dẫn lôi nhập thể')
+  res = replaceAll(res, '青莲护身', 'thanh liên hộ thân')
+  res = replaceAll(res, '挪移虚界,敌人伤害降低', 'di chuyển hư giới, sát thương của địch giảm')
+  res = replaceAll(res, '云海四合', 'biển mây khép lại')
+  res = replaceAll(res, '引星陨落', 'dẫn sao rơi rụng')
+  res = replaceAll(res, '扫落敌人气机', 'quét sạch khí cơ địch')
+  res = replaceAll(res, '玉京垂护,敌人伤害降低', 'Ngọc Kinh che chở, sát thương của địch giảm')
+  res = replaceAll(res, '神域压落', 'thần vực đè xuống')
+  res = replaceAll(res, '鼓声催战', 'tiếng trống giục chiến')
+  res = replaceAll(res, '香火回照', 'hương hỏa phản chiếu')
+  res = replaceAll(res, '帝威加身', 'đế uy gia thân')
+  res = replaceAll(res, '真灵回照', 'chân linh phản chiếu')
+  res = replaceAll(res, '本源护持', 'bản nguyên che chở')
+  res = replaceAll(res, '神魔噬影', 'thần ma phệ ảnh')
+  res = replaceAll(res, '束缚敌人,其攻击降低', 'trói buộc kẻ địch, công kích của địch giảm')
+  res = replaceAll(res, '摄敌心魂,其攻击降低', 'nhiếp tâm hồn địch, công kích của địch giảm')
+  res = replaceAll(res, '铃音慑敌,其攻击降低', 'tiếng chuông nhiếp địch, công kích của địch giảm')
+  res = replaceAll(res, '并回复其中', 'và hồi phục')
   res = replaceAll(res, '造成', 'tạo thành')
   res = replaceAll(res, '攻击伤害', 'sát thương công kích')
   res = replaceAll(res, '伤害', 'sát thương')
@@ -842,14 +1164,8 @@ export function displayArtifactActiveDesc(desc: string): string {
   res = replaceAll(res, '获得', 'nhận')
   res = replaceAll(res, '生命护盾', 'lá chắn sinh mệnh')
   res = replaceAll(res, '生命', 'sinh mệnh')
-  res = replaceAll(res, '攻击', 'Công kích')
-  res = replaceAll(res, '生命上限', 'Sinh mệnh tối đa')
-  res = replaceAll(res, '防御', 'Phòng ngự')
-  res = replaceAll(res, '双枚成丹', 'Song Đan thành dược')
   res = replaceAll(res, 'Thần thông uy lực', 'Uy lực thần thông')
   res = replaceAll(res, 'Thần thông hồi phục', 'Hồi phục thần thông')
-  res = replaceAll(res, '(再得一枚之机;与手艺合计不过八成)', '(Cơ hội thêm 1 viên; cộng dồn không quá 80%)')
-  res = replaceAll(res, '（再得一枚之机；与手艺合计不过八成）', '(Cơ hội thêm 1 viên; cộng dồn không quá 80%)')
   res = res.replace(/,([^\s])/g, ', $1')
   res = res.replace(/\s+/g, ' ').trim()
   return res
@@ -875,20 +1191,36 @@ export function displayCombatLog(text: string): string {
   if (!text) return ''
   let res = text
 
-  // Tên yêu thú / thủ lĩnh trong ngoặc vuông (tự thêm khoảng trắng phân tách nếu chữ tiếp theo liền kề)
-  res = res.replace(/【(.*?)】(?=[^\s,.!?:;\uFF0C\u3002\uFF01\uFF1F])/g, (_m, name) => `【${displayEnemyName(name)}】 `)
-  res = res.replace(/【(.*?)】/g, (_m, name) => `【${displayEnemyName(name)}】`)
+  // Các mục trong ngoặc vuông (quái, kỹ năng, pháp bảo...)
+  res = res.replace(/【(.*?)】(?=[^\s,.!?:;\uFF0C\u3002\uFF01\uFF1F])/g, (_m, name) => `【${displayCombatBracket(name)}】 `)
+  res = res.replace(/【(.*?)】/g, (_m, name) => `【${displayCombatBracket(name)}】`)
+
+  // Pháp bảo chủ động xuất chiêu
+  res = res.replace(/自行出手——(.*?)([!\\uFF01])/g, (_m, name, punc) => `tự động xuất chiêu —— ${displayArtifactActiveName(name)}${punc}`)
+  res = res.replace(/吸取敌手精血——(.*?)([!\\uFF01])/g, (_m, name, punc) => `hút lấy tinh huyết đối thủ —— ${displayArtifactActiveName(name)}${punc}`)
 
   // Các mẫu chiến báo
   res = replaceAll(res, '你与', 'Ngươi và ')
   res = replaceAll(res, '狭路相逢!', 'ngõ hẹp tương phùng!')
+  res = replaceAll(res, '灵光一照,摄魂之力散于无形。', 'linh quang chiếu rọi, lực nhiếp hồn tiêu tán vô hình.')
+  res = replaceAll(res, '灵光一照，摄魂之力散于无形。', 'linh quang chiếu rọi, lực nhiếp hồn tiêu tán vô hình.')
+  res = replaceAll(res, '你施展一记攻势', 'Ngươi thi triển một đòn công kích')
   res = replaceAll(res, '你祭出一记攻势', 'Ngươi xuất chiêu một đòn công kích')
+  res = replaceAll(res, '施展一记攻势', 'thi triển một đòn công kích')
+  res = replaceAll(res, '施展一记爪击', 'thi triển một đòn trảo kích')
+  res = replaceAll(res, '施展一记', 'thi triển một đòn ')
   res = replaceAll(res, '你祭出', 'Ngươi xuất chiêu ')
   res = replaceAll(res, '你施展', 'Ngươi thi triển ')
   res = replaceAll(res, '祭出一记攻势', 'xuất chiêu một đòn công kích')
   res = replaceAll(res, '祭出一记爪击', 'xuất chiêu một đòn trảo kích')
+  res = replaceAll(res, '一记爪击', 'một đòn trảo kích')
+  res = replaceAll(res, '一记攻势', 'một đòn công kích')
   res = replaceAll(res, '施展【', 'thi triển 【')
   res = replaceAll(res, '祭出', 'xuất chiêu ')
+  res = replaceAll(res, '身形微晃,招式落空。', 'thân hình khẽ lắc, chiêu thức thất bại.')
+  res = replaceAll(res, '身形微晃，招式落空。', 'thân hình khẽ lắc, chiêu thức thất bại.')
+  res = replaceAll(res, '身形微晃', 'thân hình khẽ lắc')
+  res = replaceAll(res, '招式落空', 'chiêu thức thất bại')
   res = replaceAll(res, '击中你。', 'đánh trúng ngươi.')
   res = replaceAll(res, '击中你', 'đánh trúng ngươi')
   res = replaceAll(res, ',击中', ', đánh trúng ')
@@ -928,12 +1260,17 @@ export function displayCombatLog(text: string): string {
   res = replaceAll(res, '发威,', 'phát uy, ')
   res = replaceAll(res, '的攻势被削弱了。', 'thế công bị suy yếu.')
   res = replaceAll(res, '岁月为你加冕——长生印生效,气血与护盾俱增;敌人杀意亦涨。', 'Năm tháng gia miện cho ngươi —— Trường Sinh Ấn có hiệu lực, khí huyết cùng hộ thuẫn đều tăng; sát ý của kẻ địch cũng dâng cao.')
-  res = replaceAll(res, '狂化!', 'Cuồng Hóa!')
-  res = replaceAll(res, '缠绕!', 'Quấn Chặt!')
-  res = replaceAll(res, '噬法!', 'Thôn Pháp!')
-  res = replaceAll(res, '神速!', 'Thần Tốc!')
-  res = replaceAll(res, '暴怒!', 'Bạo Nộ!')
-  res = replaceAll(res, '死战!', 'Tử Chiến!')
+  res = replaceAll(res, ' (重伤坠地)', '')
+  res = replaceAll(res, ' (渡劫)', '')
+  res = res.replace(/(.*)余温尚存[,，]心头微生暖意。/g, 'Hơi ấm của $1 vẫn còn vương lại, trong lòng khẽ dâng lên tia ấm áp.')
+  res = res.replace(/(.*)余韵未消[,，]往事历历在目。/g, 'Dư vận của $1 chưa tan, chuyện xưa rõ ràng trước mắt.')
+  res = res.replace(/(.*)渐行渐远[,，]归于寂静。/g, '$1 dần đi xa, quy về tịch tĩnh.')
+  res = res.replace(/曾\s*(\d+)\s*败于此[,，]终斩此獠于剑下。如今残魂再现拦路\s*——\s*他似乎还认得你。/g, 'Từng $1 lần bại trận tại đây, cuối cùng chém kẻ này dưới kiếm. Nay tàn hồn lại hiện chắn đường —— Hắn dường như vẫn còn nhận ra ngươi.')
+  for (const [zh, vi] of Object.entries(PHASE_LABEL_MAP)) {
+    if (res.includes(zh + '!')) {
+      res = replaceAll(res, zh + '!', vi + '!')
+    }
+  }
   res = replaceAll(res, '。', '.')
   res = replaceAll(res, '你', 'Ngươi ')
   res = res.replace(/\s+/g, ' ').replace(/\s+([,.!?])/g, '$1').trim()
@@ -944,6 +1281,9 @@ export function displayCombatLog(text: string): string {
 
 import {
   PILL_DESC_MAP,
+  BUFF_NAME_MAP,
+  BUFF_DESC_MAP,
+  ARTIFACT_DESC_MAP,
   PET_NAME_MAP,
   BUILD_NAME_MAP,
   DAOLU_NAME_MAP,
@@ -955,6 +1295,7 @@ import {
   DAOLU_STAGE_MAP,
   DAOLU_GATE_MAP,
   BOND_EVENT_TITLE_MAP,
+  BOND_ENDING_MAP,
   BOND_TRIGGER_MAP,
   BOND_CHOICE_MAP,
   BOND_WISH_MAP,
@@ -966,6 +1307,23 @@ import {
   EVENT_CHOICE_MAP,
   TIER_BRIEF_MAP
 } from './displayMappings'
+import {
+  EVENT_TITLE_TRANSLATIONS,
+  EVENT_TEXT_TRANSLATIONS,
+  EVENT_CHOICE_TRANSLATIONS,
+  EVENT_OUTCOME_TRANSLATIONS,
+  CAVE_EVENT_TRANSLATIONS
+} from './eventTranslations'
+
+export function displayBuffName(name: string): string {
+  if (!name) return ''
+  return BUFF_NAME_MAP[name] ?? name
+}
+
+export function displayBuffDesc(desc: string): string {
+  if (!desc) return ''
+  return BUFF_DESC_MAP[desc] ?? desc
+}
 
 export function displayPillDesc(desc: string): string {
   if (!desc) return ''
@@ -975,36 +1333,73 @@ export function displayPillDesc(desc: string): string {
 export function displayPillFuncText(text: string): string {
   if (!text) return ''
   let res = text
-  res = replaceAll(res, '服之:修为 +', 'Uống: Tu vi +')
-  res = replaceAll(res, '服之:灵气 +', 'Uống: Linh khí +')
-  res = replaceAll(res, '服之:上限的', 'Uống: ')
-  res = replaceAll(res, '上限的', 'giới hạn ')
-  res = replaceAll(res, '服之化开', 'Uống giải hóa')
-  res = replaceAll(res, '茶香悟道', 'Trà Hương Ngộ Đạo')
-  res = replaceAll(res, '战斗修为', 'Tu vi chiến đấu')
-  res = replaceAll(res, '只入历练战胜之修为,静修不与', 'chỉ tính tu vi thắng lịch luyện, tĩnh tu không tính')
-  res = replaceAll(res, '只入历练战胜之修为，静修不与', 'chỉ tính tu vi thắng lịch luyện, tĩnh tu không tính')
-  res = replaceAll(res, '持续', 'duy trì ')
-  res = replaceAll(res, '分钟', ' phút')
-  res = replaceAll(res, '小时', ' giờ')
-  res = replaceAll(res, '秒', ' giây')
-  res = replaceAll(res, '折合闭关', 'tương đương bế quan ')
-  res = replaceAll(res, '一刻有余', 'hơn một khắc')
-  res = replaceAll(res, '一刻', 'một khắc')
-  res = replaceAll(res, '至多不满一层', 'tối đa không quá 1 tầng')
-  res = replaceAll(res, '有方:', ' | Có đơn: ')
-  res = replaceAll(res, '无方,只在历练掉落与际遇里偶得', 'Không có đơn, chỉ ngẫu nhiên nhận được từ rơi rớt lịch luyện và tế ngộ')
-  res = replaceAll(res, '无方，只在历练掉落与际遇里偶得', 'Không có đơn, chỉ ngẫu nhiên nhận được từ rơi rớt lịch luyện và tế ngộ')
-  res = replaceAll(res, '无方,', 'Không có đơn, ')
-  res = replaceAll(res, '丹房可炼', 'Đan phòng có thể luyện')
+
+  // Match buff usage: 服之化开「name」:mods(持续 X 分钟)
+  res = res.replace(/服之化开「(.*?)」:(.*?)\(持续\s*(\d+)\s*分钟\)/g, (_m, buffName, mods, mins) => {
+    const bNameVi = displayBuffName(buffName)
+    const modsVi = displayArtifactPassive(mods)
+    return `Uống vào giải hóa「${bNameVi}」: ${modsVi} (Duy trì ${mins} phút)`
+  })
+
+  // Classical duration
+  res = replaceAll(res, '一个半时辰', 'Một canh giờ rưỡi')
+  res = replaceAll(res, '两个半时辰', 'Hai canh giờ rưỡi')
+  res = replaceAll(res, '三个半时辰', 'Ba canh giờ rưỡi')
+  res = replaceAll(res, '半个时辰', 'Nửa canh giờ')
+  res = replaceAll(res, '一个时辰', 'Một canh giờ')
+  res = replaceAll(res, '两个时辰', 'Hai canh giờ')
+  res = replaceAll(res, '三个时辰', 'Ba canh giờ')
+  res = replaceAll(res, '一炷香', 'Một nén nhang')
+  res = replaceAll(res, '一盏茶', 'Một chén trà')
+  res = replaceAll(res, '十三刻有余', 'Hơn mười ba khắc')
+  res = replaceAll(res, '十八刻', 'Mười tám khắc')
+  res = replaceAll(res, '九刻', 'Chín khắc')
+  res = replaceAll(res, '六刻', 'Sáu khắc')
+  res = replaceAll(res, '一刻有余', 'Hơn một khắc')
+  res = replaceAll(res, '将近一刻', 'Gần một khắc')
+  res = replaceAll(res, '一刻', 'Một khắc')
+
+  // Herb grades
   res = replaceAll(res, '凡品灵草', 'Linh thảo Phàm phẩm')
+  res = replaceAll(res, '良品灵草', 'Linh thảo Lương phẩm')
+  res = replaceAll(res, '精品灵草', 'Linh thảo Tinh phẩm')
   res = replaceAll(res, '灵品灵草', 'Linh thảo Linh phẩm')
   res = replaceAll(res, '玄品灵草', 'Linh thảo Huyền phẩm')
   res = replaceAll(res, '地品灵草', 'Linh thảo Địa phẩm')
   res = replaceAll(res, '天品灵草', 'Linh thảo Thiên phẩm')
+  res = replaceAll(res, '仙品灵草', 'Linh thảo Tiên phẩm')
+  res = replaceAll(res, '神品灵草', 'Linh thảo Thần phẩm')
   res = replaceAll(res, '道品灵草', 'Linh thảo Đạo phẩm')
+
+  // Stats and effects
+  res = replaceAll(res, '服之:修为 +', 'Uống vào: Tu vi +')
+  res = replaceAll(res, '服之:灵气 +', 'Uống vào: Linh khí +')
+  res = replaceAll(res, '服之:寿元 +', 'Uống vào: Thọ nguyên +')
+  res = replaceAll(res, '服之:悟道点 +', 'Uống vào: Điểm Ngộ Đạo +')
+  res = replaceAll(res, '服之:上限的', 'Uống vào: Hồi phục ')
+  res = replaceAll(res, '服之:', 'Uống vào: ')
+  res = replaceAll(res, '上限的', 'giới hạn ')
+  res = replaceAll(res, '茶香悟道', 'Trà Hương Ngộ Đạo')
+  res = replaceAll(res, '战斗修为', 'Tu vi chiến đấu')
+  res = replaceAll(res, '只入历练战胜之修为,静修不与', 'chỉ tính tu vi thắng lịch luyện, tĩnh tu không tính')
+  res = replaceAll(res, '只入历练战胜之修为，静修不与', 'chỉ tính tu vi thắng lịch luyện, tĩnh tu không tính')
+  res = replaceAll(res, '折合闭关', 'tương đương bế quan ')
+  res = replaceAll(res, '至多不满一层', 'tối đa không quá 1 tầng')
+  res = replaceAll(res, '载', ' năm')
   res = replaceAll(res, '点', ' điểm')
-  return res
+  res = replaceAll(res, '持续', 'duy trì ')
+  res = replaceAll(res, '分钟', ' phút')
+  res = replaceAll(res, '小时', ' giờ')
+  res = replaceAll(res, '秒', ' giây')
+
+  // Recipes and sources
+  res = replaceAll(res, '有方:', 'Đan phương: ')
+  res = replaceAll(res, '无方,只在历练掉落与际遇里偶得', 'Không có đơn, chỉ ngẫu nhiên nhận được từ rơi rớt lịch luyện và cơ duyên')
+  res = replaceAll(res, '无方，只在历练掉落与际遇里偶得', 'Không có đơn, chỉ ngẫu nhiên nhận được từ rơi rớt lịch luyện và cơ duyên')
+  res = replaceAll(res, '无方,', 'Không có đơn, ')
+  res = replaceAll(res, '丹房可炼', 'Đan phòng có thể luyện')
+
+  return displayArtifactPassive(res)
 }
 
 export function displayCraftWeakness(weakness: string): string {
@@ -1046,28 +1441,197 @@ export function displayCraftWeakness(weakness: string): string {
 
 export function displayToastText(toast: string): string {
   if (!toast) return ''
-  const res = toast
+  let res = toast
+
   if (res.includes('炉中一声闷响,丹毁了。') || res.includes('炉中一声闷响，丹毁了。')) {
     const after = res.replace(/炉中一声闷响[,，]丹毁了。/g, '').trim()
     const weaknessVi = displayCraftWeakness(after)
     return `Trong lò vang lên một tiếng trầm đục, đan đã hỏng rồi. ${weaknessVi}`
   }
+
+  // 服下「...」,...
+  if (res.startsWith('服下「')) {
+    res = res.replace(/服下「(.*?)」[,，](.*)/g, (_m, pillName, effects) => {
+      const nameVi = displayPillName(pillName)
+      let effVi = effects
+      effVi = replaceAll(effVi, '药力化开,状态加身', 'dược lực giải hóa, trạng thái gia thân')
+      effVi = replaceAll(effVi, '药力已至上限,这一颗白费了', 'dược lực đã đạt giới hạn, viên này uổng phí rồi')
+      effVi = replaceAll(effVi, '药力已至上限,这一颗只延续到顶', 'dược lực đã đạt giới hạn, viên này chỉ duy trì tới đỉnh')
+      effVi = replaceAll(effVi, '药力温养周身', 'dược lực ôn dưỡng quanh thân')
+      effVi = replaceAll(effVi, '修为精进', 'tu vi tinh tiến')
+      effVi = replaceAll(effVi, '灵气充盈', 'linh khí tràn đầy')
+      effVi = replaceAll(effVi, '修为 +', 'tu vi +')
+      effVi = replaceAll(effVi, '寿元 +', 'thọ nguyên +')
+      effVi = replaceAll(effVi, '悟道点 +', 'điểm Ngộ Đạo +')
+      effVi = replaceAll(effVi, '载', ' năm')
+      effVi = replaceAll(effVi, '约抵闭关', 'khoảng tương đương bế quan')
+      effVi = replaceAll(effVi, '一个半时辰', 'Một canh giờ rưỡi')
+      effVi = replaceAll(effVi, '两个半时辰', 'Hai canh giờ rưỡi')
+      effVi = replaceAll(effVi, '三个半时辰', 'Ba canh giờ rưỡi')
+      effVi = replaceAll(effVi, '半个时辰', 'Nửa canh giờ')
+      effVi = replaceAll(effVi, '一个时辰', 'Một canh giờ')
+      effVi = replaceAll(effVi, '两个时辰', 'Hai canh giờ')
+      effVi = replaceAll(effVi, '三个时辰', 'Ba canh giờ')
+      effVi = replaceAll(effVi, '一炷香', 'Một nén nhang')
+      effVi = replaceAll(effVi, '一盏茶', 'Một chén trà')
+      effVi = replaceAll(effVi, '十三刻有余', 'Hơn mười ba khắc')
+      effVi = replaceAll(effVi, '十八刻', 'Mười tám khắc')
+      effVi = replaceAll(effVi, '九刻', 'Chín khắc')
+      effVi = replaceAll(effVi, '六刻', 'Sáu khắc')
+      effVi = replaceAll(effVi, '一刻有余', 'Hơn một khắc')
+      effVi = replaceAll(effVi, '将近一刻', 'Gần một khắc')
+      effVi = replaceAll(effVi, '一刻', 'Một khắc')
+      effVi = replaceAll(effVi, '分钟', ' phút')
+      effVi = replaceAll(effVi, '小时', ' giờ')
+      return `Uống vào「${nameVi}」, ${effVi}`
+    })
+  }
+
+  // 连服 X 枚「...」
+  if (res.startsWith('连服')) {
+    res = res.replace(/连服\s*(\d+)\s*枚「(.*?)」(.*)/g, (_m, count, pillName, rest) => {
+      const nameVi = displayPillName(pillName)
+      let restVi = rest
+      restVi = restVi.replace(/仅存\s*/g, 'chỉ còn ')
+      restVi = restVi.replace(/\s*枚/g, ' viên')
+      return `Uống liên tiếp ${count} viên「${nameVi}」${restVi}`
+    })
+  }
+
+  // Crafting toasts
+  res = replaceAll(res, '囊中无此丹', 'Túi không có đan này')
+  res = replaceAll(res, '灵草或灵石未足,难开此炉', 'Linh thảo hoặc linh thạch chưa đủ, khó mở lò này')
+  res = replaceAll(res, '尚不知此方,无从开炉', 'Chưa biết đan phương này, không thể mở lò')
+  res = res.replace(/一炉双丹[,，]「(.*?)」品相极佳/g, (_m, pillName) => `Một lò song đan,「${displayPillName(pillName)}」phẩm tướng cực phẩm`)
+  res = res.replace(/炉开丹成[,，]得「(.*?)」一枚/g, (_m, pillName) => `Lò mở đan thành, nhận được một viên「${displayPillName(pillName)}」`)
+
+  // Batch craft pill
+  res = res.replace(/连炼\s*(\d+)\s*炉「(.*?)」:成\s*(\d+)\s*枚(?:,炸\s*(\d+)\s*炉)?/g, (_m, rounds, name, made, failed) => {
+    const pillVi = displayPillName(name)
+    const failText = failed ? `, hỏng ${failed} lò` : ''
+    return `Luyện liên tiếp ${rounds} lò「${pillVi}」: thành ${made} viên${failText}`
+  })
+
+  // Artifact batch
+  res = res.replace(/连炼\s*(\d+)\s*重,已至第\s*(\d+)\s*重,共耗悟道×(\d+)\s*·\s*灵石\s*(.+)/g, (_m, count, cur, wudao, stone) => {
+    return `Luyện liên tiếp ${count} tầng, đã đạt tầng ${cur}, tiêu hao Ngộ Đạo ×${wudao} · Linh Thạch ${stone}`
+  })
+
+  // Affix & Gear & Salvage toasts
+  res = replaceAll(res, '器灵尘未足', 'Khí Linh Trần không đủ')
+  res = replaceAll(res, '灵石未足', 'Linh Thạch không đủ')
+  res = replaceAll(res, '同一件', 'Cùng một món')
+  res = replaceAll(res, '装备不在', 'Trang bị không tồn tại')
+  res = replaceAll(res, '此器化尘', 'Khí này hóa thành tro bụi')
+  res = res.replace(/炉中化去\s*(\d+)\s*件,得器灵尘×(\d+)/g, 'Trong lò phân giải $1 món, nhận được Khí Linh Trần ×$2')
+  res = res.replace(/已改名「(.*?)」/g, 'Đã đổi tên thành「$1」')
+  res = replaceAll(res, '已改名', 'Đã đổi tên')
+  res = replaceAll(res, '已存入行囊', 'Đã cất vào túi trữ vật')
+
+  // Nemesis toasts
+  res = res.replace(/败北\s*(\d+)\s*次[,，]此獠成了你的宿敌!/g, 'Bại trận $1 lần, kẻ này đã trở thành túc địch của ngươi!')
+  res = replaceAll(res, '败于宿敌之手……', 'Thất bại dưới tay túc địch……')
+
+  // Soul toasts
+  res = replaceAll(res, '此器已锁,先解锁再凝', 'Vật phẩm này đã khóa, hãy mở khóa trước khi ngưng tụ')
+  res = replaceAll(res, '身上之物无法入炉,先卸下', 'Vật phẩm trên người không thể vào lò, hãy tháo xuống trước')
+  res = replaceAll(res, '此器平平无奇,无形意可存', 'Vật phẩm này bình thường không có gì lạ, không có hình ý để lưu tồn')
+  res = res.replace(/神魂只容得下\s*(\d+)\s*缕形意,先散去一缕/g, 'Thần hồn chỉ chứa được $1 luồng hình ý, hãy giải tán bớt một luồng trước')
+  res = res.replace(/「(.*?)」形销而意存,凝作(.*)/g, (_m, name, soul) => `「${name}」hình tiêu mà ý còn, ngưng tụ thành ${soul}`)
+  res = res.replace(/(.*)散入天地/g, '$1 tiêu tán vào thiên địa')
+
+  // Progress / Quests toasts
+  res = res.replace(/成就达成「(.*?)」(.*)/g, (_m, name, rest) => {
+    const restVi = rest ? displayRewardPreview(rest) : ''
+    return `Thành tựu đạt thành「${name}」${restVi}`
+  })
+  res = res.replace(/任务完成「(.*?)」(.*)/g, (_m, name, rest) => {
+    const restVi = rest ? displayRewardPreview(rest) : ''
+    return `Nhiệm vụ hoàn thành「${name}」${restVi}`
+  })
+  res = res.replace(/日课已成「(.*?)」(.*)/g, (_m, name, rest) => {
+    const restVi = rest ? displayRewardPreview(rest) : ''
+    return `Nhật khóa hoàn thành「${name}」${restVi}`
+  })
+  res = res.replace(/获得称号「(.*?)」/g, (_m, titleName) => `Nhận được danh hiệu「${displayTitleName(titleName)}」`)
+
+  return res
+}
+
+export function displayBattleAnalysisText(text: string): string {
+  if (!text) return ''
+  let res = text
+  // Headline
+  res = res.replace(/此战\s*(\d+)\s*回合而胜[,，]战后气血\s*(\d+)%/g, 'Trận này thắng sau $1 hiệp, khí huyết sau trận còn $2%')
+  res = res.replace(/败于第\s*(\d+)\s*回合/g, 'Thất bại ở hiệp thứ $1')
+
+  // Findings
+  res = replaceAll(res, '并无明显短板,只是道行尚浅——修为与装备再进一步即可', 'Không có điểm yếu rõ rệt, chỉ là đạo hạnh còn nông cạn —— nâng cao tu vi cùng trang bị thêm một bước là được')
+  res = replaceAll(res, '并无明显短板，只是道行尚浅——修为与装备再进一步即可', 'Không có điểm yếu rõ rệt, chỉ là đạo hạnh còn nông cạn —— nâng cao tu vi cùng trang bị thêm một bước là được')
+  res = res.replace(/真伤占总承伤\s*(.*?),护盾与减伤被绕过/g, 'Sát thương chuẩn chiếm $1 tổng sát thương gánh chịu, hộ thuẫn cùng giảm thương bị bỏ qua')
+  res = res.replace(/(\d+)\s*次出手落空\(落空率\s*(.*?)\),连击与暴击难以衔接/g, '$1 lần xuất chiêu đánh trượt (tỷ lệ trượt $2), liên kích cùng bạo kích khó lòng kết nối')
+  res = res.replace(/单次重击最高打掉你\s*(.*?)\s*气血,硬抗不是办法/g, 'Đòn nặng đơn lẻ đánh tụt tối đa $1 khí huyết của ngươi, chống đỡ trực diện không phải là cách')
+  res = res.replace(/鏖战\s*(\d+)\s*回合却几乎没有回复,久战无以为继/g, 'Huyết chiến $1 hiệp lại gần như không có hồi phục, chiến đấu lâu dài khó lòng duy trì')
+  res = res.replace(/(\d+)\s*个回合被震慑打断,节奏尽失/g, '$1 hiệp bị uy chấn làm gián đoạn, hoàn toàn mất nhịp')
+  res = res.replace(/先手判定是一条阈值:你\s*(.*?)\s*<\s*敌\s*(.*?),被对手抢了先。先手类词条再凑\s*(\d+)%\s*即可跨过这条线\(跨过即抢先,不必堆更多\)。/g, 'Phán định tiên thủ là một ngưỡng cố định: Bạn $1 < Địch $2, bị đối thủ ra tay trước. Từ khóa thuộc tính tiên thủ thêm $3% nữa là có thể vượt qua ngưỡng này (vượt qua là chiếm tiên thủ, không cần gom thêm).')
+  res = res.replace(/敌之加成\((.*?)\):/g, 'Gia thành của địch ($1): ')
+  res = replaceAll(res, '层级补偿', 'Bù trừ cảnh giới')
+  res = replaceAll(res, '危地', 'Nguy địa')
+  res = replaceAll(res, '增伤', 'Tăng sát thương')
+  res = replaceAll(res, '减伤', 'Giảm sát thương')
+  res = replaceAll(res, '三维', 'Tam duy')
+
   return res
 }
 
 export function displayEventTitle(title: string): string {
   if (!title) return ''
-  return EVENT_TITLE_MAP[title] ?? title
+  return EVENT_TITLE_TRANSLATIONS[title] ?? EVENT_TITLE_MAP[title] ?? title
 }
 
 export function displayEventText(text: string): string {
   if (!text) return ''
-  return EVENT_TEXT_MAP[text] ?? text
+  return EVENT_TEXT_TRANSLATIONS[text] ?? EVENT_TEXT_MAP[text] ?? text
 }
 
 export function displayEventChoiceLabel(label: string): string {
   if (!label) return ''
-  return EVENT_CHOICE_MAP[label] ?? label
+  return EVENT_CHOICE_TRANSLATIONS[label] ?? EVENT_CHOICE_MAP[label] ?? label
+}
+
+export function displayEventOutcomeText(text: string): string {
+  if (!text) return ''
+  return EVENT_OUTCOME_TRANSLATIONS[text] ?? text
+}
+
+export function displayChoiceHint(hint: string): string {
+  if (!hint) return ''
+  let res = hint
+  res = replaceAll(res, '可能花费灵石', 'Có thể chi trả Linh Thạch')
+  res = replaceAll(res, '花费灵石', 'Chi trả Linh Thạch')
+  res = replaceAll(res, '需备灵石', 'Cần chuẩn bị Linh Thạch')
+  res = replaceAll(res, '需备足', 'Cần chuẩn bị đủ')
+  return res
+}
+
+export function displayCaveEventTitle(title?: string): string {
+  if (!title) return ''
+  return CAVE_EVENT_TRANSLATIONS[title] ?? title
+}
+
+export function displayCaveEventDesc(desc?: string): string {
+  if (!desc) return ''
+  return CAVE_EVENT_TRANSLATIONS[desc] ?? desc
+}
+
+export function displayCaveEventOptionLabel(label?: string): string {
+  if (!label) return ''
+  return CAVE_EVENT_TRANSLATIONS[label] ?? label
+}
+
+export function displayCaveOptionText(text: string): string {
+  if (!text) return ''
+  return displayModsText(text)
 }
 
 export function displayTierBrief(brief: string): string {
@@ -1087,7 +1651,14 @@ export function displayPetName(name: string): string {
 
 export function displayDaoluName(name: string): string {
   if (!name) return ''
-  return DAOLU_NAME_MAP[name] ?? name
+  if (DAOLU_NAME_MAP[name]) return DAOLU_NAME_MAP[name]
+  let res = name
+  for (const [zh, vi] of Object.entries(DAOLU_NAME_MAP)) {
+    if (res.includes(zh)) {
+      res = replaceAll(res, zh, vi)
+    }
+  }
+  return res
 }
 
 export function displayDaoluBrief(brief: string): string {
@@ -1128,6 +1699,11 @@ export function displayGateHint(hint: string): string {
 export function displayBondEventTitle(title: string): string {
   if (!title) return ''
   return BOND_EVENT_TITLE_MAP[title] ?? title
+}
+
+export function displayBondEnding(ending: string): string {
+  if (!ending) return ''
+  return BOND_ENDING_MAP[ending] ?? ending
 }
 
 export function displayBondEventText(text: string): string {
@@ -1183,6 +1759,826 @@ export function displayIdentityNarrative(narrative: string): string {
   res = replaceAll(res, '，', ', ')
   return res.replace(/\s+/g, ' ').trim()
 }
+
+// ==================== MODS & STAT NAMES LOCALIZATION ====================
+
+export const STAT_LABEL_MAP: Record<string, string> = {
+  '攻击': 'Tấn Công',
+  '防御': 'Phòng Ngự',
+  '生命上限': 'Sinh Mệnh Tối Đa',
+  '暴击率': 'Tỉ Lệ Bạo Kích',
+  '暴击伤害': 'Sát Thương Bạo Kích',
+  '先手判定': 'Phán Định Tiên Thủ',
+  '伤害增幅': 'Tăng Sát Thương',
+  '伤害减免': 'Giảm Sát Thương',
+  '修炼速度': 'Tốc Độ Tu Luyện',
+  '灵气恢复': 'Hồi Linh Khí',
+  '进阶成功率': 'Tỉ Lệ Tiến Giai',
+  '气运': 'Khí Vận',
+  '历练遇敌': 'Lịch Luyện Gặp Địch',
+  '寿元上限': 'Thọ Nguyên Tối Đa',
+  '战利灵石': 'Linh Thạch Chiến Lợi',
+  '装备掉落率': 'Tỉ Lệ Rơi Trang Bị',
+  '战斗修为': 'Tu Vi Chiến Đấu',
+  '双枚成丹': 'Song Mai Thành Đan',
+  '强化减耗': 'Giảm Hao Tổn Cường Hóa',
+  '灵气上限': 'Linh Khí Tối Đa',
+  '灵兽效果': 'Hiệu Quả Linh Thú',
+  '破甲': 'Phá Giáp',
+  '首回合伤害': 'Sát Thương Lượt Đầu',
+  '反击概率': 'Tỉ Lệ Phản Kích',
+  '吸血': 'Hút Máu',
+  '开战护盾': 'Hộ Thuẫn Khai Chiến',
+  '处决伤害': 'Sát Thương Hành Quyết',
+  '回合回复': 'Hồi Phục Mỗi Lượt',
+  '闪避': 'Né Tránh',
+  '命中': 'Chính Xác',
+  '濒危减伤': 'Giảm Thương Khi Nguy Cấp',
+  '失败返还修为': 'Hoàn Trả Tu Vi Khi Thất Bại',
+  '双倍战利': 'Gấp Đôi Chiến Lợi',
+  '历练际遇': 'Kỳ Ngộ Lịch Luyện',
+  '御劫': 'Ngự Kiếp',
+  '连击': 'Liên Kích',
+  '震慑': 'Uy Nhiếp',
+  '背水增伤': 'Tăng Thương Bối Thủy',
+  '锋芒增伤': 'Tăng Thương Phong Mang',
+  '罡盾增伤': 'Tăng Thương Cương Thuẫn',
+  '追击威力': 'Uy Lực Truy Kích',
+  '反击威力': 'Uy Lực Phản Kích',
+  '溢疗成盾': 'Tràn Trị Liệu Thành Khiên',
+  '气血': 'Khí Huyết'
+}
+
+export const STAT_CAVEAT_MAP: Record<string, string> = {
+  '只入小进阶;大关天劫不与': 'cần cho tiểu tiến giai; đại quan thiên kiếp không tính',
+  '主器物成色;小进阶另借此数半成': 'chủ yếu ảnh hưởng phẩm chất vật phẩm; tiểu tiến giai được hưởng thêm nửa phần',
+  '只还败时所损修为;灵气不退': 'chỉ hoàn lại tu vi tổn thất khi bại; linh khí không hoàn',
+  '再得一枚之机;与手艺合计不过八成': 'cơ hội nhận thêm một viên; cộng với thủ nghệ không quá 80%',
+  '同程妖踪更密;行程不减': 'yêu thú dày đặc hơn trên cùng hành trình; chiều dài hành trình không giảm',
+  '只入历练战胜之石;洞府所产不与': 'chỉ tính linh thạch thắng trận lịch luyện; động phủ sinh ra không tính',
+  '只省装备强化之耗;法宝祭炼不与': 'chỉ giảm hao phí cường hóa trang bị; tế luyện pháp bảo không tính',
+  '只增装备现世;灵石草矿不与': 'chỉ tăng rơi trang bị; linh thạch, thảo mộc, quặng không tính',
+  '只增历练途中际遇;洞府巡游不与': 'chỉ tăng kỳ ngộ trên đường lịch luyện; tuần du động phủ không tính',
+  '当场灵石、修为、材料与装备一并翻倍': 'linh thạch, tu vi, nguyên liệu và trang bị tại trận đồng loạt nhân đôi',
+  '只入历练战胜之修为;静修不与': 'chỉ tính tu vi thắng trận lịch luyện; tĩnh tu không tính',
+  '只减天劫之伤;小进阶之骰不改': 'chỉ giảm sát thương thiên kiếp; không đổi xúc xắc tiểu tiến giai',
+  '灵气上限上浮,积余之仓随之': 'linh khí tối đa tăng lên, dung lượng tích trữ tăng theo',
+  '放大灵兽词条;灵兽园等级不在其中': 'khuếch đại từ điều linh thú; cấp Linh Thú Viên không tính',
+  '须不弱于对手,方得抢先': 'cần không yếu hơn đối thủ mới được đi trước',
+  '只重开局一合;不改谁先出手': 'chỉ tính hiệp đầu khai chiến; không đổi ai ra tay trước',
+  '须高于对手命中,方得避开': 'cần cao hơn độ chính xác của đối thủ mới có thể né tránh',
+  '只抵对手闪避;不闪则无增益': 'chỉ khắc chế né tránh của đối thủ; không né thì không có lợi ích',
+  '须护盾仍在': 'cần hộ thuẫn còn tồn tại',
+  '先削其防,再入减免;不是真伤': 'trước giảm phòng ngự, sau mới trừ miễn thương; không phải sát thương chuẩn',
+  '另起一击,非连段暴击': 'đánh thêm một đòn, không phải bạo kích nhiều đoạn',
+  '只增追击,不增本击': 'chỉ tăng truy kích, không tăng bản kích',
+  '受击后方可还手': 'bị đánh trúng mới có thể trả đòn',
+  '只增反击,不增本击': 'chỉ tăng phản kích, không tăng bản kích',
+  '震慑一合;净念或可破之': 'uy nhiếp một hiệp; tịnh niệm có thể hóa giải',
+  '按造成之伤回血': 'hồi máu theo lượng sát thương gây ra',
+  '回合初回血;已满则无': 'hồi máu đầu mỗi hiệp; đã đầy thì không có tác dụng',
+  '只化溢出之疗': 'chỉ chuyển hóa phần trị liệu bị tràn'
+}
+
+export function displayStatLabel(label: string): string {
+  if (!label) return ''
+  return STAT_LABEL_MAP[label] ?? label
+}
+
+export function displayStatCaveat(text: string): string {
+  if (!text) return ''
+  if (STAT_CAVEAT_MAP[text]) return STAT_CAVEAT_MAP[text]
+  let res = text
+  res = res.replace(/叠于固有会心 (.+) 之上/g, (_m, p1) => `xếp chồng trên Hội Tâm cơ bản ${p1}`)
+  res = res.replace(/叠于固有会心之伤 (.+) 之上/g, (_m, p1) => `xếp chồng trên Sát Thương Hội Tâm cơ bản ${p1}`)
+  res = res.replace(/只伤气血未满 (.+) 之敌/g, (_m, p1) => `chỉ gây thêm thương tổn cho địch có khí huyết dưới ${p1}`)
+  res = res.replace(/须己身气血未满 (.+)/g, (_m, p1) => `cần khí huyết bản thân dưới ${p1}`)
+  res = res.replace(/须己身气血逾 (.+)/g, (_m, p1) => `cần khí huyết bản thân vượt trên ${p1}`)
+  res = res.replace(/开战凝盾;总量不过 (.+) 气血/g, (_m, p1) => `khai chiến ngưng thuẫn; tổng lượng không quá ${p1} khí huyết`)
+  return res
+}
+
+export function displayStatValue(valueText: string): string {
+  if (!valueText) return ''
+  return valueText.replace(/\(([^)]+)\)/g, (_m, caveat) => `(${displayStatCaveat(caveat)})`)
+}
+
+export function displayModsText(text: string): string {
+  if (!text) return ''
+  let res = text
+  for (const [zh, vi] of Object.entries(STAT_CAVEAT_MAP)) {
+    if (res.includes(zh)) {
+      res = replaceAll(res, zh, vi)
+    }
+  }
+  res = displayStatCaveat(res)
+  const sortedLabels = Object.entries(STAT_LABEL_MAP).sort((a, b) => b[0].length - a[0].length)
+  for (const [zh, vi] of sortedLabels) {
+    if (res.includes(zh)) {
+      res = replaceAll(res, zh, vi)
+    }
+  }
+  return res
+}
+
+export function displayGNVi(str: string): string {
+  if (!str) return ''
+  let res = str
+  res = replaceAll(res, '万', ' Vạn')
+  res = replaceAll(res, '亿', ' Ức')
+  res = replaceAll(res, '兆', ' Triệu')
+  res = replaceAll(res, '京', ' Kinh')
+  res = replaceAll(res, '垓', ' Cai')
+  res = replaceAll(res, '秭', ' Tỉ')
+  res = replaceAll(res, '穰', ' Nhưỡng')
+  res = replaceAll(res, '沟', ' Câu')
+  res = replaceAll(res, '涧', ' Giản')
+  res = replaceAll(res, '正', ' Chính')
+  res = replaceAll(res, '载', ' Tái')
+  res = replaceAll(res, '极', ' Cực')
+  return res
+}
+
+const HERB_GRADE_SHORT_VI: Record<number, string> = {
+  1: 'Phàm Phẩm',
+  2: 'Linh Phẩm',
+  3: 'Tiên Phẩm',
+  4: 'Thần Phẩm',
+  5: 'Đạo Phẩm'
+}
+
+export function displayHerbGradeShort(grade: number): string {
+  return HERB_GRADE_SHORT_VI[grade] ?? ''
+}
+
+export function displayOfflineAwayLine(text: string): string {
+  if (!text) return ''
+  let res = text
+  res = replaceAll(res, '此去', 'Đã rời đi')
+  res = replaceAll(res, '天', ' ngày ')
+  res = replaceAll(res, '小时', ' giờ ')
+  res = replaceAll(res, '分钟', ' phút ')
+  res = replaceAll(res, '分', ' phút ')
+  res = replaceAll(res, '秒', ' giây')
+  res = replaceAll(res, '离线按', 'Ngoại tuyến tính')
+  res = replaceAll(res, '收益计', 'thu ích')
+  res = replaceAll(res, '收益按', 'Thu ích tính theo')
+  res = replaceAll(res, '结算', 'kết toán')
+  res = res.replace(/\s+/g, ' ')
+  res = replaceAll(res, ' ·', ' ·')
+  res = replaceAll(res, '( ', '(')
+  return res.trim()
+}
+
+export function displayOfflineNote(note: string): string {
+  if (!note) return ''
+
+  // 1. Buff expiration: 「气运加身、混天一气、道胎不灭、清风拂面」已到期
+  const buffMatch = note.match(/^「(.+)」已到期$/)
+  if (buffMatch && buffMatch[1]) {
+    const names = buffMatch[1].split('、').map(n => BUFF_NAME_MAP[n] ?? n)
+    return `「${names.join(', ')}」đã hết hạn`
+  }
+
+  // 2. Suppress yield: 镇压诸域仍有余韵:灵石 +176.1万 · 玄铁 +46 · 凡品灵草 +132 · 功法残页 +30
+  if (note.startsWith('镇压诸域仍有余韵:')) {
+    let res = replaceAll(note, '镇压诸域仍有余韵:', 'Trấn áp các vực vẫn còn dư vận: ')
+    res = replaceAll(res, '灵石', 'Linh Thạch')
+    res = replaceAll(res, '玄铁', 'Huyền Thiết')
+    res = replaceAll(res, '凡品灵草', 'Phàm Phẩm Linh Thảo')
+    res = replaceAll(res, '灵品灵草', 'Linh Phẩm Linh Thảo')
+    res = replaceAll(res, '仙品灵草', 'Tiên Phẩm Linh Thảo')
+    res = replaceAll(res, '神品灵草', 'Thần Phẩm Linh Thảo')
+    res = replaceAll(res, '道品灵草', 'Đạo Phẩm Linh Thảo')
+    res = replaceAll(res, '功法残页', 'Công Pháp Tàn Trang')
+    res = replaceAll(res, '器灵尘', 'Khí Linh Trần')
+    return displayGNVi(res)
+  }
+
+  // 3. Exploration completion: 沉沙古城之行圆满结束
+  const exploreMatch = note.match(/^(.+)之行圆满结束$/)
+  if (exploreMatch && exploreMatch[1]) {
+    const reg = REGION_NAME_MAP[exploreMatch[1]] ?? exploreMatch[1]
+    return `Hành trình ${reg} viên mãn kết thúc`
+  }
+
+  // 4. Lifespan: 此去寿元流逝 2 载
+  const ageMatch = note.match(/^此去寿元流逝\s*(\d+)\s*载$/)
+  if (ageMatch && ageMatch[1]) {
+    return `Chuyến đi này thọ nguyên trôi qua ${ageMatch[1]} năm`
+  }
+
+  // 5. Normal items to dust: 另有 2 件寻常之物,已折作器灵尘
+  const dustMatch = note.match(/^另有\s*(\d+)\s*件寻常之物,已折作器灵尘$/)
+  if (dustMatch && dustMatch[1]) {
+    return `Ngoài ra có ${dustMatch[1]} vật phẩm tầm thường, đã quy đổi thành Khí Linh Trần`
+  }
+
+  // 6. Battles lost: 有 1 战失利,幸而全身而退
+  const battleMatch = note.match(/^有\s*(\d+)\s*战失利,幸而全身而退$/)
+  if (battleMatch && battleMatch[1]) {
+    return `Có ${battleMatch[1]} trận thất lợi, may mắn toàn thân trở lui`
+  }
+
+  // 7. Boss defeat: 挂单之间,你已将【...】斩于剑下(离线战果,收益折损)
+  const bossWin = note.match(/^挂单之间,你已将【(.+)】斩于剑下\(离线战果,收益折损\)$/)
+  if (bossWin && bossWin[1]) {
+    const boss = ENEMY_NAME_MAP[bossWin[1]] ?? bossWin[1]
+    return `Trong lúc bận rộn, ngươi đã chém 【${boss}】 dưới mũi kiếm (chiến quả ngoại tuyến, thu ích chiết giảm)`
+  }
+
+  // 8. Boss retreat: 曾遭遇区域之主【...】,惜败而退,需再蓄力
+  const bossLoss = note.match(/^曾遭遇区域之主【(.+)】,惜败而退,需再蓄力$/)
+  if (bossLoss && bossLoss[1]) {
+    const boss = ENEMY_NAME_MAP[bossLoss[1]] ?? bossLoss[1]
+    return `Từng tao ngộ chúa tể khu vực 【${boss}】, tiếc nuối bại lui, cần tích lũy thêm sức lực`
+  }
+
+  // 9. Secret realm / world run
+  if (note.includes('秘境之行原样留着')) {
+    return 'Hành trình Bí Cảnh vẫn giữ nguyên trạng —— số tầng, khí huyết và quy tắc không đổi, trở lại tiếp tục tiến bước'
+  }
+  if (note.includes('那趟远征仍在途')) {
+    return 'Chuyến viễn chinh vẫn đang tiếp diễn —— số tầng và chiến tích giữ nguyên vẹn, trở lại tiếp tục tiến bước'
+  }
+
+  return displayGNVi(displayRealmName(note))
+}
+
+import { EQUIP_DESC_MAP } from './equipDescTranslations'
+import { affixDef } from '@/data/affixes'
+
+export function displayEquipDesc(desc: string): string {
+  if (!desc) return ''
+  return EQUIP_DESC_MAP[desc] ?? desc
+}
+
+const MENTOR_NAME_MAP: Record<string, string> = {
+  '剑修': 'Kiếm Tu',
+  '丹修': 'Đan Tu',
+  '阵修': 'Trận Tu',
+  '猎修': 'Liệp Tu'
+}
+
+export function displayMentorName(name: string): string {
+  if (!name) return ''
+  return MENTOR_NAME_MAP[name] ?? name
+}
+
+const MENTOR_MASTER_MAP: Record<string, string> = {
+  '青松剑叟': 'Thanh Tùng Kiếm Tẩu',
+  '百草婆婆': 'Bách Thảo Bà Bà',
+  '玄机子': 'Huyền Cơ Tử',
+  '哮天翁': 'Hao Thiên Ông'
+}
+
+export function displayMentorMaster(master: string): string {
+  if (!master) return ''
+  return MENTOR_MASTER_MAP[master] ?? master
+}
+
+const MENTOR_TITLE_MAP: Record<string, string> = {
+  '一剑破万法': 'Nhất Kiếm Phá Vạn Pháp',
+  '草木通神': 'Thảo Mộc Thông Thần',
+  '定鼎乾坤': 'Định Đỉnh Càn Khôn',
+  '踏遍山河': 'Đạp Biến Sơn Hà'
+}
+
+export function displayMentorTitle(title: string): string {
+  if (!title) return ''
+  return MENTOR_TITLE_MAP[title] ?? title
+}
+
+const MENTOR_DESC_MAP: Record<string, string> = {
+  '锋芒更利,暴击更易': 'Phong mang càng bén, bạo kích càng dễ',
+  '回合间回气,炉中更易出丹': 'Giữa hiệp hồi khí, trong lò dễ kết đan hơn',
+  '开战便有护盾,受击更轻': 'Khai chiến liền có hộ thuẫn, nhận đòn nhẹ hơn',
+  '赶路更快,所得更多': 'Đường đi nhanh hơn, thu hoạch nhiều hơn'
+}
+
+export function displayMentorDesc(desc: string): string {
+  if (!desc) return ''
+  return MENTOR_DESC_MAP[desc] ?? desc
+}
+
+const MENTOR_NARRATIVE_MAP: Record<string, string> = {
+  '师尊抚剑而笑:「剑心渐明,锋芒初露。」': 'Sư tôn vuốt kiếm mỉm cười: "Kiếm tâm dần sáng, phong mang sơ lộ."',
+  '师尊摇头:「剑意未纯。你心中有剑,手里却无剑。」': 'Sư tôn lắc đầu: "Kiếm ý chưa thuần. Lòng ngươi có kiếm, nhưng trong tay lại không kiếm."',
+  '师尊捻须:「丹道亦是道,你已得其味。」': 'Sư tôn vuốt râu: "Đan đạo cũng là đạo, ngươi đã hiểu được vị của nó."',
+  '师尊叹曰:「丹炉蒙尘久矣。你求的是药,还是力?」': 'Sư tôn thở dài: "Lò đan đã phủ bụi từ lâu. Thứ ngươi cầu là dược, hay là lực?"',
+  '师尊抚阵纹:「以阵护道,此心甚稳。」': 'Sư tôn vuốt trận văn: "Lấy trận hộ đạo, tâm này rất vững."',
+  '师尊蹙眉:「阵脚虚浮。守不住,何谈困敌?」': 'Sư tôn nhíu mày: "Trận cước hư phù. Thủ còn không được, nói chi khốn địch?"',
+  '师尊拍肩:「行万里路,猎万兽。你正是猎修的苗子。」': 'Sư tôn vỗ vai: "Đi vạn dặm đường, săn vạn thú. Ngươi đúng là hạt giống của Liệp Tu."',
+  '师尊远望:「你足不出户,也配称猎?」': 'Sư tôn nhìn ra xa: "Ngươi chân không bước ra khỏi cửa, cũng xứng xưng là Liệp?"'
+}
+
+export function displayMentorNarrative(line: string): string {
+  if (!line) return ''
+  return MENTOR_NARRATIVE_MAP[line] ?? line
+}
+
+const AFFIX_NAME_MAP: Record<string, string> = {
+  '锋锐': 'Phong Nhuệ',
+  '破军': 'Phá Quân',
+  '灭世': 'Diệt Thế',
+  '开天': 'Khai Thiên',
+  '坚壁': 'Kiên Bích',
+  '磐石': 'Bàn Thạch',
+  '不朽': 'Bất Hủ',
+  '亘古': 'Cổ Cổ',
+  '蕴生': 'Uẩn Sinh',
+  '厚土': 'Hậu Thổ',
+  '长生': 'Trường Sinh',
+  '不灭': 'Bất Diệt',
+  '会心': 'Hội Tâm',
+  '锐目': 'Nhuệ Mục',
+  '天瞳': 'Thiên Đồng',
+  '重击': 'Trọng Kích',
+  '碎玉': 'Toái Ngọc',
+  '裂空': 'Liệt Không',
+  '诛天': 'Tru Thiên',
+  '破妄': 'Phá Vọng',
+  '诛邪': 'Tru Tà',
+  '屠灭': 'Đồ Diệt',
+  '云甲': 'Vân Giáp',
+  '霞衣': 'Hà Y',
+  '不坏': 'Bất Hoại',
+  '静心': 'Tĩnh Tâm',
+  '悟道': 'Ngộ Đạo',
+  '天启': 'Thiên Khải',
+  '证道': 'Chứng Đạo',
+  '聚灵': 'Tụ Linh',
+  '引灵': 'Dẫn Linh',
+  '吞灵': 'Thôn Linh',
+  '通明': 'Thông Minh',
+  '道基': 'Đạo Cơ',
+  '天命': 'Thiên Mệnh',
+  '福缘': 'Phúc Duyên',
+  '鸿运': 'Hồng Vận',
+  '天眷': 'Thiên Quyến',
+  '疾行': 'Tật Hành',
+  '御风': 'Ngự Phong',
+  '寻踪': 'Tầm Tung',
+  '迅捷': 'Tấn Tiệp',
+  '流光': 'Lưu Quang',
+  '瞬影': 'Thuấn Ảnh',
+  '参悟': 'Tham Ngộ',
+  '明心': 'Minh Tâm',
+  '大彻': 'Đại Triệt',
+  '聚财': 'Tụ Tài',
+  '点金': 'Điểm Kim',
+  '化宝': 'Hóa Bảo',
+  '寻宝': 'Tầm Bảo',
+  '探骊': 'Thám Li',
+  '摘星': 'Trích Tinh',
+  '破甲': 'Phá Giáp',
+  '碎甲': 'Toái Giáp',
+  '洞虚': 'Động Hư',
+  '先发': 'Tiên Phát',
+  '雷霆': 'Lôi Đình',
+  '反击': 'Phản Kích',
+  '荆棘': 'Kinh Cức',
+  '噬血': 'Phệ Huyết',
+  '血魔': 'Huyết Ma',
+  '化生': 'Hóa Sinh',
+  '护体': 'Hộ Thể',
+  '罡罩': 'Cương Tráo',
+  '琉璃': 'Lưu Ly',
+  '斩灭': 'Trảm Diệt',
+  '断魂': 'Đoạn Hồn',
+  '回春': 'Hồi Xuân',
+  '造化': 'Tạo Hóa',
+  '不息': 'Bất Tức',
+  '轻身': 'Khinh Thân',
+  '虚步': 'Hư Bộ',
+  '化影': 'Hóa Ảnh',
+  '洞彻': 'Động Triệt',
+  '明察': 'Minh Sát',
+  '背水': 'Bối Thủy',
+  '涅槃': 'Niết Bàn',
+  '稳固': 'Vững Chắc',
+  '道心': 'Đạo Tâm',
+  '丰饶': 'Phong Nhiêu',
+  '满载': 'Mãn Tải',
+  '际遇': 'Tế Ngộ',
+  '仙缘': 'Tiên Duyên',
+  '御雷': 'Ngự Lôi',
+  '渡厄': 'Độ Ách',
+  '劫外': 'Kiếp Ngoại',
+  '连击': 'Liên Kích',
+  '疾风': 'Tật Phong',
+  '震慑': 'Chấn Nhiếp',
+  '镇岳': 'Trấn Nhạc',
+  '养寿': 'Dưỡng Thọ',
+  '龟息': 'Quy Tức',
+  '长存': 'Trường Tồn',
+  '丹心': 'Đan Tâm',
+  '丹圣': 'Đan Thánh',
+  '巧手': 'Xảo Thủ',
+  '器道': 'Khí Đạo',
+  '轻鸿': 'Khinh Hồng',
+  '踏虚': 'Đạp Hư',
+  '御空': 'Ngự Không',
+  '饮灵': 'Ẩm Linh',
+  '吮魄': 'Thuẫn Phách',
+  '噬命': 'Phệ Mệnh',
+  '背水一击': 'Bối Thủy Nhất Kích',
+  '向死而生': 'Hướng Tử Nhi Sinh',
+  '绝境道心': 'Tuyệt Cảnh Đạo Tâm',
+  '锋芒': 'Phong Mang',
+  '一鼓作气': 'Nhất Cổ Tác Khí',
+  '罡盾': 'Cương Thuẫn',
+  '盾魂': 'Thuẫn Hồn',
+  '连环': 'Liên Hoàn',
+  '风雷九连': 'Phong Lôi Cửu Liên',
+  '锋反': 'Phong Phản',
+  '万刃归返': 'Vạn Nhận Quy Phản',
+  '余泽': 'Dư Trạch',
+  '生生不息': 'Sinh Sinh Bất Tức',
+  '造化盾心': 'Tạo Hóa Thuẫn Tâm'
+}
+
+export function displayAffixName(name: string): string {
+  if (!name) return ''
+  return AFFIX_NAME_MAP[name] ?? name
+}
+
+const AFFIX_RARITY_MAP: Record<string, string> = {
+  '常见': 'Thường',
+  '稀有': 'Hiếm',
+  '珍稀': 'Trân quý',
+  '传世': 'Truyền thế'
+}
+
+export function displayAffixRarity(rarityName: string): string {
+  if (!rarityName) return ''
+  return AFFIX_RARITY_MAP[rarityName] ?? rarityName
+}
+
+export function displayAffixRoll(rollText: string): string {
+  if (!rollText) return ''
+  return rollText.replace(/^浮\s*/, '~')
+}
+
+const AFFIX_TEMPLATE_MAP: Record<string, string> = {
+  '攻击提升 {v}%': 'Tấn công tăng {v}%',
+  '防御提升 {v}%': 'Phòng ngự tăng {v}%',
+  '生命上限提升 {v}%': 'Khí huyết tối đa tăng {v}%',
+  '暴击率提升 {v}%': 'Tỉ lệ bạo kích tăng {v}%',
+  '暴击伤害提升 {v}%': 'Sát thương bạo kích tăng {v}%',
+  '造成伤害提升 {v}%': 'Sát thương tạo thành tăng {v}%',
+  '受到伤害降低 {v}%': 'Sát thương gánh chịu giảm {v}%',
+  '修炼速度提升 {v}%': 'Tốc độ tu luyện tăng {v}%',
+  '灵气恢复提升 {v}%': 'Hồi phục linh khí tăng {v}%',
+  '进阶成功率提升 {v}%': 'Tỉ lệ tiến giai tăng {v}%',
+  '气运提升 {v}%': 'Khí vận tăng {v}%',
+  '同程妖踪 +{v}%': 'Cùng hành trình yêu tung +{v}%',
+  '先手判定 +{v}%': 'Phán định tiên thủ +{v}%',
+  '战斗所得修为提升 {v}%': 'Tu vi nhận từ chiến đấu tăng {v}%',
+  '战利灵石提升 {v}%': 'Chiến lợi linh thạch tăng {v}%',
+  '装备掉落率提升 {v}%': 'Tỉ lệ rớt trang bị tăng {v}%',
+  '攻击时无视目标 {v}% 防御': 'Khi tấn công bỏ qua {v}% phòng ngự của mục tiêu',
+  '首回合造成伤害提升 {v}%': 'Sát thương tạo thành ở hiệp đầu tăng {v}%',
+  '受击后 {v}% 概率反击': 'Sau khi nhận đòn có {v}% xác suất phản kích',
+  '造成伤害的 {v}% 转化为生命': '{v}% sát thương tạo thành chuyển hóa thành khí huyết',
+  '开战获得 {v}% 生命的护盾': 'Vào trận nhận hộ thuẫn bằng {v}% khí huyết',
+  '对生命低于三成之敌伤害提升 {v}%': 'Sát thương lên kẻ địch dưới 30% khí huyết tăng {v}%',
+  '每回合回复 {v}% 生命': 'Mỗi hiệp hồi phục {v}% khí huyết',
+  '闪避概率提升 {v}%': 'Tỉ lệ né tránh tăng {v}%',
+  '无视目标 {v}% 闪避': 'Bỏ qua {v}% né tránh của mục tiêu',
+  '生命低于三成时受伤降低 {v}%': 'Khi khí huyết dưới 30%, sát thương gánh chịu giảm {v}%',
+  '突破失败返还 {v}% 损耗修为': 'Đột phá thất bại hoàn trả {v}% tu vi tổn thất',
+  '{v}% 概率当场战利翻倍': '{v}% xác suất nhân đôi chiến lợi phẩm tại chỗ',
+  '历练际遇提升 {v}%': 'Cơ duyên lịch luyện tăng {v}%',
+  '天劫伤害降低 {v}%': 'Sát thương thiên kiếp giảm {v}%',
+  '攻击后 {v}% 概率追击': 'Sau khi tấn công có {v}% xác suất truy kích',
+  '攻击 {v}% 概率震慑目标一回合': 'Tấn công có {v}% xác suất chấn nhiếp mục tiêu 1 hiệp',
+  '寿元上限提升 {v}%': 'Thọ nguyên tối đa tăng {v}%',
+  '双枚成丹概率提升 {v}%': 'Xác suất song đan thành dược tăng {v}%',
+  '强化消耗降低 {v}%': 'Tiêu hao cường hóa giảm {v}%',
+  '生命低于三成时造成伤害提升 {v}%': 'Khi khí huyết dưới 30%, sát thương tạo thành tăng {v}%',
+  '生命高于九成时造成伤害提升 {v}%': 'Khi khí huyết trên 90%, sát thương tạo thành tăng {v}%',
+  '持有护盾时造成伤害提升 {v}%': 'Khi có hộ thuẫn, sát thương tạo thành tăng {v}%',
+  '追击造成的伤害提升 {v}%': 'Sát thương tạo thành từ truy kích tăng {v}%',
+  '反击造成的伤害提升 {v}%': 'Sát thương tạo thành từ phản kích tăng {v}%',
+  '溢出治疗的 {v}% 转化为护盾': '{v}% trị liệu tràn chuyển hóa thành hộ thuẫn'
+}
+
+export function displayAffixDescParts(line: { id: string; before: string; after: string }): { before: string; after: string } {
+  const def = affixDef(line.id)
+  const template = def ? AFFIX_TEMPLATE_MAP[def.desc] : undefined
+  if (template) {
+    const [b = '', a = ''] = template.split('{v}')
+    return { before: b, after: a }
+  }
+  return { before: line.before, after: line.after }
+}
+
+const TRANSFER_LABEL_MAP: Record<string, string> = {
+  '转移词条': 'Chuyển Từ Điều',
+  '耗费': 'Tiêu hao',
+  '顶替': 'Thay thế',
+  '原器将失去': 'Trang bị gốc sẽ mất',
+  '穿戴中': 'Đang trang bị',
+  '取消': 'Hủy bỏ',
+  '确认转移': 'Xác nhận chuyển',
+  '返回': 'Trở về',
+  '去挑选': 'Đi chọn',
+  '移出词条': 'Từ điều chuyển ra',
+  '重选': 'Chọn lại',
+  '原器无词条可移': 'Trang bị gốc không có từ điều để chuyển',
+  '已封存': 'Đã phong tồn',
+  '移入目标': 'Mục tiêu chuyển vào',
+  '查看': 'Xem',
+  '无合规目标': 'Không có mục tiêu phù hợp',
+  '落脚位置': 'Vị trí tiếp nhận',
+  '追加一栏': 'Thêm một ô',
+  '转移后': 'Sau khi chuyển',
+  '新增': 'Mới',
+  '原器封存已随条保留': 'Phong tồn của trang bị gốc được giữ nguyên',
+  '补封印费': 'Bổ sung phí phong ấn',
+  '封存已满': 'Phong tồn đã đầy',
+  '属性净变': 'Biến động thuộc tính'
+}
+
+export function displayTransferLabel(label: string): string {
+  if (!label) return ''
+  return TRANSFER_LABEL_MAP[label] ?? label
+}
+
+const TRANSFER_BLOCK_MAP: Record<string, string> = {
+  '同一件': 'Cùng một món',
+  '无词条': 'Không có từ điều',
+  '无模板': 'Không có mẫu',
+  '部位不合': 'Bộ vị không hợp',
+  '需同品': 'Cần cùng phẩm',
+  '已有此条': 'Đã có từ điều này',
+  '无处落脚': 'Không có chỗ tiếp nhận',
+  '词条已满': 'Từ điều đã đầy',
+  '词条同名': 'Trùng tên từ điều',
+  '封存已满': 'Phong tồn đã đầy'
+}
+
+export function displayTransferBlock(blockText: string): string {
+  if (!blockText) return ''
+  if (TRANSFER_BLOCK_MAP[blockText]) return TRANSFER_BLOCK_MAP[blockText]
+  const rankMatch = blockText.match(/^需(.)品$/)
+  if (rankMatch && rankMatch[1]) {
+    const qName = QUALITY_NAME_MAP[rankMatch[1] + '品'] ?? (rankMatch[1] + ' phẩm')
+    return `Cần ${qName}`
+  }
+  return blockText
+}
+
+// ============ 天界 · 道途 / 特殊世界 / 虚界 / 试炼 / 契约 / 熔炉 展示层 ============
+
+export function displayDaoPathName(name: string): string {
+  if (!name) return ''
+  return DAO_PATH_MAP[name] ?? name
+}
+
+export function displayDaoPathSeal(seal: string): string {
+  if (!seal) return ''
+  return DAO_SEAL_MAP[seal] ?? seal
+}
+
+export function displayDaoPathDesc(desc: string): string {
+  if (!desc) return ''
+  return DAO_DESC_MAP[desc] ?? desc
+}
+
+export function displayDaoPathRule(rule: string): string {
+  if (!rule) return ''
+  return DAO_RULE_MAP[rule] ?? rule
+}
+
+export function displayDaoPathDeep(deep: string): string {
+  if (!deep) return ''
+  return DAO_DEEP_MAP[deep] ?? deep
+}
+
+export function displayCelestialWorldName(name: string): string {
+  if (!name) return ''
+  if (CELESTIAL_WORLD_NAME_MAP[name]) return CELESTIAL_WORLD_NAME_MAP[name]
+  return displayVoidWorldName(name)
+}
+
+export function displayCelestialWorldSeal(seal: string): string {
+  if (!seal) return ''
+  return CELESTIAL_WORLD_SEAL_MAP[seal] ?? VOID_SEAL_MAP[seal] ?? seal
+}
+
+export function displayCelestialWorldDesc(desc: string): string {
+  if (!desc) return ''
+  return CELESTIAL_WORLD_DESC_MAP[desc] ?? desc
+}
+
+export function displayCelestialWorldRule(rule: string): string {
+  if (!rule) return ''
+  return CELESTIAL_WORLD_RULE_MAP[rule] ?? rule
+}
+
+export function displayVoidWorldName(name: string): string {
+  if (!name) return ''
+  if (name.endsWith('之主')) {
+    const base = name.slice(0, -2)
+    return `${displayVoidWorldName(base)} Chi Chủ`
+  }
+  if (CELESTIAL_WORLD_NAME_MAP[name]) return CELESTIAL_WORLD_NAME_MAP[name]
+  if (name.length === 3) {
+    const head = VOID_HEAD_MAP[name.slice(0, 2)]
+    const tail = VOID_TAIL_MAP[name.slice(2)]
+    if (head && tail) return `${head} ${tail}`
+  }
+  return name
+}
+
+export function displayVoidWorldSeal(seal: string): string {
+  if (!seal) return ''
+  return VOID_SEAL_MAP[seal] ?? seal
+}
+
+export function displayVoidWorldDesc(desc: string): string {
+  if (!desc) return ''
+  let res = desc
+  res = res.replace(/此乃「(.*?)」之界,天道以变数织成。/g, (_m, iden) => {
+    const viIden = THEME_IDENTITY_MAP[iden] ?? iden
+    return `Đây là thế giới 「${viIden}」, Thiên Đạo lấy biến số dệt thành. `
+  })
+  res = res.replace(/与诸天相似不足(\d+)成,规则无常,过审方存。/g, 'Tương tự chư thiên không đến $1 phần, quy tắc vô thường, qua thẩm định mới tồn tại.')
+  return res
+}
+
+export function displayVoidWorldRule(rule: string): string {
+  if (!rule) return ''
+  if (CELESTIAL_WORLD_RULE_MAP[rule]) return CELESTIAL_WORLD_RULE_MAP[rule]
+  const colonIdx = rule.indexOf(':')
+  if (colonIdx > 0) {
+    const namePart = rule.slice(0, colonIdx)
+    const textPart = rule.slice(colonIdx + 1)
+    return `${displayMutatorName(namePart)}: ${displayMutatorText(textPart)}`
+  }
+  return rule
+}
+
+export function displayRouteNodeName(name: string): string {
+  if (!name) return ''
+  if (ROUTE_NODE_NAME_MAP[name]) return ROUTE_NODE_NAME_MAP[name]
+  if (name.length === 2) {
+    const head = VOID_NODE_HEAD_MAP[name[0] ?? '']
+    const tail = VOID_NODE_TAIL_MAP[name[1] ?? '']
+    if (head && tail) return `${head} ${tail}`
+  }
+  return name
+}
+
+export function displayRouteNodeDesc(desc: string): string {
+  if (!desc) return ''
+  if (ROUTE_NODE_DESC_MAP[desc]) return ROUTE_NODE_DESC_MAP[desc]
+  const match = desc.match(/^(.*?)盘踞于此$/)
+  if (match && match[1]) {
+    const rawTarget = match[1]
+    if (rawTarget.startsWith('【') && rawTarget.endsWith('】')) {
+      const inner = rawTarget.slice(1, -1)
+      return `【${displayEnemyName(inner)}】 chiếm giữ nơi này`
+    }
+    return `${displayEnemyName(rawTarget)} chiếm giữ nơi này`
+  }
+  return desc
+}
+
+export function displayRouteRisk(risk: string): string {
+  if (!risk) return ''
+  return ROUTE_RISK_MAP[risk] ?? risk
+}
+
+export function displayTrialName(name: string): string {
+  if (!name) return ''
+  return TRIAL_NAME_MAP[name] ?? name
+}
+
+export function displayTrialSeal(seal: string): string {
+  if (!seal) return ''
+  return TRIAL_SEAL_MAP[seal] ?? seal
+}
+
+export function displayTrialDesc(desc: string): string {
+  if (!desc) return ''
+  return TRIAL_DESC_MAP[desc] ?? desc
+}
+
+export function displayTrialRule(rule: string): string {
+  if (!rule) return ''
+  return TRIAL_RULE_MAP[rule] ?? rule
+}
+
+export function displayPactName(name: string): string {
+  if (!name) return ''
+  return PACT_NAME_MAP[name] ?? name
+}
+
+export function displayPactSeal(seal: string): string {
+  if (!seal) return ''
+  return PACT_SEAL_MAP[seal] ?? seal
+}
+
+export function displayPactDesc(desc: string): string {
+  if (!desc) return ''
+  return PACT_DESC_MAP[desc] ?? desc
+}
+
+export function displayPactRule(rule: string): string {
+  if (!rule) return ''
+  return PACT_RULE_MAP[rule] ?? rule
+}
+
+export function displayFurnaceRateName(name: string): string {
+  if (!name) return ''
+  return FURNACE_RATE_MAP[name] ?? name
+}
+
+export function displayJudgementLine(line: string): string {
+  if (!line) return ''
+  let res = line
+  res = res.replace(/^道之理解:你的构筑厚度 (.*?)\(基准 (.*?)\)—— 守关者三维 ×(.*)$/, 'Đạo chi lý giải: Độ dày cấu hình của ngươi $1 (cơ chuẩn $2) —— Tam vi thủ quan giả ×$3')
+  res = res.replace(/^道之理解:路数被看破 —— 守关者增伤 \+(.*?)%、减伤 \+(.*?)%$/, 'Đạo chi lý giải: Lối đánh bị nhìn thấu —— Thủ quan giả tăng sát thương +$1%, giảm sát thương +$2%')
+  res = res.replace(/^境界压制:未及此界该有的境界 —— 守关者额外增伤 \+(.*?)%$/, 'Cảnh giới áp chế: Chưa đạt đến cảnh giới giới này yêu cầu —— Thủ quan giả tăng thêm sát thương +$1%')
+  res = replaceAll(res, '判定随你的厚度与境界而来 —— 换个方向而非继续堆,或再破一境,它自会退回去。', 'Phán đoán đến từ độ dày và cảnh giới của ngươi —— Hãy đổi hướng thay vì tiếp tục dồn ép, hoặc phá thêm một cảnh, nó sẽ tự lùi lại.')
+  res = replaceAll(res, '这一界对你没有额外判定 —— 胜败只由三维与构筑形状决定。', 'Giới này không có phán đoán thêm đối với ngươi —— Thắng bại chỉ quyết định bởi tam vi và hình thái cấu hình.')
+  res = replaceAll(res, '增伤', 'Tăng sát thương')
+  res = replaceAll(res, '减伤', 'Giảm sát thương')
+  res = replaceAll(res, '层级补偿', 'Bù trừ tầng bậc')
+  res = replaceAll(res, '危地', 'Địa thế nguy hiểm')
+  res = replaceAll(res, '首领', 'Thủ lĩnh')
+  res = replaceAll(res, '道之理解', 'Đạo chi lý giải')
+  res = replaceAll(res, '境界压制', 'Cảnh giới áp chế')
+  res = replaceAll(res, '无判定', 'Không phán đoán')
+  return res
+}
+
+const DIFFICULTY_MAP: Record<string, string> = {
+  '闲庭信步': 'Nhàn Đình Tín Bộ',
+  '略有凶险': 'Hơi Có Hung Hiểm',
+  '凶险': 'Hung Hiểm',
+  '九死一生': 'Cửu Tử Nhất Sinh',
+  '胜券在望': 'Thắng Phần Nắm Chắc',
+  '略占上风': 'Hơi Chiếm Thượng Phong',
+  '胜负各半': 'Thắng Bại Chia Đôi'
+}
+
+export function displayChallengeDifficulty(diff: string): string {
+  if (!diff) return ''
+  return DIFFICULTY_MAP[diff] ?? diff
+}
+
+const REASON_MAP: Record<string, string> = {
+  '此局近乎无解,天道不受此约': 'Cục diện này gần như vô giải, Thiên Đạo không nhận ước hẹn này',
+  '此局形同虚设,不配称为挑战': 'Cục diện này thùng rỗng kêu to, không xứng gọi là khiêu chiến'
+}
+
+export function displayChallengeReason(reason: string | undefined): string | undefined {
+  if (!reason) return undefined
+  return REASON_MAP[reason] ?? reason
+}
+
+export function displayDaoStory(story: string | null): string | null {
+  if (!story) return null
+  let res = story
+  res = res.replace(/^这一世你已换过 (\d+) 条路数——你的剑心并不执着于一途。$/, 'Kiếp này ngươi đã đổi qua $1 lối đánh —— Kiếm tâm của ngươi vốn chẳng chấp niệm vào một đường.')
+  res = replaceAll(res, '一剑一世,道心如铁。', 'Một kiếm một kiếp, đạo tâm như sắt.')
+  res = res.replace(/^你曾 (\d+) 次以残躯血契求胜——所谓长生,似乎并非你唯一所求。$/, 'Ngươi từng $1 lần dùng thân tàn huyết khế cầu thắng —— Cái gọi là trường sinh, dường như chẳng phải điều duy nhất ngươi kiếm tìm.')
+  res = replaceAll(res, '你惜身如玉,确是长生之相。', 'Ngươi tiếc thân như ngọc, quả thực là tướng mạo trường sinh.')
+  res = res.replace(/^你曾 (\d+) 次主动接下天道重注,杀伐之名不虚。$/, 'Ngươi từng $1 lần chủ động nhận lấy trọng chú của Thiên Đạo, danh tiếng sát phạt không ngoa.')
+  res = replaceAll(res, '此世杀伐尚温,刀锋未尽出鞘。', 'Kiếp này sát phạt còn ôn hòa, lưỡi đao chưa hoàn toàn rời vỏ.')
+  res = replaceAll(res, '你很少凭未知下注——天机在手,何必赌运。', 'Ngươi rất ít khi đặt cược vào điều chưa biết —— Thiên cơ trong tay, hà tất đánh cược vận may.')
+  res = replaceAll(res, '窥天机而行险,亦是一种道。', 'Thấu thiên cơ mà mạo hiểm, cũng là một loại đạo.')
+  return res
+}
+
+const RATE_TEXT_MAP: Record<string, string> = {
+  '九死一生': 'Cửu tử nhất sinh',
+  '凶险': 'Hung hiểm',
+  '胜负各半': 'Thắng bại chia đôi',
+  '略占上风': 'Hơi chiếm thượng phong',
+  '稳操胜券': 'Nắm chắc phần thắng'
+}
+
+export function displayLegacyRateText(text: string): string {
+  if (!text) return ''
+  return RATE_TEXT_MAP[text] ?? text
+}
+
+export function displayLegacyDiffLine(line: string): string {
+  if (!line) return ''
+  let res = line
+  res = replaceAll(res, '场均回合', 'Hiệp bình quân mỗi trận')
+  res = replaceAll(res, '场均承伤', 'Chịu sát thương bq mỗi trận')
+  res = replaceAll(res, '场均反击', 'Phản kích bq mỗi trận')
+  res = replaceAll(res, ' 次', ' lần')
+  return res
+}
+
+
 
 
 

@@ -51,6 +51,7 @@ import { useAdventureStore } from '@/stores/adventure'
 import { useGameStore } from '@/stores/game'
 import { useUiStore } from '@/stores/ui'
 import { useEndgameStore } from '@/stores/endgame'
+import { useNpcStore } from '@/stores/npc'
 import { sanitizeAllStores } from '@/stores/sanitizeAll'
 
 /**
@@ -158,6 +159,12 @@ export function settleOffline(nowMs: number): OfflineSummary | null {
 
   // ---- 藏经阁被动钻研(与在线同源,只是 dt 不同) ----
   studyTick(effSec)
+
+  // ---- Chu kỳ thế giới (30 phút thực = 1 tháng trong game) ----
+  const monthsPassed = useNpcStore().advanceMonthTime(capSec)
+  if (monthsPassed > 0) {
+    notes.push(`Thời gian thấm thoắt trôi, đã trải qua ${monthsPassed} tháng tu hành nơi trần thế`)
+  }
 
   // ---- 镇压区域被动收益(豁免离线效率折扣,是统治该区域的补偿;但仍受洞府离线上限约束) ----
   // 之前误传完整 dtSec:镇压收益绕过 mansion 离线封顶,洞府离线等级对"镇压力"玩家几乎失效。

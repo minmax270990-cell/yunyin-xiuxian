@@ -1,5 +1,6 @@
-/** 功法库 —— 63 部:主修 27 / 辅修 22 / 秘术 14,每境都有新东西可参 */
+/** 功法库 —— 277 部:主修 89 / 辅修 74 / 秘术 114,每境都有新东西可参 */
 import type { GongfaDef, GongfaType, QualityId, StatMods } from '@/types'
+import { EXPANDED_GONGFA } from './gongfaExpanded'
 
 function g(
   id: string,
@@ -10,7 +11,13 @@ function g(
   desc: string,
   baseMods: StatMods,
   perLevelMods: StatMods,
-  opts: { element?: GongfaDef['element']; maxLevel?: number; skill?: GongfaDef['skill'] } = {}
+  opts: {
+    element?: GongfaDef['element']
+    maxLevel?: number
+    skill?: GongfaDef['skill']
+    secretCategory?: GongfaDef['secretCategory']
+    minComprehension?: number
+  } = {}
 ): GongfaDef {
   return {
     id,
@@ -23,7 +30,9 @@ function g(
     perLevelMods,
     maxLevel: opts.maxLevel ?? (type === 'secret' ? 3 : 9),
     element: opts.element,
-    skill: opts.skill
+    skill: opts.skill,
+    secretCategory: opts.secretCategory ?? (type === 'secret' ? 'special' : undefined),
+    minComprehension: opts.minComprehension
   }
 }
 
@@ -319,7 +328,7 @@ export const GONGFA: GongfaDef[] = [
     { expGain: 0.018, breakthroughRate: 0.003, luck: 0.008 }
   ),
   // ---- 秘术 ----
-  g('x_tianyan', '天眼通', 'secret', 'excellent', 2, '开天眼,窥机缘', { luck: 0.06, eventLuck: 0.08 }, { luck: 0.02, eventLuck: 0.03 }),
+  g('x_tianyan', '天眼通', 'secret', 'excellent', 2, '开天眼,窥机缘', { luck: 0.06, eventLuck: 0.08 }, { luck: 0.02, eventLuck: 0.03 }, { secretCategory: 'perception', minComprehension: 55 }),
   g(
     'x_jingang',
     '金刚不坏身',
@@ -328,7 +337,8 @@ export const GONGFA: GongfaDef[] = [
     3,
     '法身金刚,不坏不灭',
     { damageReduction: 0.08, lowHpReduction: 0.15 },
-    { damageReduction: 0.02, lowHpReduction: 0.05 }
+    { damageReduction: 0.02, lowHpReduction: 0.05 },
+    { element: 'metal', secretCategory: 'defense' }
   ),
   g(
     'x_jianxin',
@@ -338,7 +348,8 @@ export const GONGFA: GongfaDef[] = [
     3,
     '剑心澄澈,料敌先机',
     { critRate: 0.05, critDamage: 0.2 },
-    { critRate: 0.01, critDamage: 0.06 }
+    { critRate: 0.01, critDamage: 0.06 },
+    { secretCategory: 'attack', minComprehension: 60 }
   ),
   g(
     'x_xiangsi',
@@ -348,7 +359,8 @@ export const GONGFA: GongfaDef[] = [
     2,
     '置之死地,而后方生',
     { lowHpDamage: 0.2, lowHpReduction: 0.1 },
-    { lowHpDamage: 0.06, lowHpReduction: 0.03 }
+    { lowHpDamage: 0.06, lowHpReduction: 0.03 },
+    { secretCategory: 'support' }
   ),
   g(
     'x_fanzhen',
@@ -358,9 +370,10 @@ export const GONGFA: GongfaDef[] = [
     3,
     '以彼之力,还施彼身',
     { counterRate: 0.08, counterDamage: 0.25 },
-    { counterRate: 0.02, counterDamage: 0.08 }
+    { counterRate: 0.02, counterDamage: 0.08 },
+    { secretCategory: 'defense' }
   ),
-  g('x_sanqing', '一气化三清', 'secret', 'profound', 5, '一气化三,修行三倍', { cultivationSpeed: 0.2 }, { cultivationSpeed: 0.06 }),
+  g('x_sanqing', '一气化三清', 'secret', 'profound', 5, '一气化三,修行三倍', { cultivationSpeed: 0.2 }, { cultivationSpeed: 0.06 }, { secretCategory: 'special', minComprehension: 65 }),
   g(
     'x_woxuan',
     '斡旋造化',
@@ -369,7 +382,8 @@ export const GONGFA: GongfaDef[] = [
     6,
     '窃天地造化为己用',
     { breakthroughRate: 0.04, breakRefund: 0.1 },
-    { breakthroughRate: 0.01, breakRefund: 0.04 }
+    { breakthroughRate: 0.01, breakRefund: 0.04 },
+    { secretCategory: 'special', minComprehension: 70 }
   ),
   g(
     'x_nitian',
@@ -379,7 +393,8 @@ export const GONGFA: GongfaDef[] = [
     7,
     '我命由我不由天',
     { luck: 0.1, breakthroughRate: 0.05, lifespanPct: 0.1 },
-    { luck: 0.03, breakthroughRate: 0.012, lifespanPct: 0.03 }
+    { luck: 0.03, breakthroughRate: 0.012, lifespanPct: 0.03 },
+    { secretCategory: 'special', minComprehension: 75 }
   ),
   g(
     'x_jiuxiao',
@@ -389,7 +404,8 @@ export const GONGFA: GongfaDef[] = [
     8,
     '把九重雷劫缩成一枚印 —— 劫来则印出,以劫淬身',
     { tribulationResist: 0.2, damageReduction: 0.06, breakthroughRate: 0.03 },
-    { tribulationResist: 0.05, breakthroughRate: 0.008 }
+    { tribulationResist: 0.05, breakthroughRate: 0.008 },
+    { element: 'thunder', secretCategory: 'defense' }
   ),
   // ---- 仙界及以上(准入境界 9-20)----
   g(
@@ -421,7 +437,8 @@ export const GONGFA: GongfaDef[] = [
     11,
     '仙机在握,福祸先知',
     { luck: 0.12, eventLuck: 0.16, dropRate: 0.12 },
-    { luck: 0.035, eventLuck: 0.045, dropRate: 0.03 }
+    { luck: 0.035, eventLuck: 0.045, dropRate: 0.03 },
+    { secretCategory: 'perception', minComprehension: 70 }
   ),
   g(
     'x_taiyi',
@@ -431,7 +448,8 @@ export const GONGFA: GongfaDef[] = [
     12,
     '回光守中,神气合于一处',
     { cultivationSpeed: 0.3, qiRegen: 0.2 },
-    { cultivationSpeed: 0.06, qiRegen: 0.04 }
+    { cultivationSpeed: 0.06, qiRegen: 0.04 },
+    { secretCategory: 'support' }
   ),
   g(
     'm_daluo',
@@ -503,7 +521,8 @@ export const GONGFA: GongfaDef[] = [
     17,
     '推演天机,行止皆在算中',
     { luck: 0.12, dropRate: 0.12, explorationSpeed: 0.12 },
-    { luck: 0.035, dropRate: 0.03, explorationSpeed: 0.03 }
+    { luck: 0.035, dropRate: 0.03, explorationSpeed: 0.03 },
+    { secretCategory: 'perception', minComprehension: 80 }
   ),
   g(
     'x_daoyin',
@@ -513,7 +532,8 @@ export const GONGFA: GongfaDef[] = [
     20,
     '大道之音不绝于耳,闻之者道基自厚',
     { cultivationSpeed: 0.32, breakthroughRate: 0.05, luck: 0.08 },
-    { cultivationSpeed: 0.09, breakthroughRate: 0.015 }
+    { cultivationSpeed: 0.09, breakthroughRate: 0.015 },
+    { secretCategory: 'support', minComprehension: 80 }
   ),
   // 仙界其余四境各补一部 —— 此前 10-13 境的人只有一件本境功法可参,
   // 「主修只此一部、辅修只此一部」的时候,参悟这件事就没有选择可言。
@@ -579,7 +599,8 @@ export const GONGFA: GongfaDef[] = [
     14,
     '藐姑射之山有神人居焉,不食五谷,吸风饮露',
     { damageReduction: 0.1, maxHpPct: 0.16, dodgeRate: 0.04 },
-    { damageReduction: 0.02, maxHpPct: 0.022 }
+    { damageReduction: 0.02, maxHpPct: 0.022 },
+    { element: 'ice', secretCategory: 'defense' }
   ),
   g(
     'm_tianguan',
@@ -646,7 +667,8 @@ export const GONGFA: GongfaDef[] = [
     { cultivationSpeed: 0.5, attackPct: 0.26, defensePct: 0.24, maxHpPct: 0.24 },
     { cultivationSpeed: 0.06, attackPct: 0.026, defensePct: 0.022 },
     { element: 'chaos', skill: { name: '本源一炁', mult: 4.0, rate: 0.29 } }
-  )
+  ),
+  ...EXPANDED_GONGFA
 ]
 
 const BY_ID = new Map(GONGFA.map(x => [x.id, x]))

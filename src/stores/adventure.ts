@@ -25,6 +25,10 @@ export interface LastBattleView {
    * 旧存档没有这一栏,消费方按缺省空数组处理。
    */
   loot?: string[]
+  /** Khí huyết Đạo lữ sau trận (0..1) */
+  partnerHpPct?: number
+  /** Khí huyết Đạo lữ đầu trận (0..1) */
+  partnerStartHpPct?: number
 }
 
 /** 战力栏修形:经 gn() 归一,归零即当作缺失(卡片 v-if 只看有值的 GNum 才渲染) */
@@ -104,7 +108,14 @@ export const useAdventureStore = defineStore(
             // 漏掉这步的话,损坏档首胜时 exploration 的 add(s.stoneGain,…) 会在 .m 上炸,
             // 被 tickSafe 吞掉后每场胜利都抛、历练永久卡死
             stoneGain: gn(s.stoneGain),
-            expGain: gn(s.expGain)
+            expGain: gn(s.expGain),
+            accompanyPartnerId: typeof s.accompanyPartnerId === 'string' && s.accompanyPartnerId ? s.accompanyPartnerId : undefined,
+            partnerHpPct: typeof s.partnerHpPct === 'number' && Number.isFinite(s.partnerHpPct)
+              ? Math.max(0, Math.min(1, s.partnerHpPct))
+              : undefined,
+            playerHpPct: typeof s.playerHpPct === 'number' && Number.isFinite(s.playerHpPct)
+              ? Math.max(0, Math.min(1, s.playerHpPct))
+              : undefined
           }
         }
       }
@@ -120,7 +131,13 @@ export const useAdventureStore = defineStore(
             // 两个战力栏同款修形:坏对象(含 m/e 非数)经 gn() 归零,归零即当作缺失 ——
             // 卡片 v-if 只认有值的 GNum,坏了就不渲染,格式GN 不会拿到坏数抛错
             enemyPower: lb.enemyPower === undefined ? undefined : gnStrict(lb.enemyPower),
-            playerPower: lb.playerPower === undefined ? undefined : gnStrict(lb.playerPower)
+            playerPower: lb.playerPower === undefined ? undefined : gnStrict(lb.playerPower),
+            partnerHpPct: typeof lb.partnerHpPct === 'number' && Number.isFinite(lb.partnerHpPct)
+              ? Math.max(0, Math.min(1, lb.partnerHpPct))
+              : undefined,
+            partnerStartHpPct: typeof lb.partnerStartHpPct === 'number' && Number.isFinite(lb.partnerStartHpPct)
+              ? Math.max(0, Math.min(1, lb.partnerStartHpPct))
+              : undefined
           }
         : null
       eventMemories.value = asRecord(eventMemories.value)

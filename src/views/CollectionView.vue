@@ -50,8 +50,8 @@
               @click="openDetail(cat, entry)"
             >
               <GameIcon v-if="entry.icon" :name="entry.icon" :size="11" />
-              {{ entry.name }}
-              <span v-if="entry.badge" class="text-[9px] opacity-70">{{ entry.badge }}</span>
+              {{ displayEntryName(cat.key, entry.name) }}
+              <span v-if="entry.badge" class="text-[9px] opacity-70">{{ translateBadge(entry.badge) }}</span>
             </button>
             <!--
               未收录的条目降噪:已收是彩签,未收若也用同样粗的实线边框「???」,
@@ -70,7 +70,7 @@
     </template>
 
     <!-- 图鉴详情 -->
-    <BaseModal :open="detail !== null" :title="detail?.entry.name ?? ''" @close="detail = null">
+    <BaseModal :open="detail !== null" :title="detail ? displayDetailTitle(detail) : ''" @close="detail = null">
       <div v-if="detail">
         <p class="flex flex-wrap items-center gap-2">
           <span class="chip-ink border-current" :style="{ color: detail.entry.color ?? 'var(--color-ink-soft)' }">
@@ -80,13 +80,13 @@
           <span v-if="detail.entry.meta" class="text-[11px] text-ink-faint">{{ translateMeta(detail.entry.meta) }}</span>
         </p>
         <p class="mt-3 whitespace-pre-line text-[13px] leading-relaxed text-ink-soft">
-          {{ detail.entry.desc || 'Vật này huyền diệu, khó tả thành lời.' }}
+          {{ displayDetailDesc(detail) || 'Vật này huyền diệu, khó tả thành lời.' }}
         </p>
         <p v-if="detail.entry.hint" class="mt-2 text-[11px] text-ink-faint">{{ translateEntryHint(detail.entry.hint) }}</p>
         <div class="ink-divider my-3" />
         <p class="flex justify-between text-[11px]">
           <span class="text-ink-faint">{{ translateFootLabel(detail.entry.foot.label) }}</span>
-          <span class="tabular text-ink-soft">{{ translateFootValue(detail.entry.foot.value) }}</span>
+          <span class="tabular text-ink-soft">{{ translateFootValue(detail.entry.foot.label, detail.entry.foot.value) }}</span>
         </p>
       </div>
     </BaseModal>
@@ -122,7 +122,18 @@
   import { modsText } from '@/ui/statNames'
   import { achievementDirection, achievementGroup, ACHIEVEMENT_GROUP_LABEL, ACHIEVEMENT_GROUP_ORDER } from '@/ui/achievementHint'
   import { rewardPreview } from '@/core/progress'
-  import { displayRewardPreview } from '@/ui/displayZhVi'
+  import {
+    displayRewardPreview,
+    displayGongfaName,
+    displayGongfaDesc,
+    displayGongfaFuncText,
+    displayGongfaBranchName,
+    displayGongfaBranchDesc,
+    displayRealmName,
+    displayModsText,
+    displayEventTitle,
+    displayEventText
+  } from '@/ui/displayZhVi'
   import SectionTitle from '@/components/common/SectionTitle.vue'
   import InkTabs from '@/components/common/InkTabs.vue'
   import BaseModal from '@/components/common/BaseModal.vue'
@@ -228,7 +239,33 @@
     if (meta === '奇缘') return 'Kỳ Duyên'
     if (meta === '历练际遇') return 'Kỳ Ngộ Lịch Luyện'
     if (meta === '先天之姿') return 'Tư Chất Tiên Thiên'
-    return meta
+    let res = meta
+    res = res.replace(/主修/g, 'Chủ Tu')
+    res = res.replace(/辅修/g, 'Phụ Tu')
+    res = res.replace(/秘术/g, 'Bí Thuật')
+    res = res.replace(/凡品/g, 'Phàm phẩm')
+    res = res.replace(/良品/g, 'Lương phẩm')
+    res = res.replace(/精品/g, 'Tinh phẩm')
+    res = res.replace(/灵品/g, 'Linh phẩm')
+    res = res.replace(/玄品/g, 'Huyền phẩm')
+    res = res.replace(/地品/g, 'Địa phẩm')
+    res = res.replace(/天品/g, 'Thiên phẩm')
+    res = res.replace(/仙品/g, 'Tiên phẩm')
+    res = res.replace(/神品/g, 'Thần phẩm')
+    res = res.replace(/道品/g, 'Đạo phẩm')
+    res = res.replace(/金属/g, 'Hệ Kim')
+    res = res.replace(/木属/g, 'Hệ Mộc')
+    res = res.replace(/水属/g, 'Hệ Thủy')
+    res = res.replace(/火属/g, 'Hệ Hỏa')
+    res = res.replace(/土属/g, 'Hệ Thổ')
+    res = res.replace(/雷属/g, 'Hệ Lôi')
+    res = res.replace(/风属/g, 'Hệ Phong')
+    res = res.replace(/冰属/g, 'Hệ Băng')
+    res = res.replace(/光属/g, 'Hệ Quang')
+    res = res.replace(/暗属/g, 'Hệ Ám')
+    res = res.replace(/混沌属/g, 'Hệ Hỗn Độn')
+    res = res.replace(/(.*)期可参/, (_m, r) => `${displayRealmName(r)} kỳ có thể tham`)
+    return res
   }
 
   function translateStageName(s: string): string {
@@ -251,9 +288,39 @@
     return label
   }
 
-  function translateFootValue(value: string): string {
+  function translateFootValue(label: string, value: string): string {
+    if (label === '所属功法') return displayGongfaName(value)
     if (value === '早年收录,未记时日') return 'Thu thập thuở trước, chưa ghi ngày giờ'
     return value
+  }
+
+  function translateBadge(b: string): string {
+    if (b === '择') return 'Đã chọn'
+    if (b === '可择') return 'Có thể chọn'
+    return b
+  }
+
+  function displayEntryName(catKey: string, name: string): string {
+    if (catKey === 'branch') return displayGongfaBranchName(name)
+    if (catKey === 'gongfa') return displayGongfaName(name)
+    return name
+  }
+
+  function displayDetailTitle(d: { catKey?: string; entry: CodexEntry }): string {
+    if (d.catKey === 'branch') return displayGongfaBranchName(d.entry.name)
+    if (d.catKey === 'gongfa') return displayGongfaName(d.entry.name)
+    return d.entry.name
+  }
+
+  function displayDetailDesc(d: { catKey?: string; entry: CodexEntry }): string {
+    if (!d.entry.desc) return ''
+    if (d.catKey === 'branch') {
+      const parts = d.entry.desc.split('\n')
+      const firstLine = displayGongfaBranchDesc(parts[0] ?? '')
+      const rest = parts.slice(1).join('\n')
+      return rest ? `${firstLine}\n${rest}` : firstLine
+    }
+    return d.entry.desc
   }
 
   function translateEntryHint(hint: string): string {
@@ -360,8 +427,8 @@
         c.gongfa,
         GONGFA.map(g => ({
           id: g.id,
-          name: g.name,
-          desc: [g.desc, gongfaFuncText(g)].filter(Boolean).join('\n'),
+          name: displayGongfaName(g.name),
+          desc: [displayGongfaDesc(g.desc), displayGongfaFuncText(gongfaFuncText(g))].filter(Boolean).join('\n'),
           meta: gongfaMetaText(g),
           color: qualityDef(g.quality).color
         }))
@@ -377,7 +444,7 @@
         PETS.map(p => ({
           id: p.id,
           name: p.name,
-          desc: [p.desc, modsText(player.petModsFor(p))].filter(Boolean).join('\n'),
+          desc: [p.desc, displayModsText(modsText(player.petModsFor(p)))].filter(Boolean).join('\n'),
           meta: qualityDef(p.quality).name,
           icon: beastIcon(p.family),
           color: qualityDef(p.quality).color
@@ -391,8 +458,8 @@
         // 一律写成「历练际遇」,玩家会以为那条缘也能在随便哪个地界撞见
         EVENTS.map(e => ({
           id: e.id,
-          name: e.title,
-          desc: e.text,
+          name: displayEventTitle(e.title),
+          desc: displayEventText(e.text),
           meta: chainOfEvent(e.id) ? '奇缘' : '历练际遇'
         }))
       ),
@@ -403,7 +470,7 @@
         TALENTS.map(t => ({
           id: t.id,
           name: t.name,
-          desc: [t.desc, modsText(t.mods)].filter(Boolean).join('\n'),
+          desc: [t.desc, displayModsText(modsText(t.mods))].filter(Boolean).join('\n'),
           meta: '先天之姿',
           color: TALENT_GRADE_COLORS[t.grade]
         }))
@@ -414,9 +481,9 @@
   // ---- 详情弹窗 ----
   // 脚注各类口径不同(旧七类记收录时日、灵材记照面回数、悟道记所属功法),
   // 故由条目自带 foot,此处不再拼装
-  const detail = ref<{ catName: string; entry: CodexEntry } | null>(null)
+  const detail = ref<{ catName: string; catKey?: string; entry: CodexEntry } | null>(null)
 
   function openDetail(cat: CodexCat, entry: CodexEntry): void {
-    detail.value = { catName: cat.name, entry }
+    detail.value = { catName: cat.name, catKey: cat.key, entry }
   }
 </script>

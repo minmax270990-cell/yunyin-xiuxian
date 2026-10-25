@@ -104,7 +104,7 @@ export function undertakeChallenge(draft: ChallengeDraft, verdict: ChallengeVerd
   const ui = useUiStore()
   if (!endgameUnlocked() || !endgame.daoPath || !verdict.ok) return null
   if (!endgame.spendDaoSource(CHALLENGE_ENTRY_COST)) {
-    ui.toast(`道源不足 ${CHALLENGE_ENTRY_COST}`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${CHALLENGE_ENTRY_COST}`, 'warn')
     return null
   }
   const player = usePlayerStore()
@@ -118,7 +118,7 @@ export function undertakeChallenge(draft: ChallengeDraft, verdict: ChallengeVerd
     ...(pact?.special === 'endHp80' ? { minHpAfterFight: 0.8 } : {}),
     perWinPlayerMods: endgame.daoPath === 'sword' ? SWORD_PER_WIN : endgame.daoPath === 'slaughter' ? SLAUGHTER_PER_WIN : undefined
   }
-  const name = draft.name.trim() || '无名之约'
+  const name = draft.name.trim() || 'Vô Danh Chi Ước'
   const report = runGauntlet(buildPlayerSnap(true), draftFoes(draft.worldId, ref, judgement), rules, world.healBetweenPct, rng, opts)
   let reward = 0
   if (report.cleared) {
@@ -127,19 +127,19 @@ export function undertakeChallenge(draft: ChallengeDraft, verdict: ChallengeVerd
     recordMilestone('first_custom')
     const player2 = usePlayerStore()
     endgame.updateRecord('best_custom', reward, player2.reincarnation.count + 1, name, 'max')
-    ui.toast(`挑战书《${name}》功成!道源 +${reward}`, 'rare')
+    ui.toast(`Chiến thư《${name}》thành công! Đạo nguyên +${reward}`, 'rare')
   } else if (report.pactBroken) {
     // 违契终止:并非败北,而是契约束缚 —— 已胜的场次如实报数,不再报「止步第 N 战」的败绩口吻
-    ui.toast(`《${name}》违契而止,已胜 ${report.fightsWon} 战`, 'warn')
+    ui.toast(`《${name}》vi ước dừng lại, đã thắng ${report.fightsWon} trận`, 'warn')
   } else {
-    ui.toast(`《${name}》未竟,止步第 ${report.fightsWon + 1} 战`, 'warn')
+    ui.toast(`《${name}》chưa xong, dừng bước tại trận thứ ${report.fightsWon + 1}`, 'warn')
   }
-  recordMark('custom', `挑战书·${name}`, report.cleared, report.totalRounds, draft.pactId, {
+  recordMark('custom', `Chiến thư · ${name}`, report.cleared, report.totalRounds, draft.pactId, {
     worldId: draft.worldId,
     mutatorIds: draft.mutatorIds
   })
   return {
-    title: `挑战书 · ${name}`,
+    title: `Chiến thư · ${name}`,
     report,
     rewardDaoSource: reward,
     markText: report.cleared

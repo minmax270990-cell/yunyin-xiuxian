@@ -54,6 +54,15 @@ import { usePlayerStore } from '@/stores/player'
 import { useQuestsStore } from '@/stores/quests'
 import { useUiStore } from '@/stores/ui'
 import { rng, type RandomService } from '@/utils/random'
+import { displayDaoluName } from '@/ui/displayZhVi'
+
+export interface DaoluAdventureEntry {
+  id: string
+  title: string
+  desc: string
+  atDay: number
+  kind: 'breakthrough' | 'treasure' | 'peril' | 'daily'
+}
 
 /** 本世与某人的关系(存档结构) */
 export interface BondState {
@@ -87,6 +96,38 @@ export interface BondState {
   intent?: BondIntent | null
   /** 她已开口,正等你的回应 */
   intentPending?: boolean
+  /** 上次交谈的游戏天数 */
+  lastChatDay?: number
+  /** 今日交谈次数 */
+  chatCountToday?: number
+  /** 上次赠礼的游戏天数 */
+  lastGiftDay?: number
+  /** 今日赠礼次数 */
+  giftCountToday?: number
+  /** 上次双修的游戏天数 */
+  lastDualDay?: number
+  /** 上次切磋的游戏天数 */
+  lastSparDay?: number
+  /** 当前境界 */
+  daoluMajor?: number
+  /** 个人奇遇经历记录 */
+  adventures?: DaoluAdventureEntry[]
+  /** 当前小层(0..8) */
+  daoluSub?: number
+  /** 当前层修为进度百分比(0..100) */
+  daoluExpPct?: number
+  /** 当前主修功法 id */
+  daoluGongfaId?: string
+  /** 修炼专注取向: speed(修为) / breakthrough(破境) / combat(战力) */
+  daoluFocus?: 'speed' | 'breakthrough' | 'combat'
+  /** 当前修业状态: cultivating(顺遂) / bottleneck(瓶颈) / injured(负伤) */
+  daoluStatus?: 'cultivating' | 'bottleneck' | 'injured'
+  /** 上次按月结算修业的月份 */
+  lastCultivatedMonth?: number
+  /** Trang bị đạo lữ đang mang trên thân */
+  daoluEquippedItems?: import('@/types').EquipmentInstance[]
+  /** Túi đồ chứa trang bị đạo lữ đang sở hữu nhưng chưa mặc */
+  daoluInventoryItems?: import('@/types').EquipmentInstance[]
 }
 
 /** 一世结束后留在履历里的那一笔 */
@@ -128,9 +169,13 @@ export function currentDaolu(): DaoluDef | null {
  * 与本世之界挂钩:她偏好的地貌若在这一世的路线上,才更可能出现 ——
  * 世界不同 → 路径不同 → 遇见谁不同,轮回与世界生成由此连上
  */
-export function candidatesFor(terrains: readonly string[]): DaoluDef[] {
+export function candidatesFor(terrains: readonly string[], requiredGender?: 'male' | 'female'): DaoluDef[] {
   const seen = new Set(terrains)
-  return DAOLU.filter(d => d.terrains.length === 0 || d.terrains.some(t => seen.has(t)))
+  return DAOLU.filter(
+    d =>
+      (!requiredGender || d.gender === requiredGender) &&
+      (d.terrains.length === 0 || d.terrains.some(t => seen.has(t)))
+  )
 }
 
 /**
@@ -138,8 +183,17 @@ export function candidatesFor(terrains: readonly string[]): DaoluDef[] {
  *
  * 是概率不是按钮 —— 若能保证重逢,轮回就失去了分别的重量
  */
-export function destinedCandidate(history: readonly BondRecord[], terrains: readonly string[]): DaoluDef | null {
-  const deep = history.filter(r => stageIndex(r.stage) >= stageIndex('pledged'))
+export function destinedCandidate(
+  history: readonly BondRecord[],
+  terrains: readonly string[],
+  requiredGender?: 'male' | 'female'
+): DaoluDef | null {
+  const deep = history.filter(r => {
+    if (stageIndex(r.stage) < stageIndex('pledged')) return false
+    if (!requiredGender) return true
+    const d = daoluDef(r.daoluId)
+    return d?.gender === requiredGender
+  })
   if (deep.length === 0) return null
   // 走得越深,重逢的可能越大,但永远不满
   const chance = Math.min(0.35, 0.08 * deep.length)
@@ -148,7 +202,7 @@ export function destinedCandidate(history: readonly BondRecord[], terrains: read
   const def = daoluDef(pick.daoluId)
   if (!def) return null
   // 仍要她愿意出现在这一世的地界上
-  return candidatesFor(terrains).some(c => c.id === def.id) ? def : null
+  return candidatesFor(terrains, requiredGender).some(c => c.id === def.id) ? def : null
 }
 
 /** 初遇:记住这个人 */
@@ -157,6 +211,11 @@ export function meet(daoluId: string, now = Date.now()): boolean {
   if (player.bond) return false
   const def = daoluDef(daoluId)
   if (!def) return false
+  // 异性结缘规则: 仅匹配异性道侣
+  if (player.gender && def.gender) {
+    const expectedGender = player.gender === 'female' ? 'male' : 'female'
+    if (def.gender !== expectedGender) return false
+  }
   player.setBond({
     daoluId,
     stage: 'met',
@@ -173,8 +232,55 @@ export function meet(daoluId: string, now = Date.now()): boolean {
     nextEventAt: EVENT_GAP,
     lastKind: null
   })
-  useUiStore().toast(`途中遇见一人——${def.name}`, 'info')
+  useUiStore().toast(`Trên đường tình cờ gặp một người —— ${displayDaoluName(def.name)}`, 'info')
   return true
+}
+
+/**
+ * Khởi tạo Đạo lữ ban đầu khi nhân vật mang thiên phú đặc biệt 「Nhất Kiến Chung Tình」
+ * Lựa chọn đạo lữ khác giới tính với người chơi và thiết lập quan hệ kết duyên đồng hành (together).
+ */
+export function initFirstLoveDaolu(
+  playerGender: 'male' | 'female' = 'male',
+  preferredId?: string,
+  now = Date.now()
+): DaoluDef | null {
+  const player = usePlayerStore()
+  if (player.bond && !player.bond.fallen && !player.bond.departed) return null
+  const targetGender = playerGender === 'female' ? 'male' : 'female'
+  const pool = DAOLU.filter(d => d.gender === targetGender)
+  if (pool.length === 0) return null
+
+  let partner: DaoluDef | undefined
+  if (preferredId) {
+    partner = pool.find(d => d.id === preferredId)
+  }
+  if (!partner) {
+    partner = pool[rng.int(0, pool.length - 1)]!
+  }
+
+  player.setBond({
+    daoluId: partner.id,
+    stage: 'together',
+    fate: 50,
+    trust: 40,
+    accord: 60,
+    shared: 0,
+    metAt: now,
+    fallen: false,
+    departed: false,
+    doneEvents: [],
+    opportunities: 1,
+    nextEventAt: now + 1000 * 3600 * 2,
+    pendingEventId: null,
+    lastKind: null,
+    daoluMajor: partner.startMajor ?? 1,
+    daoluSub: 0,
+    daoluExpPct: 0,
+    daoluStatus: 'cultivating'
+  })
+
+  return partner
 }
 
 // ============ 关系推进 ============
@@ -209,7 +315,7 @@ export function advanceBond(delta: BondDelta): BondState | null {
   player.setBond(next)
   if (stageIndex(next.stage) > stageIndex(b.stage)) {
     const def = daoluDef(b.daoluId)
-    useUiStore().toast(`你与${def?.name ?? '她'}的关系更进一步`, 'rare')
+    useUiStore().toast(`Quan hệ giữa ngươi và ${displayDaoluName(def?.name ?? 'nàng')} càng thêm gắn bó`, 'rare')
   }
   return next
 }
@@ -247,7 +353,7 @@ export function fall(): BondRecord | null {
   if (!b || b.fallen) return null
   const def = daoluDef(b.daoluId)
   player.setBond({ ...b, fallen: true })
-  useUiStore().toast(`${def?.name ?? '她'}没能走完这一世`, 'warn')
+  useUiStore().toast(`${displayDaoluName(def?.name ?? 'Nàng')} không thể cùng ngươi đi hết kiếp này`, 'warn')
   return { daoluId: b.daoluId, name: def?.name ?? b.daoluId, stage: b.stage, ending: 'perished', shared: b.shared }
 }
 
@@ -259,6 +365,30 @@ export function part(): BondRecord | null {
   const def = daoluDef(b.daoluId)
   player.setBond(null)
   return { daoluId: b.daoluId, name: def?.name ?? b.daoluId, stage: b.stage, ending: 'parted', shared: b.shared }
+}
+
+/**
+ * 悼念并放下已陨落的道侣。
+ *
+ * 将逝去之人记录进历史履历(reincarnation.bonds),清空本世 bond 槽位,
+ * 使修士可以重新结识其他同道,不被永恒卡死在状态中。
+ */
+export function releaseFallen(): BondRecord | null {
+  const player = usePlayerStore()
+  const b = player.bond
+  if (!b || !b.fallen) return null
+  const def = daoluDef(b.daoluId)
+  const record: BondRecord = {
+    daoluId: b.daoluId,
+    name: def?.name ?? b.daoluId,
+    stage: b.stage,
+    ending: 'perished',
+    shared: b.shared
+  }
+  player.recordBond(record)
+  player.setBond(null)
+  useUiStore().toast('Lập bia đắp mộ, tiền duyên đã dứt. Tiên đồ về sau, ắt còn tao ngộ.', 'info')
+  return record
 }
 
 /**
@@ -351,7 +481,7 @@ export function offerBondEvent(trigger: BondTrigger, rand: RandomService = rng):
   }
   const picked = rand.weighted(pool, e => weightFor(e, b))
   player.setBond({ ...b, opportunities: b.opportunities + 1, pendingEventId: picked.id })
-  useUiStore().toast(`${currentDaolu()?.name ?? '她'}似乎有话要说`, 'info')
+  useUiStore().toast(`${displayDaoluName(currentDaolu()?.name ?? 'Nàng')} dường như có lời muốn nói`, 'info')
   return picked
 }
 
@@ -453,7 +583,7 @@ export function chooseBondEvent(eventId: string, choiceId: string): ChoiceResult
         : 'neutral'
 
   if (left) {
-    useUiStore().toast(`${def.name}离你而去`, 'warn')
+    useUiStore().toast(`${displayDaoluName(def.name)} đã rời xa ngươi`, 'warn')
     player.setBond({ ...after, departed: true })
   }
   return { text: out.text, left, reaction }

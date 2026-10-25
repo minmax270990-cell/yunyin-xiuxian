@@ -249,6 +249,43 @@
       </p>
       <p class="text-[12px] text-ink-faint">Chuyến đi này định tính toán thế nào?</p>
       <p class="mt-1 text-[10px] leading-relaxed text-ink-faint">Hành trình tính xem chặng này đi bao lâu; "Lịch luyện gặp địch" chỉ khiến yêu thú xuất hiện dày đặc hơn, không thể rút ngắn quãng đường.</p>
+
+      <!-- Tùy chọn Mời Đạo lữ đồng hành -->
+      <div v-if="companionEval" class="mt-3 rounded-md border border-ink/15 bg-ink/4 p-2.5">
+        <label class="flex items-center justify-between cursor-pointer select-none">
+          <div class="flex items-center gap-2">
+            <input v-model="accompanyDaolu" type="checkbox" class="rounded accent-cinnabar h-4 w-4" />
+            <span class="font-kai text-[12px] text-ink font-semibold">
+              Mời Đạo Lữ Đồng Hành ({{ companionEval.partnerName }})
+            </span>
+          </div>
+          <span
+            v-if="accompanyDaolu"
+            class="chip-ink text-[10px] font-kai font-semibold px-2 py-0.5"
+            :class="{
+              'border-jade/60 text-jade bg-jade/10': companionEval.dangerLevel === 'safe',
+              'border-gold-ink/60 text-gold-ink bg-gold-ink/10': companionEval.dangerLevel === 'perilous',
+              'border-cinnabar/60 text-cinnabar bg-cinnabar/10': companionEval.dangerLevel === 'deadly'
+            }"
+          >
+            {{ companionEval.dangerTitle }}
+          </span>
+        </label>
+
+        <div v-if="accompanyDaolu" class="mt-2 space-y-1 border-t border-ink/10 pt-2 text-[11px]">
+          <div class="flex items-center justify-between text-ink-soft">
+            <span>Cảnh giới: {{ REALMS[companionEval.partnerMajor]?.name ?? `Cảnh giới ${companionEval.partnerMajor}` }}</span>
+            <span>Chiến lực ước tính: <span class="font-semibold text-gold-ink">{{ formatGN(companionEval.partnerPower) }}</span></span>
+          </div>
+          <p class="leading-relaxed text-ink-faint text-[10px]">
+            {{ companionEval.dangerDesc }}
+          </p>
+          <p v-if="companionEval.dangerLevel === 'deadly'" class="rounded bg-cinnabar/10 p-1.5 text-[10px] leading-relaxed text-cinnabar">
+            【Hung Hiểm】 <strong>Cảnh Báo Sinh Tử:</strong> Yêu ma nơi này hung hãn tột cùng. Nếu người chơi chiến bại, Đạo lữ có thể gặp nguy hiểm chí mạng và <strong>vẫn lạc tử vong vĩnh viễn</strong>!
+          </p>
+        </div>
+      </div>
+
       <div class="mt-3 space-y-2">
         <button
           v-for="m in MODE_LIST"
@@ -296,7 +333,9 @@
     explorationFoeDanger,
     regionFoeOrigin,
     regionBossCleared,
-    startExploration
+    startExploration,
+    evaluateDaoluCompanion,
+    type DaoluCompanionEval
   } from '@/core/exploration'
   import { currentRegionEvent } from '@/core/regionEvent'
   import { expectedWinReward } from '@/core/loot'
@@ -535,6 +574,11 @@
     return `Một trận thắng khoảng ${formatGN(r.stone)} thạch · ${formatGN(r.exp)} tu vi`
   }
 
+  const accompanyDaolu = ref(false)
+  const companionEval = computed<DaoluCompanionEval | null>(() => {
+    return modeTarget.value ? evaluateDaoluCompanion(modeTarget.value.id) : null
+  })
+
   function chooseMode(region: RegionDef): void {
     /*
      * 闭关期间不许外出历练 —— 这条早该在这里说。
@@ -547,12 +591,14 @@
       return
     }
     modeTarget.value = region
+    accompanyDaolu.value = false
   }
 
   function begin(mode: ExploreMode): void {
     if (!modeTarget.value) return
-    if (startExploration(modeTarget.value.id, mode)) {
+    if (startExploration(modeTarget.value.id, mode, accompanyDaolu.value)) {
       modeTarget.value = null
+      accompanyDaolu.value = false
     }
   }
 

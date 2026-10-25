@@ -206,7 +206,7 @@ export function settleSuppressedRegions(dt: number, service: RandomService = rng
   if (revived.length > 0) {
     for (const regionId of revived) player.unsuppressRegion(regionId)
     const names = revived.map(id => regionDef(id)?.name ?? id).join('、')
-    useUiStore().toast(`${names}妖气复聚,镇压松动——此地重新成为历练之地`, 'info')
+    useUiStore().toast(`${names} yêu khí lại tụ, trấn áp buông lỏng —— nơi đây lại trở thành nơi lịch luyện`, 'info')
     // 复苏后本 tick 不再为这些区域结算
   }
   const active = player.suppressedRegions.filter(id => !revived.includes(id))

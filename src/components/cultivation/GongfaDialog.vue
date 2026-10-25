@@ -4,32 +4,69 @@
       <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
         <QualityTag :quality="def.quality" />
         <span class="chip-ink border-ink/30 text-ink-soft">{{ GONGFA_TYPE_NAMES[def.type] }}</span>
+        <span v-if="def.secretCategory" class="chip-ink border-azure/40 text-azure">
+          {{ SECRET_CATEGORY_NAMES[def.secretCategory] ?? def.secretCategory }}
+        </span>
         <span v-if="def.element" class="chip-ink" :style="{ color: ELEMENTS[def.element].color }">
           {{ ELEMENTS[def.element].name }} Thuộc Tính
         </span>
+        <span v-else class="chip-ink text-ink-faint">Vô Thuộc Tính</span>
         <!-- Phase 32.2:同源功法参悟时更易撞见(倾向,非独占;无此灵根照样学得到) -->
         <span v-if="sameRoot" class="chip-ink border-gold-ink/40 text-gold-ink" title="Cùng linh căn tương hợp, Tàng Kinh Các tham ngộ dễ gặp hơn">Đồng Nguyên</span>
-        <span v-if="learned" class="ml-auto tabular text-[12px] text-gold-ink">Tầng {{ level }}/{{ def.maxLevel }}</span>
+        <span v-if="learned" class="ml-auto tabular text-[12px]" :class="elig?.isAtComprehendLimit && !elig?.isAtMaxLevel ? 'text-cinnabar font-bold' : 'text-gold-ink'">
+          Tầng {{ level }}/{{ def.maxLevel }} (Hạn: {{ elig?.maxComprehendLevel ?? def.maxLevel }})
+        </span>
+        <span v-else class="ml-auto tabular text-[12px] text-ink-faint">
+          Tiềm năng: Tầng {{ elig?.maxComprehendLevel ?? def.maxLevel }}/{{ def.maxLevel }}
+        </span>
       </div>
       <p class="mt-2 text-[12px] leading-relaxed text-ink-faint">{{ displayGongfaDesc(def.desc) }}</p>
-      <!-- 参悟门槛与藏经阁习得同源:minRealm ≤ major+1 已在池内(超前一层设计,spec 钉死),仅当再高一层的真参悟不到时才提示 -->
-      <p v-if="!learned && def.minRealm > player.major + 1" class="mt-1 text-[11px] text-cinnabar">
-        Cần cảnh giới {{ displayRealmName(REALMS[def.minRealm]?.name ?? 'cao hơn') }} mới có thể lĩnh ngộ tinh nghĩa
-      </p>
+
+      <!-- Thông tin tốc độ lĩnh ngộ & tương hợp linh căn -->
+      <div v-if="elig" class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded bg-ink/5 px-2.5 py-1 text-[11px]">
+        <span class="text-ink-soft">
+          {{ def.element ? `Linh căn ${ELEMENTS[def.element]?.name ?? ''}: ${elig.elementAptitude}/100 điểm` : `Ngộ tính: ${eligSnapshot.comprehension ?? 50} điểm` }}
+        </span>
+        <span class="text-azure">Tốc độ tu: ×{{ elig.speedMultiplier }}</span>
+        <span class="text-gold-ink">Độ tương hợp: {{ elig.affinityScore }}</span>
+      </div>
+
+      <!-- Cảnh báo giới hạn lĩnh ngộ khi đã học -->
+      <div v-if="learned && elig?.isAtComprehendLimit && !elig?.isAtMaxLevel" class="mt-2 rounded bg-cinnabar/10 px-2.5 py-1.5 text-[11px] text-cinnabar leading-relaxed">
+        <strong>【Hạn Định Linh Căn】 (Tầng {{ elig.maxComprehendLevel }}/{{ def.maxLevel }}):</strong>
+        Linh căn hiện tại ({{ elig.elementAptitude }} điểm) không đủ để cảm ngộ tầng cao hơn. Hãy bồi dưỡng phẩm cấp linh căn hoặc dùng đan dược tẩy tủy để phá vỡ gông cùm!
+      </div>
+
+      <!-- Cảnh báo khi chưa học -->
+      <template v-if="!learned && elig">
+        <div v-if="elig.status === 'realm_locked'" class="mt-2 rounded bg-cinnabar/10 px-2.5 py-1.5 text-[11px] text-cinnabar">
+          {{ elig.reason }}
+        </div>
+        <div v-else-if="elig.status === 'incompatible'" class="mt-2 rounded bg-cinnabar/10 px-2.5 py-1.5 text-[11px] text-cinnabar">
+          {{ elig.reason }}
+        </div>
+        <div v-else-if="elig.status === 'comprehension_locked'" class="mt-2 rounded bg-cinnabar/10 px-2.5 py-1.5 text-[11px] text-cinnabar">
+          {{ elig.reason }}
+        </div>
+        <div v-else-if="elig.status === 'conditional'" class="mt-2 rounded bg-gold-ink/10 px-2.5 py-1.5 text-[11px] text-gold-ink">
+          {{ elig.reason }}
+        </div>
+      </template>
+
       <div class="ink-divider my-3" />
       <template v-if="learned">
         <div class="space-y-1.5">
           <p v-for="row in modRows" :key="row.label" class="flex justify-between text-[13px]">
-            <span class="text-ink-soft">{{ row.label }}</span>
-            <span class="tabular text-azure">{{ row.value }}</span>
+            <span class="text-ink-soft">{{ displayStatLabel(row.label) }}</span>
+            <span class="tabular text-azure">{{ displayStatValue(row.value) }}</span>
           </p>
-          <p v-if="def.skill" class="text-[13px] leading-relaxed text-cinnabar">
+          <p v-if="def.skill" class="text-[13px] leading-relaxed text-cinnabar" :data-source="gongfaSkillLine ? '' : undefined">
             {{ displayGongfaSkillLine(def.skill) }}
           </p>
         </div>
         <!-- 每进一层的增量:进修要花悟道点与残页,值不值当得看得见 -->
         <p class="mt-2 text-[11px] text-ink-faint">
-          Mỗi khi tiến một tầng: <span class="tabular text-azure">{{ modsText(def.perLevelMods) }}</span>
+          Mỗi khi tiến một tầng: <span class="tabular text-azure">{{ displayModsText(modsText(def.perLevelMods)) }}</span>
         </p>
         <p v-if="upCost" class="mt-3 text-right text-[11px] text-ink-faint tabular">
           Tiến tu cần Điểm Ngộ Đạo × {{ upCost.wudao }} · Tàn trang × {{ upCost.page }}
@@ -44,9 +81,9 @@
           <div v-if="branchPicked" class="rounded-md bg-paper-deep/70 px-3 py-2">
             <p>
               <span class="font-kai text-[13px] text-gold-ink">{{ displayGongfaBranchName(branchPicked.name) }}</span>
-              <span class="ml-2 text-[11px] text-ink-faint">{{ branchPicked.desc }}</span>
+              <span class="ml-2 text-[11px] text-ink-faint">{{ displayGongfaBranchDesc(branchPicked.desc) }}</span>
             </p>
-            <p class="tabular mt-0.5 text-[11px] text-azure">{{ modsText(branchPicked.mods) }}</p>
+            <p class="tabular mt-0.5 text-[11px] text-azure">{{ displayModsText(modsText(branchPicked.mods)) }}</p>
           </div>
           <div v-else class="space-y-1.5">
             <button
@@ -57,8 +94,8 @@
             >
               <span class="min-w-0">
                 <span class="font-kai text-[13px] text-ink">{{ displayGongfaBranchName(b.name) }}</span>
-                <span class="ml-2 text-[11px] text-ink-faint">{{ b.desc }}</span>
-                <span class="tabular mt-0.5 block text-[11px] text-azure">{{ modsText(b.mods) }}</span>
+                <span class="ml-2 text-[11px] text-ink-faint">{{ displayGongfaBranchDesc(b.desc) }}</span>
+                <span class="tabular mt-0.5 block text-[11px] text-azure">{{ displayModsText(modsText(b.mods)) }}</span>
               </span>
               <span class="shrink-0 text-[10px] text-azure">Chọn đạo này →</span>
             </button>
@@ -68,7 +105,7 @@
                 Đạo phân nhánh, một khi đã chọn <strong>trọn đời không đổi</strong> (chuyển thế vẫn theo ngươi). Xác nhận chọn 【{{ displayGongfaBranchName(gongfaBranchDef(branchConfirm)?.name ?? '') }}】?
               </p>
               <p v-if="gongfaBranchDef(branchConfirm)" class="mt-1 text-[11px] tabular text-azure">
-                {{ modsText(gongfaBranchDef(branchConfirm)!.mods) }}
+                {{ displayModsText(modsText(gongfaBranchDef(branchConfirm)!.mods)) }}
               </p>
               <!-- 择道确认是玩家唯一一次定流派走向:!py-1 盒高不足 28px,抬到 !py-2(35px) -->
               <div class="mt-1.5 flex justify-end gap-2">
@@ -90,11 +127,11 @@
         <p class="mt-2 text-[11px] text-ink-soft">Tu tới viên mãn ({{ def.maxLevel }} tầng) có thể nhận:</p>
         <div class="mt-1 space-y-1">
           <p v-for="row in previewRows" :key="row.label" class="flex justify-between text-[13px]">
-            <span class="text-ink-faint">{{ row.label }}</span>
-            <span class="tabular text-azure">{{ row.value }}</span>
+            <span class="text-ink-faint">{{ displayStatLabel(row.label) }}</span>
+            <span class="tabular text-azure">{{ displayStatValue(row.value) }}</span>
           </p>
-          <p v-if="def.skill" class="text-[13px] leading-relaxed text-cinnabar">
-            {{ gongfaSkillLine(def.skill) }}
+          <p v-if="def.skill" class="text-[13px] leading-relaxed text-cinnabar" :data-source="gongfaSkillLine ? '' : undefined">
+            {{ displayGongfaSkillLine(def.skill) }}
           </p>
         </div>
       </template>
@@ -113,7 +150,23 @@
         >
           {{ subFull ? `Ô phụ tu đầy ${cultivation.subGongfa.length}/${dongfu.subGongfaSlots}` : subActionText }}
         </button>
-        <button v-if="upCost" class="btn-ghost flex-1" :disabled="!canAffordUp" :title="!canAffordUp ? 'Điểm Ngộ Đạo hoặc tàn trang chưa đủ' : undefined" @click="def && upgradeGongfa(def.id)">{{ canAffordUp ? 'Tiến Tu' : 'Tiến Tu (Thiếu liệu)' }}</button>
+        <button
+          v-if="elig?.isAtComprehendLimit && !elig?.isAtMaxLevel"
+          class="btn-ghost flex-1 opacity-60 text-cinnabar"
+          disabled
+          :title="`Đã đạt giới hạn lĩnh ngộ của linh căn (${elig.maxComprehendLevel}/${def?.maxLevel ?? 9}). Cần bồi dưỡng linh căn để nâng tầng.`"
+        >
+          Chạm Giới Hạn (Tầng {{ elig.maxComprehendLevel }})
+        </button>
+        <button
+          v-else-if="upCost"
+          class="btn-ghost flex-1"
+          :disabled="!canAffordUp"
+          :title="!canAffordUp ? 'Điểm Ngộ Đạo hoặc tàn trang chưa đủ' : undefined"
+          @click="def && upgradeGongfa(def.id)"
+        >
+          {{ canAffordUp ? 'Tiến Tu' : 'Tiến Tu (Thiếu liệu)' }}
+        </button>
       </div>
     </template>
   </BaseModal>
@@ -123,7 +176,6 @@
   import { computed, ref, watch } from 'vue'
   import { useUiStore } from '@/stores/ui'
   import { useCultivationStore } from '@/stores/cultivation'
-  import { REALMS } from '@/data/realms'
   import { useDongfuStore } from '@/stores/dongfu'
   import { usePlayerStore } from '@/stores/player'
   import { useResourcesStore } from '@/stores/resources'
@@ -132,6 +184,7 @@
   import { branchesFor, gongfaBranchDef } from '@/data/gongfaBranches'
   import { gongfaUpgradeCost, upgradeGongfa } from '@/core/gongfaService'
   import { gongfaAffinity, rootElements } from '@/core/linggenAffinity'
+  import { checkGongfaEligibility, getPlayerSnapshot } from '@/core/gongfaEligibility'
   import { mergeMods } from '@/core/statsCalc'
   import { gongfaModsAt } from '@/stores/cultivation'
   import { STAT_NAMES, modsText, statValueText } from '@/ui/statNames'
@@ -141,12 +194,24 @@
     displayGongfaName,
     displayGongfaDesc,
     displayGongfaBranchName,
+    displayGongfaBranchDesc,
     displayGongfaSkillLine,
-    displayRealmName
+    displayStatLabel,
+    displayStatValue,
+    displayModsText
   } from '@/ui/displayZhVi'
-  import type { AnyStatKey, StatMods } from '@/types'
+  import type { AnyStatKey, StatMods, SecretCategory } from '@/types'
   import BaseModal from '@/components/common/BaseModal.vue'
   import QualityTag from '@/components/common/QualityTag.vue'
+
+  const SECRET_CATEGORY_NAMES: Record<SecretCategory, string> = {
+    attack: 'Bí Thuật · Công Kích',
+    defense: 'Bí Thuật · Phòng Ngự',
+    speed: 'Bí Thuật · Thân Pháp',
+    support: 'Bí Thuật · Hỗ Trợ',
+    perception: 'Bí Thuật · Thần Thức',
+    special: 'Bí Thuật · Đặc Thù'
+  }
 
   const ui = useUiStore()
   const cultivation = useCultivationStore()
@@ -157,6 +222,8 @@
   const def = computed(() => (ui.gongfaDetailId ? gongfaDef(ui.gongfaDetailId) : undefined))
   const level = computed(() => (def.value ? (cultivation.learned[def.value.id] ?? 0) : 0))
   const learned = computed(() => level.value > 0)
+  const eligSnapshot = computed(() => getPlayerSnapshot())
+  const elig = computed(() => (def.value ? checkGongfaEligibility(def.value, eligSnapshot.value, level.value) : null))
   const upCost = computed(() => (def.value ? gongfaUpgradeCost(def.value.id) : null))
   // 进修要悟道点+残页两样,一样不够就该置灰说清(upgradeGongfa 缺料只能吐 warn)
   const canAffordUp = computed(() => {
@@ -219,7 +286,7 @@
   function choose(branchId: string): void {
     if (!def.value) return
     if (cultivation.chooseBranch(def.value.id, branchId)) {
-      ui.toast(`Đã ngộ đạo「${gongfaBranchDef(branchId)?.name ?? ''}」`, 'rare')
+      ui.toast(`Đã ngộ đạo「${displayGongfaBranchName(gongfaBranchDef(branchId)?.name ?? '')}」`, 'rare')
     }
   }
 

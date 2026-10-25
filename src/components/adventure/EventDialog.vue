@@ -39,7 +39,7 @@
         >
           {{ displayEventChoiceLabel(choice.label) }}
           <span v-if="choiceHintText(choice, tier)" class="ml-2 text-[11px] font-normal text-ink-faint">
-            {{ choiceHintText(choice, tier) }}
+            {{ displayChoiceHint(choiceHintText(choice, tier)) }}
           </span>
         </button>
       </div>
@@ -47,10 +47,10 @@
     <!-- 结果阶段 -->
     <template v-else-if="result">
       <p class="mb-1.5 text-[10px] text-ink-faint">{{ displayEventTierName(tierDef.name) }} · {{ displayTierBrief(tierDef.brief) }}</p>
-      <p class="text-[13px] leading-relaxed text-ink-soft animate-ink-pop">{{ result.outcomeText }}</p>
+      <p class="text-[13px] leading-relaxed text-ink-soft animate-ink-pop">{{ displayEventOutcomeText(result.outcomeText) }}</p>
       <ul v-if="result.lines.length" class="mt-3 space-y-1.5">
         <li v-for="(line, i) in result.lines" :key="i" class="rounded bg-paper-deep/70 px-3 py-1.5 text-[12px] text-ink tabular">
-          {{ line }}
+          {{ displayRewardPreview(line) }}
         </li>
       </ul>
     </template>
@@ -80,7 +80,10 @@
     displayEventChoiceLabel,
     displayTierBrief,
     displayEventTierName,
-    displayTierOdds
+    displayTierOdds,
+    displayChoiceHint,
+    displayEventOutcomeText,
+    displayRewardPreview
   } from '@/ui/displayZhVi'
 
   const adventure = useAdventureStore()

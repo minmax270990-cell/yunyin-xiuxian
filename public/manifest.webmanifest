@@ -1,8 +1,8 @@
 {
-  "name": "云隐修仙录",
-  "short_name": "云隐修仙",
-  "description": "文字版修仙放置游戏。一念修行 · 云深不知处。",
-  "lang": "zh-CN",
+  "name": "Thiên Đạo",
+  "short_name": "Thiên Đạo",
+  "description": "Trò chơi tu tiên chữ nhàn rỗi (idle) thuần ngoại tuyến.",
+  "lang": "vi",
   "dir": "ltr",
   "start_url": "./",
   "scope": "./",

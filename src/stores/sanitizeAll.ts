@@ -22,6 +22,7 @@ import { useDiagStore } from '@/stores/diag'
 import { useMarketStore } from '@/stores/market'
 import { useApprenticeStore } from '@/stores/apprentice'
 import { useBountyStore } from '@/stores/bounty'
+import { useNpcStore } from '@/stores/npc'
 import { usePacingTelemetry } from '@/stores/pacingTelemetry'
 
 /**
@@ -45,5 +46,6 @@ export function sanitizeAllStores(): void {
   useMarketStore().sanitize() // 坊市货架/寄卖坏格修平,否则 renderSlot 对坏 pillId 白屏
   useApprenticeStore().sanitize()
   useBountyStore().sanitize()
+  useNpcStore().sanitize()
   usePacingTelemetry().sanitize() // 遥测分片也落盘,坏档一样要修平(见 pacingTelemetry.sanitize)
 }

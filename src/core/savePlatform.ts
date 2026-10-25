@@ -20,7 +20,7 @@ export async function exportSaveToDevice(): Promise<string | null> {
     try {
       // Documents 在部分 Android 上需运行时授权,先问一句,被拒就如实告知
       const perm = await Filesystem.requestPermissions()
-      if (perm.publicStorage === 'denied') return '存储权限被拒绝,无法导出存档'
+      if (perm.publicStorage === 'denied') return 'Quyền lưu trữ bị từ chối, không thể xuất bản lưu'
       const stamp = new Date().toISOString().slice(0, 10)
       const file = `yunyin-xiuxian-${stamp}.save`
       await Filesystem.writeFile({
@@ -29,12 +29,12 @@ export async function exportSaveToDevice(): Promise<string | null> {
         directory: Directory.Documents,
         encoding: Encoding.UTF8
       })
-      useUiStore().toast(`已导出到「文档/Export/${file}」`, 'success')
+      useUiStore().toast(`Đã xuất ra「Tài liệu/Export/${file}」`, 'success')
       return null
     } catch {
       // 写盘失败(存储不可用/权限异常)明确告知,不静默
-      useUiStore().toast('存档导出失败,请检查存储空间后重试', 'warn')
-      return '导出失败'
+      useUiStore().toast('Xuất bản lưu thất bại, vui lòng kiểm tra dung lượng lưu trữ rồi thử lại', 'warn')
+      return 'Xuất thất bại'
     }
   }
   /*
@@ -69,17 +69,17 @@ export async function exportSaveToDevice(): Promise<string | null> {
   }
 
   if (downloaded && clipped) {
-    useUiStore().toast(`已导出「${file}」(存档文本也已复制到剪贴板备用)`, 'success')
+    useUiStore().toast(`Đã xuất「${file}」 (văn bản bản lưu cũng đã được sao chép vào khay nhớ tạm để dự phòng)`, 'success')
     return null
   }
   if (downloaded) {
-    useUiStore().toast(`已导出「${file}」`, 'success')
+    useUiStore().toast(`Đã xuất「${file}」`, 'success')
     return null
   }
   if (clipped) {
-    useUiStore().toast('浏览器没能下载 —— 存档文本已复制到剪贴板,新建文本粘贴并另存为 .save 即可导入', 'warn')
-    return '存档已复制到剪贴板'
+    useUiStore().toast('Trình duyệt không thể tải xuống —— văn bản bản lưu đã được sao chép vào khay nhớ tạm, hãy tạo tệp mới dán vào và lưu thành đuôi .save là có thể nhập vào', 'warn')
+    return 'Bản lưu đã sao chép vào khay nhớ tạm'
   }
-  useUiStore().toast('浏览器既不能下载也复制不了存档,请换一个浏览器打开后再导出', 'warn')
-  return '浏览器不支持导出'
+  useUiStore().toast('Trình duyệt không thể tải xuống cũng như sao chép bản lưu, vui lòng đổi trình duyệt khác rồi thử lại', 'warn')
+  return 'Trình duyệt không hỗ trợ xuất'
 }

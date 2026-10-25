@@ -106,7 +106,7 @@ export function gongfaModsAt(major: number): StatMods {
     const usable = GONGFA.filter(g => g.type === type && g.minRealm <= major)
     if (usable.length === 0) return {}
     // 取该境界可用的最高门槛功法,并按满级折算
-    const best = usable.reduce((a, b) => (b.minRealm >= a.minRealm ? b : a))
+    const best = usable.reduce((a, b) => (b.minRealm > a.minRealm ? b : a))
     const out: StatMods = { ...best.baseMods }
     for (const k in best.perLevelMods) {
       const key = k as keyof StatMods

@@ -73,7 +73,7 @@ describe('天赋四等 · 稀有度的三条承诺', () => {
     for (const g of GRADES) {
       const list = TALENTS.filter(t => t.grade === g)
       console.log(
-        `  ${GRADE_NAME[g]}(权重 ${g === 1 ? 100 : g === 2 ? 45 : g === 3 ? 15 : 4}) n=${String(list.length).padStart(2)} ` +
+        `  ${GRADE_NAME[g]}(权重 ${list[0]?.weight ?? 10}) n=${String(list.length).padStart(2)} ` +
           `均预算 ${avgBudget(g).toFixed(2)} · 领地:${territoryOf(g).join(' / ') || '(无)'}`
       )
     }

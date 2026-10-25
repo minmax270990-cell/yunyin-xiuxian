@@ -88,16 +88,23 @@
       <span class="shrink-0 text-[11px] text-gold-ink">Giao dịch →</span>
     </RouterLink>
 
-    <!-- 道童:遣其跑腿,后台自长 —— 洞府门面第二个常驻入口 -->
+    <!-- Tông Môn: Khai sơn lập phái, quản lý đệ tử -->
     <RouterLink to="/apprentice" class="card-ink flex items-center gap-3 border-jade/30 px-4 py-3 active:scale-98">
       <span class="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-jade/15 text-jade">
-        <GameIcon name="users" :size="18" />
+        <GameIcon name="castle" :size="18" />
       </span>
       <span class="min-w-0 grow">
-        <span class="block font-kai text-[14px] tracking-widest text-ink">Đạo Đồng</span>
-        <span class="block truncate text-[10px] text-ink-faint">Phái đạo đồng hái thuốc · Lịch luyện · Tìm cơ duyên, trở về mang theo tài nguyên</span>
+        <span class="flex items-center gap-2 font-kai text-[14px] tracking-widest text-ink">
+          Tông Môn
+          <span v-if="sect.pendingApplicant" class="rounded bg-cinnabar px-1.5 py-0.5 text-[9px] text-paper animate-pulse font-sans">
+            Đơn mới
+          </span>
+        </span>
+        <span class="block truncate text-[10px] text-ink-faint">
+          {{ player.major >= 2 ? (sect.sectCreated ? `【${sect.sectName}】· ${sect.disciples.length} Đệ tử` : 'Khai sơn lập phái · Quản lý tông môn') : 'Mở khóa tại Kim Đan Kỳ' }}
+        </span>
       </span>
-      <span class="shrink-0 text-[11px] text-jade">Phái Đi →</span>
+      <span class="shrink-0 text-[11px] text-jade">Vào Tông →</span>
     </RouterLink>
 
     <!-- 修行志(任务);日课按本地午夜重排,未成即作罢 —— 规则得摆在台面上,不然玩家会以为昨天差一步的日课还欠着 -->
@@ -179,6 +186,7 @@
   import { useAdventureStore } from '@/stores/adventure'
   import { useCultivationStore } from '@/stores/cultivation'
   import { useQuestsStore } from '@/stores/quests'
+  import { useSectStore } from '@/stores/apprentice'
   import { BUILDINGS } from '@/data/buildings'
   import { DAILY_TASKS, MAIN_QUESTS } from '@/data/quests'
   import { LIFESPAN_WARN_RATIO } from '@/data/constants'
@@ -214,6 +222,7 @@
   const adventure = useAdventureStore()
   const cultivation = useCultivationStore()
   const quests = useQuestsStore()
+  const sect = useSectStore()
 
   // 法球尺寸:380px 以下卡片内宽骤减,法球随断点同步缩到 108px(与模板容器 max-[380px] 一致)。
   // 不能只算一次:横竖屏切换、窗口拖拽都会改 matchMedia 结果,故监听 change 让 orbSize 跟着变,

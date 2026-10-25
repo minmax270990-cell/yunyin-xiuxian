@@ -6,8 +6,8 @@
     </div>
 
     <!-- Tên trò chơi -->
-    <h1 class="mt-6 font-kai text-[36px] leading-tight tracking-[0.2em] text-ink text-center">Vân Ẩn Tu Tiên Lục</h1>
-    <p class="mt-2 text-[12px] tracking-[0.3em] text-ink-faint text-center">Nhất Niệm Tu Hành · Mây Sâu Khó Biết Chốn</p>
+    <h1 class="mt-6 font-kai text-[36px] leading-tight tracking-[0.2em] text-ink text-center">Thiên Đạo</h1>
+    <p class="mt-2 text-[12px] tracking-[0.3em] text-ink-faint text-center">Nhất Niệm Tu Hành · Vạn Pháp Quy Tông</p>
 
     <!-- Nút bắt đầu -->
     <button class="btn-seal mt-10 w-full max-w-72 !py-3.5 text-[16px] tracking-[0.2em]" @click="onStart">BẮT ĐẦU TRÒ CHƠI</button>

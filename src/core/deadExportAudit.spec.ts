@@ -297,11 +297,12 @@ describe('死导出审计', () => {
    * 一个模块若从没被运行时引用过,它整份都是审计工具,自然全是 spec-only。
    */
   const SPEC_ONLY_ALLOWLIST: Record<string, string> = {
+    destinedCandidate: '宿缘原语:轮回前世深交重逢概率模型,genderDaolu.spec/daoluService.spec 守卫;现道侣由自选与一见钟情接管',
+    meet: '初遇原语:供调试、用例与一见钟情底层使用;现道侣由自选与一见钟情接管',
     weatherDef: '查表原语:运行时用 todayWeather() 直接取对象,按 id 查表服务于数据自检与联动审计',
     reliefKinds: '审计汇总:把灵根的劫型解法通道列出来,供渡劫审计与灵根角色审计读',
     winChanceFromRatio: '审计公式:胜率换算只作审计口径,不进战斗结算',
     tribulationSuccessRate: '审计口径:五种劫型的抽样成功率,界面走劫势推演,不展示这一条单一概率',
-    div: '数值原语:gNum 库的除法(含零除分支),gnum.spec 覆盖;库完整性优先于"当前无人调"',
     lt: '数值原语:gNum 比较,供公式单调性用例读',
     gt: '数值原语:gNum 比较,与 lt 成对',
     parseClassicalDuration: '反查原语:classicalDuration 把时长渲染成古语时制后,由它对文案做 round-trip 自检(timeUnits.spec 守卫),运行时从不解析古语文案'

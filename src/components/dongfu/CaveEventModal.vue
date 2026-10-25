@@ -4,6 +4,12 @@ import { getCurrentCaveEvent, chooseCaveOption, dismissCaveEvent } from '@/core/
 import { caveOptionText } from '@/ui/caveText'
 import type { CaveEvent } from '@/types'
 import BaseModal from '@/components/common/BaseModal.vue'
+import {
+  displayCaveEventTitle,
+  displayCaveEventDesc,
+  displayCaveEventOptionLabel,
+  displayCaveOptionText
+} from '@/ui/displayZhVi'
 
 /*
  * 洞府巡游 —— 与顿悟同一个毛病(自己铺 fixed inset-0):没有 dialog 语义、
@@ -60,8 +66,8 @@ const locationLabel = computed(() =>
       <span class="chip-ink !py-0 text-[10px] text-jade">{{ locationLabel }}</span>
       <span class="tabular text-gold-ink">{{ remaining }} Giây sau tự tan</span>
     </p>
-    <p class="mt-3 font-kai text-[14px] tracking-widest text-ink">{{ event?.title }}</p>
-    <p class="mt-1 text-[12px] leading-relaxed text-ink-soft">{{ event?.desc }}</p>
+    <p class="mt-3 font-kai text-[14px] tracking-widest text-ink">{{ displayCaveEventTitle(event?.title) }}</p>
+    <p class="mt-1 text-[12px] leading-relaxed text-ink-soft">{{ displayCaveEventDesc(event?.desc) }}</p>
     <div class="mt-3 space-y-2">
       <button
         v-for="(opt, idx) in event?.options ?? []"
@@ -69,8 +75,8 @@ const locationLabel = computed(() =>
         class="w-full rounded-lg border border-ink/25 px-4 py-2.5 text-left transition-all active:scale-98 active:bg-ink/5"
         @click="handleChoose(idx)"
       >
-        <span class="block font-kai text-[14px] tracking-widest text-ink">{{ opt.label }}</span>
-        <span class="mt-0.5 block text-[11px] leading-relaxed text-ink-faint">{{ caveOptionText(opt) }}</span>
+        <span class="block font-kai text-[14px] tracking-widest text-ink">{{ displayCaveEventOptionLabel(opt.label) }}</span>
+        <span class="mt-0.5 block text-[11px] leading-relaxed text-ink-faint">{{ displayCaveOptionText(caveOptionText(opt)) }}</span>
       </button>
     </div>
     <template #footer>

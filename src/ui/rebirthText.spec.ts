@@ -9,27 +9,27 @@ describe('rebirthDecisionHint', () => {
     const text = rebirthDecisionHint()
     expect(HERITAGE.find(r => r.id === 'artifacts')?.mode).toBe('reset')
     expect(HERITAGE.find(r => r.id === 'gongfa')?.mode).toBe('partial')
-    expect(text).toContain('一层')
-    expect(text).toContain('法宝')
-    expect(text).not.toContain('折半')
-    expect(text).not.toMatch(/保留[^。]*法宝/)
+    expect(text).toContain('tầng 1')
+    expect(text).toContain('Pháp bảo')
+    expect(text).not.toContain('Chiết tổn')
+    expect(text).not.toMatch(/giữ lại[^.]*Pháp bảo/i)
   })
 
   it('the character sheet uses the shared hint, not a second summary', () => {
     const src = readFileSync(resolve(__dirname, '../views/CharacterView.vue'), 'utf8')
     expect(src).toContain('rebirthDecisionHint()')
-    expect(src).not.toContain('功法折半')
+    expect(src).not.toContain('công pháp chiết bán')
   })
 
-  it('兵解门槛的境名不手抄:toast 与弹窗一样读 MANUAL_REBIRTH_MIN_MAJOR', () => {
+  it('ngưỡng cảnh giới binh giải không chép tay: toast và popup cùng đọc MANUAL_REBIRTH_MIN_MAJOR', () => {
     const src = readFileSync(resolve(__dirname, '../views/CharacterView.vue'), 'utf8')
     expect(src).toContain('REALMS[MANUAL_REBIRTH_MIN_MAJOR]?.name')
-    expect(src).not.toContain('至少金丹境方可自行兵解')
+    expect(src).not.toContain('ít nhất Kim Đan cảnh mới có thể tự hành binh giải')
   })
 })
 
-describe('heritageViewRows 去留一览(与 HERITAGE 同表)', () => {
-  it('逐行对应:一条 HERITAGE 一行,名号一致,留/去与 mode 同义', () => {
+describe('heritageViewRows Danh sách giữ lại hay đặt lại (cùng bảng với HERITAGE)', () => {
+  it('đối chiếu từng dòng: một dòng HERITAGE một hàng, tên gọi đồng nhất, giữ/bỏ đồng nghĩa với mode', () => {
     const rows = heritageViewRows()
     expect(rows.length).toBe(HERITAGE.length)
     for (const r of HERITAGE) {
@@ -40,12 +40,12 @@ describe('heritageViewRows 去留一览(与 HERITAGE 同表)', () => {
     }
   })
 
-  it('措辞三态:全留/部分/归零各自成词,随魂一色、归零灰', () => {
+  it('cách dùng từ ba trạng thái: giữ đủ/một phần/về 0 thành từ riêng, theo hồn một màu, về 0 màu xám', () => {
     const rows = heritageViewRows()
-    expect(rows.find(r => r.id === 'daoFruit')!.modeLabel).toBe('随魂保留')
+    expect(rows.find(r => r.id === 'daoFruit')!.modeLabel).toBe('Theo hồn giữ lại')
     expect(rows.find(r => r.id === 'daoFruit')!.cls).toBe('text-jade')
-    expect(rows.find(r => r.id === 'gongfa')!.modeLabel).toBe('部分保留')
-    expect(rows.find(r => r.id === 'realm')!.modeLabel).toBe('归零重来')
+    expect(rows.find(r => r.id === 'gongfa')!.modeLabel).toBe('Giữ lại một phần')
+    expect(rows.find(r => r.id === 'realm')!.modeLabel).toBe('Về 0 làm lại')
     expect(rows.find(r => r.id === 'realm')!.cls).toBe('text-ink-faint')
   })
 })

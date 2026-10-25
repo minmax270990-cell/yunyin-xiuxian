@@ -3,7 +3,7 @@
     <div v-if="summary" class="text-center">
       <p class="font-kai text-2xl tracking-[0.5em] text-ink mt-1 animate-ink-pop">QUY LAI</p>
       <p class="mt-2 text-[12px] text-ink-faint">
-        {{ awayLine }}
+        {{ displayOfflineAwayLine(awayLine) }}
       </p>
       <div class="ink-divider my-3" />
       <!-- 离线三类事分而叙之:修行在长、家业在产、路上在走 —— 修为是主,置顶金标 -->
@@ -39,11 +39,11 @@
             :style="{ color: qualityDef(eq.quality).color }"
             @click="eq.uid && openEquip(eq.uid)"
           >
-            {{ qualityDef(eq.quality).name }}·{{ eq.name }}
+            {{ displayQualityName(qualityDef(eq.quality).name) }} · {{ displayEquipName(eq.name) }}
           </button>
         </p>
       </div>
-      <p v-for="(note, i) in summary.notes" :key="i" class="mt-2 text-[11px] text-ink-faint">{{ note }}</p>
+      <p v-for="(note, i) in summary.notes" :key="i" class="mt-2 text-[11px] text-ink-faint">{{ displayOfflineNote(note) }}</p>
     </div>
     <template #footer>
       <button class="btn-seal w-full" @click="close">Thu Nhận</button>
@@ -57,7 +57,14 @@
   import { useInventoryStore } from '@/stores/inventory'
   import { formatDuration, formatGN, formatNum } from '@/utils/format'
   import { offlineAwayPhrase } from '@/ui/offlineText'
-  import { HERB_GRADE_SHORT } from '@/data/herbGrades'
+  import {
+    displayQualityName,
+    displayEquipName,
+    displayOfflineAwayLine,
+    displayOfflineNote,
+    displayGNVi,
+    displayHerbGradeShort
+  } from '@/ui/displayZhVi'
   import { qualityDef } from '@/data/qualities'
   import { playSfx } from '@/core/audio'
   import BaseModal from '@/components/common/BaseModal.vue'
@@ -97,13 +104,19 @@
     const out: { label: string; list: GRow[] }[] = []
 
     const cult: GRow[] = []
-    if (s.exp.m > 0) cult.push({ icon: 'flame', label: 'Tu Vi', value: `+${formatGN(s.exp)}`, main: true })
+    if (s.exp.m > 0) cult.push({ icon: 'flame', label: 'Tu Vi', value: `+${displayGNVi(formatGN(s.exp))}`, main: true })
     if (cult.length) out.push({ label: 'Tu Hành Thu Được', list: cult })
 
     const home: GRow[] = []
-    if (s.stone.m > 0) home.push({ icon: 'gem', label: 'Linh Thạch', value: `+${formatGN(s.stone)}` })
-    if (s.qi > 0) home.push({ icon: 'wind', label: 'Linh Khí', value: `+${formatNum(s.qi)}` })
-    if (s.herb > 0) home.push({ icon: 'leaf', label: 'Linh Thảo', value: s.herbByGrade.length ? s.herbByGrade.map(h => `${HERB_GRADE_SHORT[h.grade]}+${h.amount}`).join(' · ') : `+${s.herb}` })
+    if (s.stone.m > 0) home.push({ icon: 'gem', label: 'Linh Thạch', value: `+${displayGNVi(formatGN(s.stone))}` })
+    if (s.qi > 0) home.push({ icon: 'wind', label: 'Linh Khí', value: `+${displayGNVi(formatNum(s.qi))}` })
+    if (s.herb > 0) home.push({
+      icon: 'leaf',
+      label: 'Linh Thảo',
+      value: s.herbByGrade.length
+        ? s.herbByGrade.map(h => `${displayHerbGradeShort(h.grade)}+${h.amount}`).join(' · ')
+        : `+${s.herb}`
+    })
     if (s.ore > 0) home.push({ icon: 'mountain', label: 'Huyền Thiết', value: `+${s.ore}` })
     if (s.wudao > 0) home.push({ icon: 'book', label: 'Điểm Ngộ Đạo', value: `+${s.wudao}` })
     if (home.length) out.push({ label: 'Gia Nghiệp Thu Hoạch', list: home })

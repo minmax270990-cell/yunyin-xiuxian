@@ -6,12 +6,18 @@ import { add, gn, gnZero, gte, subClamp } from '@/utils/gnum'
 import { QI_BANK_MULT } from '@/data/constants'
 import { FURNACE_HERB_MIN_GRADE } from '@/data/endgame'
 import { HERB_GRADES, herbGradeOfMajor, isHerbGrade, type HerbGrade } from '@/data/herbGrades'
+import { SPIRIT_ROOT_FRUIT_TIERS, type SpiritRootFruitTier } from '@/data/spiritRootFruit'
 import { persistConfig } from '@/utils/storage'
 import { usePlayerStore } from '@/stores/player'
 
 /** 全新空灵草账:五品各 0 */
 export function emptyHerbMap(): Record<HerbGrade, number> {
   return { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+}
+
+/** Toàn bộ Linh Căn Quả ban đầu rỗng */
+export function emptyFruitMap(): Record<SpiritRootFruitTier, number> {
+  return { mortal: 0, earth: 0, heaven: 0 }
 }
 
 export const useResourcesStore = defineStore(
@@ -22,6 +28,8 @@ export const useResourcesStore = defineStore(
     const wudao = ref(0)
     /** 灵草按品阶分账:key = HerbGrade(1 凡品 → 5 道品) */
     const herbByGrade = ref<Record<HerbGrade, number>>(emptyHerbMap())
+    /** Linh Căn Quả chia theo 3 cấp độ: mortal (+1), earth (+5), heaven (+10) */
+    const spiritRootFruit = ref<Record<SpiritRootFruitTier, number>>(emptyFruitMap())
     const ore = ref(0)
     const page = ref(0)
     const dust = ref(0)
@@ -139,6 +147,31 @@ export const useResourcesStore = defineStore(
       return !!r && r.value >= n
     }
 
+    function fruitCount(tier: SpiritRootFruitTier): number {
+      return spiritRootFruit.value[tier] ?? 0
+    }
+
+    function addFruit(tier: SpiritRootFruitTier, n: number): void {
+      spiritRootFruit.value = {
+        ...spiritRootFruit.value,
+        [tier]: Math.max(0, Math.floor((spiritRootFruit.value[tier] ?? 0) + n))
+      }
+    }
+
+    function spendFruit(tier: SpiritRootFruitTier, n = 1): boolean {
+      const cur = spiritRootFruit.value[tier] ?? 0
+      if (cur < n) return false
+      spiritRootFruit.value = {
+        ...spiritRootFruit.value,
+        [tier]: cur - n
+      }
+      return true
+    }
+
+    function resetFruits(): void {
+      spiritRootFruit.value = emptyFruitMap()
+    }
+
     function setQi(v: number, cap: number): void {
       // 灵气可「积余」到标称容量的 QI_BANK_MULT 倍:标称容量只是"满"的界线
       // (灵气充盈加成、突破耗时皆以它为基准),不是硬顶 —— 卡境期间灵气继续累积
@@ -160,6 +193,16 @@ export const useResourcesStore = defineStore(
         }
       }
       herbByGrade.value = clean
+      // Linh Căn Quả分账: 逐品阶夹回非负有限整数
+      const rawFruits = spiritRootFruit.value as unknown
+      const cleanFruits: Record<SpiritRootFruitTier, number> = emptyFruitMap()
+      if (rawFruits && typeof rawFruits === 'object') {
+        for (const t of SPIRIT_ROOT_FRUIT_TIERS) {
+          const v = (rawFruits as Record<string, unknown>)[t]
+          cleanFruits[t] = typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0
+        }
+      }
+      spiritRootFruit.value = cleanFruits
       for (const key of Object.keys(smallRefs) as Exclude<SmallResourceId, 'herb'>[]) {
         const r = smallRef(key)
         if (!r) continue
@@ -176,6 +219,7 @@ export const useResourcesStore = defineStore(
       wudao,
       herb,
       herbByGrade,
+      spiritRootFruit,
       ore,
       page,
       dust,
@@ -186,6 +230,10 @@ export const useResourcesStore = defineStore(
       herbMeltable,
       spendHerbMeltable,
       resetHerbs,
+      fruitCount,
+      addFruit,
+      spendFruit,
+      resetFruits,
       addStone,
       spendStone,
       hasStone,

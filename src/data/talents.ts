@@ -2,7 +2,8 @@
 import type { StatMods, TalentDef } from '@/types'
 
 function t(id: string, name: string, grade: TalentDef['grade'], desc: string, mods: StatMods): TalentDef {
-  const weights = { 1: 100, 2: 45, 3: 15, 4: 4 } as const
+  // Tỉ lệ xuất hiện các phẩm cấp thiên phú là ngang nhau (đều 10 điểm trọng số)
+  const weights = { 1: 10, 2: 10, 3: 10, 4: 10 } as const
   return { id, name, grade, desc, mods, weight: weights[grade] }
 }
 

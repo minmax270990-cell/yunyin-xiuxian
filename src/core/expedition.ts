@@ -166,11 +166,11 @@ function settle(run: WorldRunState, world: CelestialWorldDef, cleared: boolean, 
     if (run.pactId === 'wushang') recordMilestone('first_wushang')
     if (world.id === 'void') recordMilestone('first_void')
     trackClearRecords(world.name, run.totalRounds, run.pactId, reward)
-    ui.toast(`你踏破${world.name}!道源 +${reward}${speedBonus > 0 ? '(含杀伐速战之赏)' : ''}`, 'rare')
+    ui.toast(`Ngươi đã đạp phá ${world.name}! Đạo nguyên +${reward}${speedBonus > 0 ? ' (bao gồm thưởng sát phạt tốc chiến)' : ''}`, 'rare')
   } else if (pactBroken) {
-    ui.toast(`契约崩碎,天道将你逐出${world.name}`, 'warn')
+    ui.toast(`Khế ước vỡ vụn, thiên đạo đã trục xuất ngươi khỏi ${world.name}`, 'warn')
   } else {
-    ui.toast(`${world.name}将你逐出天门`, 'warn')
+    ui.toast(`${world.name} đã trục xuất ngươi ra khỏi Thiên Môn`, 'warn')
   }
   // 所择之门记进道痕环境:忆战/重写要按当年的门重打这一趟
   recordMark(world.id, world.name, cleared, run.totalRounds, run.pactId, run.gateId ? { gateId: run.gateId } : undefined)
@@ -230,16 +230,16 @@ export function startWorldExpedition(worldId: string, pactId: string | null, gat
   const world = resolveWorld(worldId)
   if (!world || !endgameUnlocked()) return null
   if (!endgame.daoPath) {
-    ui.toast('先择道途,方可踏天', 'warn')
+    ui.toast('Trước tiên hãy chọn Đạo Đồ, mới có thể đạp thiên', 'warn')
     return null
   }
   if (endgame.worldRun) {
-    ui.toast('已有远征在途,先了结眼前的路', 'warn')
+    ui.toast('Đang có viễn chinh trên đường, hãy hoàn tất con đường trước mắt', 'warn')
     return null
   }
   // 秘境与远征互斥:身处秘境者不得再踏天门
   if (usePlayerStore().secretRealm) {
-    ui.toast('你正身处秘境之中,先出了秘境再踏天门', 'warn')
+    ui.toast('Ngươi đang ở trong bí cảnh, hãy rời khỏi bí cảnh trước khi bước vào Thiên Môn', 'warn')
     return null
   }
   const pact = pactId ? pactDef(pactId) : undefined
@@ -248,13 +248,13 @@ export function startWorldExpedition(worldId: string, pactId: string | null, gat
   if (pact?.special === 'sealCore') {
     const sealed = sealCoreMods()
     if (!sealed) {
-      ui.toast('道途尚未成路,逆命契无从封印', 'warn')
+      ui.toast('Đạo Đồ chưa thành đường, Nghịch Mệnh Khế không thể phong ấn', 'warn')
       return null
     }
     sealedMods = sealed
   }
   if (!endgame.spendDaoSource(world.entryCost)) {
-    ui.toast(`道源不足 ${world.entryCost}(天道熔炉可献祭闲置资财)`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${world.entryCost} (Thiên Đạo Lò Luyện có thể hiến tế tài nguyên nhàn rỗi)`, 'warn')
     return null
   }
   const rules = chainRules(currentDaoRules(), world.rules, pactRules(pact), gateRulesOf(gate?.id))
@@ -270,8 +270,8 @@ export function startWorldExpedition(worldId: string, pactId: string | null, gat
     winStacks: 0,
     sealedMods
   }
-  if (pact) ui.toast(`你与天道立下「${pact.name}」`, 'info')
-  if (gate) ui.toast(`你自「${gate.fullName}」入界 —— ${gate.desc}`, 'info')
+  if (pact) ui.toast(`Ngươi và thiên đạo đã lập nên「${pact.name}」`, 'info')
+  if (gate) ui.toast(`Ngươi từ「${gate.fullName}」nhập giới —— ${gate.desc}`, 'info')
   return fightStep(run, world, world.foes[0]!)
 }
 
@@ -414,11 +414,11 @@ export function challengeMutation(mutatorIds: string[]): MutationResult | null {
   const endgame = useEndgameStore()
   const ui = useUiStore()
   if (!endgameUnlocked() || !endgame.daoPath) {
-    ui.toast('先择道途,方可应变数', 'warn')
+    ui.toast('Trước tiên hãy chọn Đạo Đồ, mới có thể ứng biến với biến số', 'warn')
     return null
   }
   if (!endgame.spendDaoSource(MUTATION_ENTRY_COST)) {
-    ui.toast(`道源不足 ${MUTATION_ENTRY_COST}`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${MUTATION_ENTRY_COST}`, 'warn')
     return null
   }
   const muts = mutatorIds.map(id => MUTATORS.find(m => m.id === id)).filter(m => m !== undefined)
@@ -435,9 +435,9 @@ export function challengeMutation(mutatorIds: string[]): MutationResult | null {
   if (report.cleared) {
     reward = MUTATION_BASE_REWARD
     endgame.addDaoSource(reward)
-    ui.toast(`天道变数尽数破解!道源 +${reward}`, 'rare')
+    ui.toast(`Thiên đạo biến số đã được hóa giải hoàn toàn! Đạo nguyên +${reward}`, 'rare')
   } else {
-    ui.toast(`变数难测,你止步第 ${report.fightsWon + 1} 战`, 'warn')
+    ui.toast(`Biến số khó lường, ngươi dừng bước ở trận thứ ${report.fightsWon + 1}`, 'warn')
   }
   recordMark('mutation', '天道变数', report.cleared, report.totalRounds, null, { mutatorIds })
   return { report, rewardDaoSource: reward }
@@ -452,27 +452,27 @@ export function rerollVoidWorld(): boolean {
   const endgame = useEndgameStore()
   const ui = useUiStore()
   if (!endgameUnlocked() || !endgame.daoPath) {
-    ui.toast('先择道途,方可窥探虚界', 'warn')
+    ui.toast('Trước tiên hãy chọn Đạo Đồ, mới có thể dòm ngó Hư Giới', 'warn')
     return false
   }
   if (endgame.worldRun?.worldId === 'void') {
-    ui.toast('虚界远征在途,此界尚不能散去', 'warn')
+    ui.toast('Hư Giới viễn chinh đang diễn ra, giới này chưa thể tiêu tán', 'warn')
     return false
   }
   if (!endgame.spendDaoSource(VOID_REROLL_COST)) {
-    ui.toast(`道源不足 ${VOID_REROLL_COST}`, 'warn')
+    ui.toast(`Đạo nguyên không đủ ${VOID_REROLL_COST}`, 'warn')
     return false
   }
   const generated = generateApprovedWorld(Date.now() % 999983, 40, voidHistory())
   if (!generated) {
     // 极端情形兜底:裁判连续否决,退款
     endgame.addDaoSource(VOID_REROLL_COST)
-    ui.toast('天机紊乱,虚界未能成形(道源已退还)', 'warn')
+    ui.toast('Thiên cơ hỗn loạn, Hư Giới chưa thể thành hình (đã hoàn trả Đạo nguyên)', 'warn')
     return false
   }
   endgame.voidWorld = generated.world
   ui.toast(
-    `虚界「${generated.world.name}」成形(迥异诸天 ${Math.round(generated.novelty * 100)}%,推演淘汰 ${generated.rejected} 个候选)`,
+    `Hư Giới「${generated.world.name}」đã thành hình (khác biệt chư thiên ${Math.round(generated.novelty * 100)}%, suy tính đào thải ${generated.rejected} ứng viên)`,
     'rare'
   )
   return true
